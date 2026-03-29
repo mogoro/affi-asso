@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AFFI — Association Ferroviaire Francaise des Ingenieurs</title>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-inner">
+        <a class="nav-logo" href="#accueil" onclick="navigate('accueil')">
+            <div>
+                <div class="nav-logo-text">AFFI</div>
+                <div class="nav-logo-sub">Ingenieurs Ferroviaires</div>
+            </div>
+        </a>
+        <div class="nav-links" id="nav-links">
+            <a class="nav-link active" data-page="accueil" onclick="navigate('accueil')">Accueil</a>
+            <a class="nav-link" data-page="identite" onclick="navigate('identite')">L'association</a>
+            <a class="nav-link" data-page="evenements" onclick="navigate('evenements')">Evenements</a>
+            <a class="nav-link" data-page="publications" onclick="navigate('publications')">Publications</a>
+            <a class="nav-link" data-page="contact" onclick="navigate('contact')">Contact</a>
+        </div>
+        <a class="nav-cta" href="#adhesion" onclick="navigate('adhesion')">Adherer</a>
+        <a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Espace Membres</a>
+        <button class="nav-hamburger" onclick="document.getElementById('nav-links').classList.toggle('hidden')">&#9776;</button>
+    </div>
+</nav>
+
+<!-- ================================================================== -->
+<!-- PAGE: ACCUEIL                                                       -->
+<!-- ================================================================== -->
+<div id="page-accueil" class="page active">
+
+    <div class="hero">
+        <div class="container">
+            <h1>Les voies du progres</h1>
+            <p>L'AFFI rassemble les ingenieurs et cadres du secteur ferroviaire pour promouvoir l'excellence technique, l'innovation et le partage de connaissances.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="#adhesion" onclick="navigate('adhesion')">Rejoindre l'AFFI</a>
+                <a class="btn btn-outline" href="#identite" onclick="navigate('identite')">Decouvrir</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <section>
+        <div class="container">
+            <div class="kpi-row">
+                <div class="kpi-card"><div class="kpi-icon">&#128101;</div><div class="kpi-val">500+</div><div class="kpi-label">Membres actifs</div></div>
+                <div class="kpi-card"><div class="kpi-icon">&#127891;</div><div class="kpi-val">40+</div><div class="kpi-label">Evenements / an</div></div>
+                <div class="kpi-card"><div class="kpi-icon">&#127758;</div><div class="kpi-val">30+</div><div class="kpi-label">Entreprises representees</div></div>
+                <div class="kpi-card"><div class="kpi-icon">&#128218;</div><div class="kpi-val">100+</div><div class="kpi-label">Publications</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prochains evenements -->
+    <section style="background:var(--gray-50)">
+        <div class="container">
+            <h2 class="section-title">Prochains Evenements</h2>
+            <p class="section-sub">Conferences, visites de site, challenges et rencontres</p>
+            <div class="cards-grid" id="home-events">
+                <div class="card"><div class="card-body text-center" style="padding:40px;color:var(--gray-400)">Chargement...</div></div>
+            </div>
+            <div class="text-center mt-24">
+                <a class="btn btn-blue" href="#evenements" onclick="navigate('evenements')">Voir tous les evenements</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Actualites -->
+    <section>
+        <div class="container">
+            <h2 class="section-title">Actualites</h2>
+            <p class="section-sub">Les dernieres nouvelles de l'association et du secteur ferroviaire</p>
+            <div class="cards-grid" id="home-news">
+                <div class="card"><div class="card-body text-center" style="padding:40px;color:var(--gray-400)">Chargement...</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partenaires -->
+    <section style="background:var(--gray-50)">
+        <div class="container">
+            <h2 class="section-title">Nos Partenaires</h2>
+            <p class="section-sub">Ils soutiennent l'AFFI et l'excellence ferroviaire francaise</p>
+            <div class="partners-grid" id="home-partners">
+                <div class="partner-card"><span class="partner-name">SNCF</span></div>
+                <div class="partner-card"><span class="partner-name">RATP</span></div>
+                <div class="partner-card"><span class="partner-name">Alstom</span></div>
+                <div class="partner-card"><span class="partner-name">Thales</span></div>
+                <div class="partner-card"><span class="partner-name">Systra</span></div>
+                <div class="partner-card"><span class="partner-name">Egis Rail</span></div>
+                <div class="partner-card"><span class="partner-name">SNCF Reseau</span></div>
+                <div class="partner-card"><span class="partner-name">Keolis</span></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ================================================================== -->
+<!-- PAGE: IDENTITE / L'ASSOCIATION                                      -->
+<!-- ================================================================== -->
+<div id="page-identite" class="page">
+    <section>
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-text">
+                    <h2>L'Association</h2>
+                    <p>L'AFFI est la premiere association francaise qui reunit les ingenieurs et cadres en activite ou retraites, representant l'ensemble des secteurs du ferroviaire.</p>
+                    <p>Fondee pour promouvoir l'excellence technique et le partage de connaissances dans le domaine ferroviaire, l'AFFI organise des conferences, des visites de site et des rencontres entre professionnels.</p>
+                    <ul class="about-list">
+                        <li>Conferences techniques avec des experts du secteur</li>
+                        <li>Rail Innovation Challenge (concours annuel)</li>
+                        <li>Visites de sites industriels et d'infrastructure</li>
+                        <li>Rencontres mensuelles informelles</li>
+                        <li>Publications et partage de connaissances</li>
+                        <li>Reseau professionnel de 500+ membres</li>
+                    </ul>
+                    <a class="btn btn-blue mt-24" href="#adhesion" onclick="navigate('adhesion')">Devenir membre</a>
+                </div>
+                <div class="about-img">&#128646;</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ses actions -->
+    <section style="background:var(--gray-50)">
+        <div class="container">
+            <h2 class="section-title">Nos Actions</h2>
+            <p class="section-sub">Ce qui fait vivre l'association au quotidien</p>
+            <div class="cards-grid">
+                <div class="card"><div class="card-body"><div class="card-title">&#127891; Conferences Techniques</div><div class="card-text">Des presentations par des experts reconnus du secteur ferroviaire sur les sujets d'actualite : ERTMS, signalisation, materiel roulant, infrastructure.</div></div></div>
+                <div class="card"><div class="card-body"><div class="card-title">&#127942; Rail Innovation Challenge</div><div class="card-text">Un concours annuel qui recompense les projets innovants dans le domaine ferroviaire. Ouvert aux etudiants et aux professionnels.</div></div></div>
+                <div class="card"><div class="card-body"><div class="card-title">&#128205; Visites de Sites</div><div class="card-text">Decouverte d'installations ferroviaires : centres de maintenance, postes d'aiguillage, ateliers de construction de materiel roulant.</div></div></div>
+                <div class="card"><div class="card-body"><div class="card-title">&#129309; Rencontres Mensuelles</div><div class="card-text">Les rendez-vous de l'AFFI : un moment convivial pour echanger entre professionnels du secteur autour d'un verre.</div></div></div>
+                <div class="card"><div class="card-body"><div class="card-title">&#128218; Publications</div><div class="card-text">Articles techniques, comptes rendus de conferences, analyses sectorielles partages avec les membres.</div></div></div>
+                <div class="card"><div class="card-body"><div class="card-title">&#127760; Reseau International</div><div class="card-text">Echanges avec des associations d'ingenieurs ferroviaires en Europe et dans le monde.</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Historique -->
+    <section>
+        <div class="container">
+            <h2 class="section-title">Historique</h2>
+            <p class="section-sub">Les grandes dates de l'association</p>
+            <div style="max-width:700px;margin:0 auto">
+                <div class="timeline">
+                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2024</div><div class="timeline-text">Lancement du Rail Innovation Challenge et modernisation du site web.</div></div>
+                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2020</div><div class="timeline-text">Adaptation au numerique : conferences en ligne, webinaires et nouvelles publications digitales.</div></div>
+                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2015</div><div class="timeline-text">Partenariat avec les grandes entreprises du secteur. 300 membres actifs.</div></div>
+                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2005</div><div class="timeline-text">Ouverture aux cadres et managers du secteur ferroviaire.</div></div>
+                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">1995</div><div class="timeline-text">Creation de l'AFFI par un groupe d'ingenieurs passionnes du ferroviaire.</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Organigramme -->
+    <section style="background:var(--gray-50)">
+        <div class="container">
+            <h2 class="section-title">Le Bureau</h2>
+            <p class="section-sub">L'equipe qui pilote l'association</p>
+            <div class="board-grid" id="board-grid">
+                <div class="board-card"><div class="board-avatar">JM</div><div class="board-name">Jean-Jacques Mogoro</div><div class="board-role">President</div><div class="board-company">FIF</div></div>
+                <div class="board-card"><div class="board-avatar">VP</div><div class="board-name">Vice-President</div><div class="board-role">Vice-President</div></div>
+                <div class="board-card"><div class="board-avatar">SG</div><div class="board-name">Secretaire General</div><div class="board-role">Secretaire General</div></div>
+                <div class="board-card"><div class="board-avatar">TR</div><div class="board-name">Tresorier</div><div class="board-role">Tresorier</div></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ================================================================== -->
+<!-- PAGE: EVENEMENTS                                                    -->
+<!-- ================================================================== -->
+<div id="page-evenements" class="page">
+    <section>
+        <div class="container">
+            <h2 class="section-title">Evenements</h2>
+            <p class="section-sub">Conferences, visites, challenges et rencontres</p>
+            <div class="cards-grid" id="events-list">
+                <div class="card"><div class="card-body text-center" style="padding:40px;color:var(--gray-400)">Chargement...</div></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ================================================================== -->
+<!-- PAGE: PUBLICATIONS                                                  -->
+<!-- ================================================================== -->
+<div id="page-publications" class="page">
+    <section>
+        <div class="container">
+            <h2 class="section-title">Publications</h2>
+            <p class="section-sub">Articles, comptes rendus et documents techniques</p>
+            <div class="cards-grid" id="publications-list">
+                <div class="card"><div class="card-body text-center" style="padding:40px;color:var(--gray-400)">Chargement...</div></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ================================================================== -->
+<!-- PAGE: ADHESION                                                      -->
+<!-- ================================================================== -->
+<div id="page-adhesion" class="page">
+    <section>
+        <div class="container">
+            <h2 class="section-title">Adherer a l'AFFI</h2>
+            <p class="section-sub">Rejoignez la communaute des ingenieurs ferroviaires</p>
+
+            <div class="kpi-row" style="max-width:800px;margin:0 auto 40px">
+                <div class="kpi-card" style="border-top:3px solid var(--blue)"><div class="kpi-val" style="font-size:28px">Standard</div><div class="kpi-label" style="font-size:18px;color:var(--navy);font-weight:700;margin:8px 0">50 EUR / an</div><div class="kpi-label">Acces aux evenements<br>Publications<br>Annuaire membres</div></div>
+                <div class="kpi-card" style="border-top:3px solid var(--red)"><div class="kpi-val" style="font-size:28px">Entreprise</div><div class="kpi-label" style="font-size:18px;color:var(--navy);font-weight:700;margin:8px 0">500 EUR / an</div><div class="kpi-label">5 membres inclus<br>Visibilite partenaire<br>Evenements VIP</div></div>
+                <div class="kpi-card" style="border-top:3px solid var(--green)"><div class="kpi-val" style="font-size:28px">Etudiant</div><div class="kpi-label" style="font-size:18px;color:var(--navy);font-weight:700;margin:8px 0">Gratuit</div><div class="kpi-label">Acces aux conferences<br>Rail Innovation Challenge<br>Mentorat</div></div>
+                <div class="kpi-card" style="border-top:3px solid var(--orange)"><div class="kpi-val" style="font-size:28px">Retraite</div><div class="kpi-label" style="font-size:18px;color:var(--navy);font-weight:700;margin:8px 0">25 EUR / an</div><div class="kpi-label">Acces complet<br>Partage d'experience<br>Reseau</div></div>
+            </div>
+
+            <div class="form-card">
+                <h3 style="text-align:center;margin-bottom:24px;color:var(--navy)">Formulaire d'adhesion</h3>
+                <form onsubmit="submitAdhesion(event)">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                        <div class="form-group"><label>Prenom</label><input type="text" name="first_name" required></div>
+                        <div class="form-group"><label>Nom</label><input type="text" name="last_name" required></div>
+                    </div>
+                    <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                    <div class="form-group"><label>Telephone</label><input type="tel" name="phone"></div>
+                    <div class="form-group"><label>Entreprise</label><input type="text" name="company"></div>
+                    <div class="form-group"><label>Fonction</label><input type="text" name="job_title"></div>
+                    <div class="form-group"><label>Secteur</label><select name="sector">
+                        <option value="">Selectionner...</option>
+                        <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
+                        <option>Infrastructure</option><option>Maintenance</option>
+                        <option>Ingenierie</option><option>Numerique</option>
+                        <option>Gestion de projet</option><option>Autre</option>
+                    </select></div>
+                    <div class="form-group"><label>Type d'adhesion</label><select name="membership_type">
+                        <option value="standard">Standard (50 EUR/an)</option>
+                        <option value="entreprise">Entreprise (500 EUR/an)</option>
+                        <option value="etudiant">Etudiant (gratuit)</option>
+                        <option value="retraite">Retraite (25 EUR/an)</option>
+                    </select></div>
+                    <button type="submit" class="form-submit">Envoyer ma demande d'adhesion</button>
+                    <div class="form-success" id="adhesion-success">Votre demande a ete envoyee. Nous vous recontactons sous 48h.</div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ================================================================== -->
+<!-- PAGE: CONTACT                                                       -->
+<!-- ================================================================== -->
+<div id="page-contact" class="page">
+    <section>
+        <div class="container">
+            <h2 class="section-title">Contact</h2>
+            <p class="section-sub">Une question ? N'hesitez pas a nous ecrire</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;max-width:900px;margin:0 auto">
+                <div>
+                    <h3 style="color:var(--navy);margin-bottom:16px">Coordonnees</h3>
+                    <p style="margin-bottom:12px"><strong>AFFI</strong><br>60 rue Anatole France<br>92300 Levallois-Perret</p>
+                    <p style="margin-bottom:12px">Email : contact@ingenieur-ferroviaire.net</p>
+                    <p style="margin-bottom:24px">Site : www.ingenieur-ferroviaire.net</p>
+                    <div style="background:var(--gray-100);border-radius:12px;height:200px;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:14px">Carte Google Maps</div>
+                </div>
+                <div>
+                    <form onsubmit="submitContact(event)">
+                        <div class="form-group"><label>Nom</label><input type="text" name="name" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                        <div class="form-group"><label>Sujet</label><input type="text" name="subject"></div>
+                        <div class="form-group"><label>Message</label><textarea name="message" required></textarea></div>
+                        <button type="submit" class="form-submit">Envoyer</button>
+                        <div class="form-success" id="contact-success">Message envoye avec succes.</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ================================================================== -->
+<!-- PAGE: ESPACE MEMBRES                                                -->
+<!-- ================================================================== -->
+<div id="page-membres" class="page">
+    <section>
+        <div class="container">
+            <h2 class="section-title">Espace Membres</h2>
+            <p class="section-sub">Connectez-vous pour acceder aux ressources reservees</p>
+            <div class="form-card">
+                <h3 style="text-align:center;margin-bottom:24px;color:var(--navy)">Connexion</h3>
+                <form onsubmit="event.preventDefault();alert('Fonctionnalite en cours de developpement')">
+                    <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                    <div class="form-group"><label>Mot de passe</label><input type="password" name="password" required></div>
+                    <button type="submit" class="form-submit">Se connecter</button>
+                </form>
+                <p class="text-center mt-24" style="font-size:13px;color:var(--gray-500)">Pas encore membre ? <a href="#adhesion" onclick="navigate('adhesion')">Adherer maintenant</a></p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <h4>AFFI</h4>
+                <p>Association Ferroviaire Francaise des Ingenieurs et Cadres. Depuis 1995, nous rassemblons les professionnels du secteur ferroviaire.</p>
+                <p style="margin-top:12px">60 rue Anatole France<br>92300 Levallois-Perret</p>
+            </div>
+            <div>
+                <h4>Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="#accueil" onclick="navigate('accueil')">Accueil</a></li>
+                    <li><a href="#identite" onclick="navigate('identite')">L'association</a></li>
+                    <li><a href="#evenements" onclick="navigate('evenements')">Evenements</a></li>
+                    <li><a href="#publications" onclick="navigate('publications')">Publications</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Membres</h4>
+                <ul class="footer-links">
+                    <li><a href="#adhesion" onclick="navigate('adhesion')">Adherer</a></li>
+                    <li><a href="#membres" onclick="navigate('membres')">Espace membres</a></li>
+                    <li><a href="#contact" onclick="navigate('contact')">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Partenaires</h4>
+                <ul class="footer-links">
+                    <li><a href="https://www.fif.french4dev.com/fr" target="_blank">FIF</a></li>
+                    <li><a href="https://www.sncf.com" target="_blank">SNCF</a></li>
+                    <li><a href="https://www.alstom.com" target="_blank">Alstom</a></li>
+                    <li><a href="https://www.ratp.fr" target="_blank">RATP</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bar">
+            &copy; 2026 AFFI — Tous droits reserves &middot; Mentions legales &middot; Politique de confidentialite
+        </div>
+    </div>
+</footer>
+
+<script src="/js/app.js"></script>
+<script>
+function submitAdhesion(e) {
+    e.preventDefault();
+    document.getElementById('adhesion-success').style.display = 'block';
+}
+</script>
+</body>
+</html>

@@ -5,279 +5,515 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AFFI — Association Ferroviaire Francaise des Ingenieurs</title>
 <link rel="stylesheet" href="/css/styles.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a2d4d">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+    <div class="topbar-inner">
+        <span>60 rue Anatole France, 92300 Levallois-Perret &middot; contact@ingenieur-ferroviaire.net</span>
+        <div><a href="#contact" onclick="navigate('contact')">Contact</a><a href="#membres" onclick="navigate('membres')">Espace Membres</a></div>
+    </div>
+</div>
 
 <!-- NAVBAR -->
 <nav class="navbar">
     <div class="nav-inner">
         <a class="nav-logo" href="#accueil" onclick="navigate('accueil')">
             <div>
-                <div class="nav-logo-text">AFFI</div>
+                <div class="nav-logo-text">AFF<span class="nav-logo-accent">I</span></div>
                 <div class="nav-logo-sub">Ingenieurs Ferroviaires</div>
             </div>
         </a>
         <div class="nav-links" id="nav-links">
             <a class="nav-link active" data-page="accueil" onclick="navigate('accueil')">Accueil</a>
-            <a class="nav-link" data-page="identite" onclick="navigate('identite')">L'association</a>
+            <div class="nav-dropdown">
+                <a class="nav-link" data-page="identite" onclick="navigate('identite')">Identite</a>
+                <div class="nav-dropdown-menu">
+                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-association'),100)">L'association</a>
+                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-actions'),100)">Ses actions</a>
+                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-historique'),100)">Historique</a>
+                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-organigramme'),100)">Organigramme</a>
+                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-cartographie'),300)">Carte des membres</a>
+                </div>
+            </div>
+            <a class="nav-link" data-page="agenda" onclick="navigate('agenda')">Agenda</a>
             <a class="nav-link" data-page="evenements" onclick="navigate('evenements')">Evenements</a>
             <a class="nav-link" data-page="publications" onclick="navigate('publications')">Publications</a>
-            <a class="nav-link" data-page="contact" onclick="navigate('contact')">Contact</a>
+            <a class="nav-link" data-page="adhesion" onclick="navigate('adhesion')">Adherer</a>
+            <a class="nav-link" data-page="membres" onclick="navigate('membres')">Espace Membres</a>
         </div>
-        <a class="nav-cta" href="#adhesion" onclick="navigate('adhesion')">Adherer</a>
-        <a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Espace Membres</a>
+        <div class="nav-actions">
+            <span id="notif-badge" class="notif-badge" style="display:none" onclick="navigate('membres');setTimeout(()=>switchMemberTab('notifications'),200)"></span>
+            <a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>
+        </div>
         <button class="nav-hamburger" onclick="document.getElementById('nav-links').classList.toggle('hidden')">&#9776;</button>
     </div>
 </nav>
 
-<!-- ================================================================== -->
-<!-- PAGE: ACCUEIL                                                       -->
-<!-- ================================================================== -->
+<!-- ================================================================ -->
+<!-- ACCUEIL                                                          -->
+<!-- ================================================================ -->
 <div id="page-accueil" class="page active">
 
-    <div class="hero">
-        <div class="container">
-            <h1>Les voies du progres</h1>
-            <p>L'AFFI rassemble les ingenieurs et cadres du secteur ferroviaire pour promouvoir l'excellence technique, l'innovation et le partage de connaissances.</p>
-            <div class="hero-actions">
-                <a class="btn btn-primary" href="#adhesion" onclick="navigate('adhesion')">Rejoindre l'AFFI</a>
-                <a class="btn btn-outline" href="#identite" onclick="navigate('identite')">Decouvrir</a>
+    <!-- Hero Slider — Real events from scraped site -->
+    <div class="hero-slider">
+        <div class="slide active"><div class="slide-bg slide-bg-1"></div>
+            <div class="slide-content">
+                <h1>1996-2026 : 30 ans au service du ferroviaire</h1>
+                <p>L'AFFI, premiere association francaise rassemblant les ingenieurs et cadres du secteur ferroviaire.</p>
+                <div class="flex-gap" style="justify-content:center"><a class="btn btn-accent" href="#adhesion" onclick="navigate('adhesion')">Rejoindre l'AFFI</a><a class="btn btn-outline-white" href="#identite" onclick="navigate('identite')">Decouvrir</a></div>
             </div>
         </div>
+        <div class="slide"><div class="slide-bg slide-bg-2"></div>
+            <div class="slide-content">
+                <h1>Conference Franco-Allemande sur le Systeme Ferroviaire</h1>
+                <p>26 & 27 Mars 2025 — Defis et avancees dans le domaine de l'exploitation en autonomie de circulations ferroviaires.</p>
+                <a class="btn btn-accent" href="#evenements" onclick="navigate('evenements')">Voir les evenements</a>
+            </div>
+        </div>
+        <div class="slide"><div class="slide-bg slide-bg-3"></div>
+            <div class="slide-content">
+                <h1>Voeux AFFI avec M. Frederic DELORME</h1>
+                <p>PDG de Rails Logistics Europe — 27 janvier 2025</p>
+                <a class="btn btn-white" href="#evenements" onclick="navigate('evenements')">En savoir plus</a>
+            </div>
+        </div>
+        <div class="slide"><div class="slide-bg slide-bg-1"></div>
+            <div class="slide-content">
+                <h1>Visite de la ligne T10</h1>
+                <p>Visite en Ile-de-France de la ligne T10 et de son site de maintenance et de remisage — 7 juin 2024</p>
+                <a class="btn btn-accent" href="#evenements" onclick="navigate('evenements')">Voir les evenements</a>
+            </div>
+        </div>
+        <div class="slide"><div class="slide-bg slide-bg-2"></div>
+            <div class="slide-content">
+                <h1>Visite des ateliers RATP Porte de la Villette</h1>
+                <p>26 mai 2023 — Paris</p>
+                <a class="btn btn-white" href="#evenements" onclick="navigate('evenements')">Voir les evenements</a>
+            </div>
+        </div>
+        <div class="slide-dots"><span class="slide-dot active"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span></div>
     </div>
 
-    <!-- KPIs -->
+    <!-- Articles / Actualites style blog (like original homepage) -->
     <section>
         <div class="container">
-            <div class="kpi-row">
-                <div class="kpi-card"><div class="kpi-icon">&#128101;</div><div class="kpi-val">500+</div><div class="kpi-label">Membres actifs</div></div>
-                <div class="kpi-card"><div class="kpi-icon">&#127891;</div><div class="kpi-val">40+</div><div class="kpi-label">Evenements / an</div></div>
-                <div class="kpi-card"><div class="kpi-icon">&#127758;</div><div class="kpi-val">30+</div><div class="kpi-label">Entreprises representees</div></div>
-                <div class="kpi-card"><div class="kpi-icon">&#128218;</div><div class="kpi-val">100+</div><div class="kpi-label">Publications</div></div>
+            <div class="cards-grid" id="home-news" style="grid-template-columns:1fr 1fr">
+                <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
             </div>
         </div>
     </section>
 
-    <!-- Prochains evenements -->
-    <section style="background:var(--gray-50)">
+    <!-- Agenda — Prochaines dates -->
+    <section class="bg-light">
         <div class="container">
-            <h2 class="section-title">Prochains Evenements</h2>
-            <p class="section-sub">Conferences, visites de site, challenges et rencontres</p>
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Agenda</h2>
+            <p class="section-sub section-sub-center">Prochains evenements et dates a retenir</p>
             <div class="cards-grid" id="home-events">
-                <div class="card"><div class="card-body text-center" style="padding:40px;color:var(--gray-400)">Chargement...</div></div>
+                <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
             </div>
             <div class="text-center mt-24">
-                <a class="btn btn-blue" href="#evenements" onclick="navigate('evenements')">Voir tous les evenements</a>
+                <a class="btn btn-primary" href="#agenda" onclick="navigate('agenda')">Voir tout l'agenda</a>
+                <a class="btn btn-primary" href="#evenements" onclick="navigate('evenements')" style="margin-left:12px;background:var(--gray-600)">Tous les evenements</a>
             </div>
         </div>
     </section>
 
-    <!-- Actualites -->
+    <!-- Bienvenue -->
+    <section>
+        <div class="container" style="max-width:900px">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Bienvenue sur le site de l'AFFI</h2>
+            <div style="text-align:center;color:var(--gray-600);line-height:1.8;font-size:15px">
+                <p>L'AFFI, Association Ferroviaire Francaise des Ingenieurs et cadres, est la premiere association francaise qui rassemble les ingenieurs et les cadres en activite ou en retraite, representant tous les secteurs ferroviaires :</p>
+                <ul style="text-align:left;max-width:700px;margin:16px auto;list-style:disc;padding-left:24px">
+                    <li>les industries qui concoivent et fabriquent les materiels et les equipements,</li>
+                    <li>les exploitants de reseaux de chemins de fer, de tramways, de metros fer et pneu,</li>
+                    <li>les entreprises qui posent et entretiennent les voies,</li>
+                    <li>d'une maniere generale, toutes les personnes physiques ou morales qui s'interessent au secteur ferroviaire.</li>
+                </ul>
+                <p>La richesse de l'AFFI reside dans l'apport personnel permanent de ses membres, leur savoir-faire et leur volonte d'echanger connaissances et experiences.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Espace Carriere -->
+    <section class="bg-light">
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Espace Carriere</h2>
+            <p class="section-sub section-sub-center">Offres d'emploi, missions freelance et opportunites dans le ferroviaire</p>
+            <div id="home-jobs">
+                <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
+                    <input type="text" id="job-search" placeholder="Rechercher une offre..." oninput="loadJobs(this.value,document.getElementById('job-sector').value,document.getElementById('job-freelance').checked)" style="flex:1;min-width:200px;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
+                    <select id="job-sector" onchange="loadJobs(document.getElementById('job-search').value,this.value,document.getElementById('job-freelance').checked)" style="padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
+                        <option value="">Tous secteurs</option>
+                        <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
+                        <option>Infrastructure</option><option>Maintenance</option>
+                        <option>Numerique & IA</option><option>Ingenierie & Conseil</option>
+                    </select>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+                        <input type="checkbox" id="job-freelance" onchange="loadJobs(document.getElementById('job-search').value,document.getElementById('job-sector').value,this.checked)"> Freelance uniquement
+                    </label>
+                    <button class="btn btn-accent" onclick="showJobForm()" style="font-size:13px;padding:8px 20px;display:none" id="btn-post-job">+ Publier une offre</button>
+                </div>
+                <div id="jobs-list"><p class="empty-msg">Chargement...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Communaute preview -->
     <section>
         <div class="container">
-            <h2 class="section-title">Actualites</h2>
-            <p class="section-sub">Les dernieres nouvelles de l'association et du secteur ferroviaire</p>
-            <div class="cards-grid" id="home-news">
-                <div class="card"><div class="card-body text-center" style="padding:40px;color:var(--gray-400)">Chargement...</div></div>
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Communaute AFFI</h2>
+            <p class="section-sub section-sub-center">Echangez, debattez, partagez avec les membres</p>
+            <div id="feed-compose" style="display:none;margin-bottom:24px">
+                <div class="card"><div class="card-body">
+                    <form onsubmit="postToFeed(event)">
+                        <textarea name="content" placeholder="Partagez une actualite, une reflexion..." required style="width:100%;padding:12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px;min-height:80px;resize:vertical;margin-bottom:12px"></textarea>
+                        <button type="submit" class="btn btn-accent" style="font-size:13px;padding:8px 20px">Publier</button>
+                    </form>
+                </div></div>
             </div>
+            <div id="feed-list"><p class="empty-msg">Connectez-vous pour acceder a la communaute</p></div>
         </div>
     </section>
 
     <!-- Partenaires -->
-    <section style="background:var(--gray-50)">
+    <section class="bg-light">
         <div class="container">
-            <h2 class="section-title">Nos Partenaires</h2>
-            <p class="section-sub">Ils soutiennent l'AFFI et l'excellence ferroviaire francaise</p>
-            <div class="partners-grid" id="home-partners">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Sites des Partenaires de l'AFFI</h2>
+            <p class="section-sub section-sub-center">Ils soutiennent l'AFFI et l'excellence ferroviaire</p>
+            <div class="partners-grid">
                 <div class="partner-card"><span class="partner-name">SNCF</span></div>
                 <div class="partner-card"><span class="partner-name">RATP</span></div>
                 <div class="partner-card"><span class="partner-name">Alstom</span></div>
-                <div class="partner-card"><span class="partner-name">Thales</span></div>
-                <div class="partner-card"><span class="partner-name">Systra</span></div>
-                <div class="partner-card"><span class="partner-name">Egis Rail</span></div>
-                <div class="partner-card"><span class="partner-name">SNCF Reseau</span></div>
-                <div class="partner-card"><span class="partner-name">Keolis</span></div>
+                <div class="partner-card"><span class="partner-name">Arcadis</span></div>
+                <div class="partner-card"><span class="partner-name">BEA-TT</span></div>
+                <div class="partner-card"><span class="partner-name">Certifer</span></div>
+                <div class="partner-card"><span class="partner-name">EPSF</span></div>
+                <div class="partner-card"><span class="partner-name">FIF</span></div>
+                <div class="partner-card"><span class="partner-name">Framafer</span></div>
+                <div class="partner-card"><span class="partner-name">Saferail</span></div>
+                <div class="partner-card"><span class="partner-name">Universite de l'Ingenierie</span></div>
+                <div class="partner-card"><span class="partner-name">Vossloh</span></div>
             </div>
         </div>
     </section>
 </div>
 
-<!-- ================================================================== -->
-<!-- PAGE: IDENTITE / L'ASSOCIATION                                      -->
-<!-- ================================================================== -->
+<!-- ================================================================ -->
+<!-- L'ASSOCIATION                                                     -->
+<!-- ================================================================ -->
 <div id="page-identite" class="page">
-    <section>
+    <!-- Sub-navigation Identite -->
+    <div class="sub-nav">
+        <div class="container" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+            <a class="sub-nav-link active" onclick="scrollToSection('ident-association')">L'association</a>
+            <a class="sub-nav-link" onclick="scrollToSection('ident-actions')">Ses actions</a>
+            <a class="sub-nav-link" onclick="scrollToSection('ident-historique')">Historique</a>
+            <a class="sub-nav-link" onclick="scrollToSection('ident-organigramme')">Organigramme</a>
+            <a class="sub-nav-link" onclick="scrollToSection('ident-cartographie')">Carte des membres</a>
+        </div>
+    </div>
+    <section id="ident-association">
         <div class="container">
             <div class="about-grid">
                 <div class="about-text">
-                    <h2>L'Association</h2>
-                    <p>L'AFFI est la premiere association francaise qui reunit les ingenieurs et cadres en activite ou retraites, representant l'ensemble des secteurs du ferroviaire.</p>
-                    <p>Fondee pour promouvoir l'excellence technique et le partage de connaissances dans le domaine ferroviaire, l'AFFI organise des conferences, des visites de site et des rencontres entre professionnels.</p>
+                    <div class="section-line"></div>
+                    <h2>Premiere association francaise des ingenieurs ferroviaires</h2>
+                    <p>L'AFFI est une association loi 1901 qui rassemble tous les ingenieurs et cadres du secteur public ou prive ayant une activite dans les differents domaines ferroviaires : infrastructure et ouvrages d'art, voie, signalisation, materiel roulant, exploitation, dans les applications passagers ou fret, urbain, interurbain ou grandes lignes.</p>
+                    <p>L'AFFI est un lieu de rencontres, de decouvertes et d'echanges, qui offre a ses adherents un enrichissement personnel permanent, notamment par le croisement des connaissances entre les differentes disciplines du ferroviaire.</p>
                     <ul class="about-list">
-                        <li>Conferences techniques avec des experts du secteur</li>
-                        <li>Rail Innovation Challenge (concours annuel)</li>
-                        <li>Visites de sites industriels et d'infrastructure</li>
-                        <li>Rencontres mensuelles informelles</li>
-                        <li>Publications et partage de connaissances</li>
-                        <li>Reseau professionnel de 500+ membres</li>
+                        <li>Ceremonie des voeux et Assemblee Generale avec personnalite invitee</li>
+                        <li>Mardis de l'AFFI : exposes techniques en fin de journee</li>
+                        <li>Voyages d'etudes sur des realisations ferroviaires en France et a l'etranger</li>
+                        <li>Colloques sur des themes d'actualite avec des experts de premier plan</li>
+                        <li>Publications AFFI INFO et Flash AFFI INFO</li>
+                        <li>Rail Innovation Challenge : concours annuel pour l'innovation ferroviaire</li>
+                        <li>Rendez-vous mensuels informels entre membres</li>
                     </ul>
-                    <a class="btn btn-blue mt-24" href="#adhesion" onclick="navigate('adhesion')">Devenir membre</a>
+                    <a class="btn btn-accent mt-24" href="#adhesion" onclick="navigate('adhesion')">Devenir membre</a>
                 </div>
                 <div class="about-img">&#128646;</div>
             </div>
         </div>
     </section>
 
-    <!-- Ses actions -->
-    <section style="background:var(--gray-50)">
+    <section class="bg-light" id="ident-actions">
         <div class="container">
-            <h2 class="section-title">Nos Actions</h2>
-            <p class="section-sub">Ce qui fait vivre l'association au quotidien</p>
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Ses Actions</h2>
+            <p class="section-sub section-sub-center">Les actions de l'AFFI ont pour but de proposer a ses membres d'approfondir leurs connaissances dans leur propre domaine d'expertise ou de decouvrir d'autres activites du monde ferroviaire.</p>
             <div class="cards-grid">
-                <div class="card"><div class="card-body"><div class="card-title">&#127891; Conferences Techniques</div><div class="card-text">Des presentations par des experts reconnus du secteur ferroviaire sur les sujets d'actualite : ERTMS, signalisation, materiel roulant, infrastructure.</div></div></div>
-                <div class="card"><div class="card-body"><div class="card-title">&#127942; Rail Innovation Challenge</div><div class="card-text">Un concours annuel qui recompense les projets innovants dans le domaine ferroviaire. Ouvert aux etudiants et aux professionnels.</div></div></div>
-                <div class="card"><div class="card-body"><div class="card-title">&#128205; Visites de Sites</div><div class="card-text">Decouverte d'installations ferroviaires : centres de maintenance, postes d'aiguillage, ateliers de construction de materiel roulant.</div></div></div>
-                <div class="card"><div class="card-body"><div class="card-title">&#129309; Rencontres Mensuelles</div><div class="card-text">Les rendez-vous de l'AFFI : un moment convivial pour echanger entre professionnels du secteur autour d'un verre.</div></div></div>
-                <div class="card"><div class="card-body"><div class="card-title">&#128218; Publications</div><div class="card-text">Articles techniques, comptes rendus de conferences, analyses sectorielles partages avec les membres.</div></div></div>
-                <div class="card"><div class="card-body"><div class="card-title">&#127760; Reseau International</div><div class="card-text">Echanges avec des associations d'ingenieurs ferroviaires en Europe et dans le monde.</div></div></div>
+                <div class="card"><div class="card-img-placeholder cip-1">&#127891;</div><div class="card-body"><div class="card-title">Voeux & Assemblee Generale</div><div class="card-text">Ceremonie annuelle des voeux et assemblee generale en presence d'une personnalite invitee du monde ferroviaire.</div><span class="card-link">Decouvrir</span></div></div>
+                <div class="card"><div class="card-img-placeholder cip-3">&#128218;</div><div class="card-body"><div class="card-title">Mardis de l'AFFI</div><div class="card-text">Exposes techniques en fin de journee sur des sujets d'actualite : ERTMS, signalisation, materiel roulant, infrastructure.</div><span class="card-link">Programme</span></div></div>
+                <div class="card"><div class="card-img-placeholder cip-2">&#128205;</div><div class="card-body"><div class="card-title">Voyages d'Etudes</div><div class="card-text">Visites de realisations et projets ferroviaires en France et a l'etranger : centres de maintenance, chantiers, ateliers.</div><span class="card-link">Programme</span></div></div>
+                <div class="card"><div class="card-img-placeholder cip-4">&#127942;</div><div class="card-body"><div class="card-title">Colloques & Conferences</div><div class="card-text">Journees d'etude sur des themes d'actualite permettant des echanges avec des experts de premier plan.</div><span class="card-link">Agenda</span></div></div>
+                <div class="card"><div class="card-body"><div class="card-title">&#128240; Publications AFFI INFO</div><div class="card-text">Periodiques AFFI INFO et Flash AFFI INFO : comptes rendus de manifestations, articles techniques, analyses sectorielles.</div><span class="card-link">Consulter</span></div></div>
+                <div class="card"><div class="card-body"><div class="card-title">&#127760; Reseau International</div><div class="card-text">Membre de l'UEEIV, partenariats avec la VDEI (Allemagne) et les associations d'ingenieurs ferroviaires de 20 pays europeens.</div><span class="card-link">En savoir plus</span></div></div>
             </div>
         </div>
     </section>
 
     <!-- Historique -->
-    <section>
+    <section id="ident-historique">
         <div class="container">
-            <h2 class="section-title">Historique</h2>
-            <p class="section-sub">Les grandes dates de l'association</p>
-            <div style="max-width:700px;margin:0 auto">
-                <div class="timeline">
-                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2024</div><div class="timeline-text">Lancement du Rail Innovation Challenge et modernisation du site web.</div></div>
-                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2020</div><div class="timeline-text">Adaptation au numerique : conferences en ligne, webinaires et nouvelles publications digitales.</div></div>
-                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2015</div><div class="timeline-text">Partenariat avec les grandes entreprises du secteur. 300 membres actifs.</div></div>
-                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2005</div><div class="timeline-text">Ouverture aux cadres et managers du secteur ferroviaire.</div></div>
-                    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">1995</div><div class="timeline-text">Creation de l'AFFI par un groupe d'ingenieurs passionnes du ferroviaire.</div></div>
-                </div>
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Historique</h2>
+            <p class="section-sub section-sub-center">L'AFFI a ete creee en 1996 correlativement a une constatation majeure : il n'y avait pas d'Association d'Ingenieurs ferroviaires en France, tres certainement un des pays dans le monde le plus evolue dans le domaine ferroviaire. Il existait une Union europeenne, l'UEEIV, regroupant 22 associations nationales d'Ingenieurs ferroviaires, representant 20 pays. La France etait restee curieusement a l'ecart de ce mouvement. Ceci fut fait en avril 1996, a l'initiative des entreprises ferroviaires francaises, soutenues par la Federation des Industries Ferroviaires, la SNCF et la RATP.</p>
+            <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2026</div><div class="timeline-text">30 ans de l'AFFI. Rail Innovation Challenge edition 6. Conference franco-allemande sur le systeme ferroviaire.</div></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2020</div><div class="timeline-text">Transition numerique : conferences en ligne, webinaires, publications digitales pendant la crise sanitaire.</div></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2007</div><div class="timeline-text">Premier colloque franco-allemand AFFI-VDEI a Strasbourg. Partenariats internationaux renforces.</div></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2003</div><div class="timeline-text">Lancement des AFFI INFO et Flash AFFI INFO. Premiers Mardis de l'AFFI.</div></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">1998</div><div class="timeline-text">600 membres des la deuxieme annee. Adhesion a l'UEEIV (Union Europeenne des Associations d'Ingenieurs ferroviaires).</div></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">1996</div><div class="timeline-text">Fondation de l'AFFI en avril, a l'initiative des entreprises ferroviaires, soutenues par la FIF, la SNCF et la RATP. President fondateur : Jean-Henri Lemoussu.</div></div>
             </div>
         </div>
     </section>
 
     <!-- Organigramme -->
-    <section style="background:var(--gray-50)">
+    <section class="bg-light" id="ident-organigramme">
         <div class="container">
-            <h2 class="section-title">Le Bureau</h2>
-            <p class="section-sub">L'equipe qui pilote l'association</p>
-            <div class="board-grid" id="board-grid">
-                <div class="board-card"><div class="board-avatar">JM</div><div class="board-name">Jean-Jacques Mogoro</div><div class="board-role">President</div><div class="board-company">FIF</div></div>
-                <div class="board-card"><div class="board-avatar">VP</div><div class="board-name">Vice-President</div><div class="board-role">Vice-President</div></div>
-                <div class="board-card"><div class="board-avatar">SG</div><div class="board-name">Secretaire General</div><div class="board-role">Secretaire General</div></div>
-                <div class="board-card"><div class="board-avatar">TR</div><div class="board-name">Tresorier</div><div class="board-role">Tresorier</div></div>
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Organigramme</h2>
+            <h3 style="text-align:center;margin-bottom:24px;color:var(--primary);font-size:18px;font-weight:700">Conseil d'administration — Le Bureau</h3>
+            <div class="board-grid">
+                <div class="board-card"><div class="board-avatar">FP</div><div class="board-name">Francois-Xavier Picard</div><div class="board-role">President</div></div>
+                <div class="board-card"><div class="board-avatar">YR</div><div class="board-name">Yves Ramette</div><div class="board-role">Vice-President</div></div>
+                <div class="board-card"><div class="board-avatar">MA</div><div class="board-name">Marc Antoni</div><div class="board-role">Vice-President</div></div>
+                <div class="board-card"><div class="board-avatar">IB</div><div class="board-name">Igor Bilimoff</div><div class="board-role">Vice-President, Delegue general FIF</div></div>
+                <div class="board-card"><div class="board-avatar">JM</div><div class="board-name">Jean-Jacques Mogoro</div><div class="board-role">Secretaire General</div></div>
+                <div class="board-card"><div class="board-avatar">PM</div><div class="board-name">Philippe Mingasson</div><div class="board-role">Secretaire General Adjoint</div></div>
+                <div class="board-card"><div class="board-avatar">JR</div><div class="board-name">Jean-Pierre Riff</div><div class="board-role">Secretaire General Adjoint</div></div>
+                <div class="board-card"><div class="board-avatar">CV</div><div class="board-name">Christophe Vandenbrouck</div><div class="board-role">Tresorier</div></div>
+            </div>
+            <h3 style="text-align:center;margin:32px 0 16px;color:var(--gray-500);font-size:16px;font-weight:600">Autres membres du Bureau</h3>
+            <div class="board-grid" style="max-width:700px;margin:0 auto">
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Vivien Stamm-Douvier</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Patrick Laval</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Kevin Benoit</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Claude Mangone</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Antoine Gauchery</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Malek Harzallah</div></div>
+            </div>
+            <h3 style="text-align:center;margin:32px 0 16px;color:var(--gray-500);font-size:16px;font-weight:600">Administrateurs</h3>
+            <div class="board-grid" style="max-width:900px;margin:0 auto">
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Jean-Pierre Loubinoux</div><div class="board-role" style="font-size:12px">President Honoraire</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Quentin Barbaud</div><div class="board-role" style="font-size:12px">SAFERAIL</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Gerard Cambillau</div><div class="board-role" style="font-size:12px">Telecom-Paritech</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Francois Lacote</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Jean-Louis Wagner</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Nicolas Castres-Saint-Martin</div><div class="board-role" style="font-size:12px">Certifer</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Jean-Damien Poncet</div><div class="board-role" style="font-size:12px">BEATT</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Pierre Fleury</div><div class="board-role" style="font-size:12px">Alstom</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Thomas Joindot</div><div class="board-role" style="font-size:12px">SNCF</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Francois Mazza</div><div class="board-role" style="font-size:12px">RATP</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Dominique Seguier</div><div class="board-role" style="font-size:12px">Arcadis</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Pierre Gibbe</div><div class="board-role" style="font-size:12px">Universite de l'Ingenierie</div></div>
+                <div class="board-card" style="padding:16px"><div class="board-name" style="font-size:14px">Julien Berthelot</div><div class="board-role" style="font-size:12px">Vossloh</div></div>
+            </div>
+            <h3 style="text-align:center;margin:40px 0 16px;color:var(--primary);font-size:18px;font-weight:700">Les Membres Partenaires de l'AFFI</h3>
+            <p style="text-align:center;max-width:700px;margin:0 auto 24px;color:var(--gray-500);font-size:14px">Au-dela de l'adhesion personnelle de ses membres, l'AFFI beneficie de l'appui de grands industriels et operateurs qui contribuent financierement a son fonctionnement.</p>
+            <div class="partners-grid" style="max-width:900px;margin:0 auto">
+                <div class="partner-card"><span class="partner-name">SNCF</span></div>
+                <div class="partner-card"><span class="partner-name">RATP</span></div>
+                <div class="partner-card"><span class="partner-name">Alstom</span></div>
+                <div class="partner-card"><span class="partner-name">Arcadis</span></div>
+                <div class="partner-card"><span class="partner-name">BEA-TT</span></div>
+                <div class="partner-card"><span class="partner-name">Certifer</span></div>
+                <div class="partner-card"><span class="partner-name">EPSF</span></div>
+                <div class="partner-card"><span class="partner-name">FIF</span></div>
+                <div class="partner-card"><span class="partner-name">Framafer</span></div>
+                <div class="partner-card"><span class="partner-name">Saferail</span></div>
+                <div class="partner-card"><span class="partner-name">Universite de l'Ingenierie</span></div>
+                <div class="partner-card"><span class="partner-name">Vossloh</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cartographie des membres intégrée dans Identité -->
+    <section id="ident-cartographie">
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Cartographie des Membres</h2>
+            <p class="section-sub section-sub-center">Localisez les adherents par entreprise et par zone geographique</p>
+            <div style="display:flex;gap:12px;margin-bottom:16px;justify-content:center">
+                <button class="course-filter active" id="map-mode-member" onclick="loadMap('member')">Par membre</button>
+                <button class="course-filter" id="map-mode-company" onclick="loadMap('company')">Par entreprise</button>
+            </div>
+            <div id="map-container" style="height:500px;width:100%;background:var(--gray-100);border-radius:var(--radius)"></div>
+            <div id="map-legend" style="margin-top:16px"></div>
+        </div>
+    </section>
+</div>
+
+<!-- ================================================================ -->
+<!-- AGENDA (upcoming events)                                          -->
+<!-- ================================================================ -->
+<div id="page-agenda" class="page">
+    <section>
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Agenda</h2>
+            <p class="section-sub section-sub-center">Prochains evenements, conferences et rendez-vous</p>
+            <div class="cards-grid" id="agenda-list">
+                <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formations & Masterclass intégrées dans l'Agenda -->
+    <section class="bg-light">
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Formations & Masterclass</h2>
+            <p class="section-sub section-sub-center">Developpez vos competences avec nos experts ferroviaires</p>
+            <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;justify-content:center">
+                <button class="course-filter active" onclick="filterCourses(this,'')" data-cat="">Toutes</button>
+                <button class="course-filter" onclick="filterCourses(this,'Signalisation')" data-cat="Signalisation">Signalisation</button>
+                <button class="course-filter" onclick="filterCourses(this,'Numerique & IA')" data-cat="Numerique & IA">Numerique & IA</button>
+                <button class="course-filter" onclick="filterCourses(this,'Ingenierie')" data-cat="Ingenierie">Ingenierie</button>
+                <button class="course-filter" onclick="filterCourses(this,'Management')" data-cat="Management">Management</button>
+            </div>
+            <div class="cards-grid" id="courses-list">
+                <p class="empty-msg">Chargement...</p>
             </div>
         </div>
     </section>
 </div>
 
-<!-- ================================================================== -->
-<!-- PAGE: EVENEMENTS                                                    -->
-<!-- ================================================================== -->
+<!-- ================================================================ -->
+<!-- EVENEMENTS (past events archive)                                  -->
+<!-- ================================================================ -->
 <div id="page-evenements" class="page">
     <section>
         <div class="container">
-            <h2 class="section-title">Evenements</h2>
-            <p class="section-sub">Conferences, visites, challenges et rencontres</p>
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Evenements</h2>
+            <p class="section-sub section-sub-center">Les evenements organises par l'AFFI</p>
+            <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;justify-content:center">
+                <button class="course-filter active" onclick="filterEvents(this,'')" data-year="">Tous</button>
+                <button class="course-filter" onclick="filterEvents(this,'2026')" data-year="2026">2026</button>
+                <button class="course-filter" onclick="filterEvents(this,'2025')" data-year="2025">2025</button>
+                <button class="course-filter" onclick="filterEvents(this,'2024')" data-year="2024">2024</button>
+                <button class="course-filter" onclick="filterEvents(this,'2023')" data-year="2023">2023</button>
+            </div>
             <div class="cards-grid" id="events-list">
-                <div class="card"><div class="card-body text-center" style="padding:40px;color:var(--gray-400)">Chargement...</div></div>
+                <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
             </div>
         </div>
     </section>
 </div>
 
-<!-- ================================================================== -->
-<!-- PAGE: PUBLICATIONS                                                  -->
-<!-- ================================================================== -->
+<!-- ================================================================ -->
+<!-- PUBLICATIONS                                                      -->
+<!-- ================================================================ -->
 <div id="page-publications" class="page">
     <section>
         <div class="container">
-            <h2 class="section-title">Publications</h2>
-            <p class="section-sub">Articles, comptes rendus et documents techniques</p>
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Publications</h2>
+            <p class="section-sub section-sub-center">Articles, comptes rendus et documents techniques</p>
             <div class="cards-grid" id="publications-list">
-                <div class="card"><div class="card-body text-center" style="padding:40px;color:var(--gray-400)">Chargement...</div></div>
+                <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
             </div>
         </div>
     </section>
 </div>
 
-<!-- ================================================================== -->
-<!-- PAGE: ADHESION                                                      -->
-<!-- ================================================================== -->
+
+<!-- ================================================================ -->
+<!-- ADHESION                                                          -->
+<!-- ================================================================ -->
 <div id="page-adhesion" class="page">
     <section>
         <div class="container">
-            <h2 class="section-title">Adherer a l'AFFI</h2>
-            <p class="section-sub">Rejoignez la communaute des ingenieurs ferroviaires</p>
-
-            <div class="kpi-row" style="max-width:800px;margin:0 auto 40px">
-                <div class="kpi-card" style="border-top:3px solid var(--blue)"><div class="kpi-val" style="font-size:28px">Standard</div><div class="kpi-label" style="font-size:18px;color:var(--navy);font-weight:700;margin:8px 0">50 EUR / an</div><div class="kpi-label">Acces aux evenements<br>Publications<br>Annuaire membres</div></div>
-                <div class="kpi-card" style="border-top:3px solid var(--red)"><div class="kpi-val" style="font-size:28px">Entreprise</div><div class="kpi-label" style="font-size:18px;color:var(--navy);font-weight:700;margin:8px 0">500 EUR / an</div><div class="kpi-label">5 membres inclus<br>Visibilite partenaire<br>Evenements VIP</div></div>
-                <div class="kpi-card" style="border-top:3px solid var(--green)"><div class="kpi-val" style="font-size:28px">Etudiant</div><div class="kpi-label" style="font-size:18px;color:var(--navy);font-weight:700;margin:8px 0">Gratuit</div><div class="kpi-label">Acces aux conferences<br>Rail Innovation Challenge<br>Mentorat</div></div>
-                <div class="kpi-card" style="border-top:3px solid var(--orange)"><div class="kpi-val" style="font-size:28px">Retraite</div><div class="kpi-label" style="font-size:18px;color:var(--navy);font-weight:700;margin:8px 0">25 EUR / an</div><div class="kpi-label">Acces complet<br>Partage d'experience<br>Reseau</div></div>
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Adherer a l'AFFI</h2>
+            <p class="section-sub section-sub-center">Choisissez votre formule et rejoignez 500+ professionnels du ferroviaire</p>
+            <div class="kpi-row" style="max-width:900px;margin:0 auto 48px">
+                <div class="kpi-card" style="border-top-color:var(--primary)"><div class="kpi-val" style="font-size:24px">Standard</div><div style="font-size:28px;font-weight:900;color:var(--accent);margin:8px 0">50 &euro; / an</div><div class="kpi-label">Evenements &middot; Publications<br>Annuaire membres &middot; Newsletter</div></div>
+                <div class="kpi-card" style="border-top-color:var(--accent)"><div class="kpi-val" style="font-size:24px">Entreprise</div><div style="font-size:28px;font-weight:900;color:var(--accent);margin:8px 0">500 &euro; / an</div><div class="kpi-label">5 membres inclus<br>Visibilite partenaire &middot; VIP</div></div>
+                <div class="kpi-card" style="border-top-color:var(--green)"><div class="kpi-val" style="font-size:24px">Etudiant</div><div style="font-size:28px;font-weight:900;color:var(--accent);margin:8px 0">Gratuit</div><div class="kpi-label">Conferences &middot; Challenge<br>Mentorat &middot; Reseau</div></div>
+                <div class="kpi-card" style="border-top-color:var(--gold)"><div class="kpi-val" style="font-size:24px">Retraite</div><div style="font-size:28px;font-weight:900;color:var(--accent);margin:8px 0">25 &euro; / an</div><div class="kpi-label">Acces complet<br>Partage d'experience</div></div>
             </div>
-
+            <div style="max-width:800px;margin:0 auto 40px;padding:28px;background:var(--gray-50);border-radius:var(--radius);border:2px solid var(--gray-200)">
+                <h3 style="color:var(--primary);margin-bottom:16px;font-size:18px;font-weight:800">Comment adherer ?</h3>
+                <p style="margin-bottom:12px"><strong>1. En ligne via HelloAsso</strong> — Constituez votre dossier et payez directement en ligne. Attention : HelloAsso ajoute automatiquement un montant de contribution. En cliquant sur "Modifier", vous etes libre de fixer un autre montant ou de ne pas laisser de don.</p>
+                <p style="margin-bottom:12px"><strong>2. Par courrier ou email</strong> — Telechargez le bulletin d'adhesion, completez-le et envoyez-le par courrier postal accompagne d'un cheque a l'ordre de l'AFFI, ou par email a admin@ingenieur-ferroviaire.net</p>
+                <p style="margin-bottom:12px"><strong>Reglement de la cotisation :</strong> Carte bancaire (paiement en ligne securise ou HelloAsso), virement bancaire, ou cheque a l'ordre de l'AFFI.</p>
+                <p><strong>Adresse :</strong> AFFI — 60, rue Anatole France — 92300 Levallois-Perret — France</p>
+            </div>
             <div class="form-card">
-                <h3 style="text-align:center;margin-bottom:24px;color:var(--navy)">Formulaire d'adhesion</h3>
-                <form onsubmit="submitAdhesion(event)">
+                <h3 style="text-align:center;margin-bottom:28px;color:var(--primary);font-size:22px;font-weight:800">Formulaire d'adhesion</h3>
+                <form onsubmit="event.preventDefault();document.getElementById('adhesion-success').style.display='block'">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
                         <div class="form-group"><label>Prenom</label><input type="text" name="first_name" required></div>
                         <div class="form-group"><label>Nom</label><input type="text" name="last_name" required></div>
                     </div>
-                    <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                    <div class="form-group"><label>Email professionnel</label><input type="email" name="email" required></div>
                     <div class="form-group"><label>Telephone</label><input type="tel" name="phone"></div>
-                    <div class="form-group"><label>Entreprise</label><input type="text" name="company"></div>
-                    <div class="form-group"><label>Fonction</label><input type="text" name="job_title"></div>
-                    <div class="form-group"><label>Secteur</label><select name="sector">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                        <div class="form-group"><label>Entreprise</label><input type="text" name="company"></div>
+                        <div class="form-group"><label>Fonction</label><input type="text" name="job_title"></div>
+                    </div>
+                    <div class="form-group"><label>Secteur d'activite</label><select name="sector">
                         <option value="">Selectionner...</option>
                         <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
                         <option>Infrastructure</option><option>Maintenance</option>
-                        <option>Ingenierie</option><option>Numerique</option>
-                        <option>Gestion de projet</option><option>Autre</option>
+                        <option>Ingenierie & Conseil</option><option>Numerique & IA</option>
+                        <option>Gestion de projet</option><option>Recherche & Formation</option>
+                        <option>Autre</option>
                     </select></div>
                     <div class="form-group"><label>Type d'adhesion</label><select name="membership_type">
-                        <option value="standard">Standard (50 EUR/an)</option>
-                        <option value="entreprise">Entreprise (500 EUR/an)</option>
-                        <option value="etudiant">Etudiant (gratuit)</option>
-                        <option value="retraite">Retraite (25 EUR/an)</option>
+                        <option value="standard">Standard — 50 EUR/an</option>
+                        <option value="entreprise">Entreprise — 500 EUR/an</option>
+                        <option value="etudiant">Etudiant — Gratuit</option>
+                        <option value="retraite">Retraite — 25 EUR/an</option>
                     </select></div>
-                    <button type="submit" class="form-submit">Envoyer ma demande d'adhesion</button>
-                    <div class="form-success" id="adhesion-success">Votre demande a ete envoyee. Nous vous recontactons sous 48h.</div>
+                    <button type="submit" class="form-submit">Envoyer ma demande</button>
+                    <div class="form-success" id="adhesion-success">Demande envoyee ! Nous vous recontactons sous 48h.</div>
                 </form>
             </div>
         </div>
     </section>
 </div>
 
-<!-- ================================================================== -->
-<!-- PAGE: CONTACT                                                       -->
-<!-- ================================================================== -->
+<!-- ================================================================ -->
+<!-- CONTACT                                                           -->
+<!-- ================================================================ -->
 <div id="page-contact" class="page">
     <section>
         <div class="container">
-            <h2 class="section-title">Contact</h2>
-            <p class="section-sub">Une question ? N'hesitez pas a nous ecrire</p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;max-width:900px;margin:0 auto">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Contact</h2>
+            <p class="section-sub section-sub-center">Une question ? Ecrivez-nous</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:56px;max-width:950px;margin:0 auto">
                 <div>
-                    <h3 style="color:var(--navy);margin-bottom:16px">Coordonnees</h3>
-                    <p style="margin-bottom:12px"><strong>AFFI</strong><br>60 rue Anatole France<br>92300 Levallois-Perret</p>
-                    <p style="margin-bottom:12px">Email : contact@ingenieur-ferroviaire.net</p>
-                    <p style="margin-bottom:24px">Site : www.ingenieur-ferroviaire.net</p>
-                    <div style="background:var(--gray-100);border-radius:12px;height:200px;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:14px">Carte Google Maps</div>
+                    <h3 style="color:var(--primary);margin-bottom:20px;font-size:20px;font-weight:800">Coordonnees</h3>
+                    <p style="margin-bottom:16px;line-height:1.8"><strong>AFFI — Association Ferroviaire Francaise des Ingenieurs</strong><br>60 rue Anatole France<br>92300 Levallois-Perret</p>
+                    <p style="margin-bottom:8px"><strong>Email :</strong> contact@ingenieur-ferroviaire.net</p>
+                    <p style="margin-bottom:28px"><strong>Web :</strong> www.ingenieur-ferroviaire.net</p>
+                    <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:var(--radius);height:220px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:60px">&#128205;</div>
                 </div>
                 <div>
                     <form onsubmit="submitContact(event)">
-                        <div class="form-group"><label>Nom</label><input type="text" name="name" required></div>
+                        <div class="form-group"><label>Nom complet</label><input type="text" name="name" required></div>
                         <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
                         <div class="form-group"><label>Sujet</label><input type="text" name="subject"></div>
-                        <div class="form-group"><label>Message</label><textarea name="message" required></textarea></div>
-                        <button type="submit" class="form-submit">Envoyer</button>
-                        <div class="form-success" id="contact-success">Message envoye avec succes.</div>
+                        <div class="form-group"><label>Votre message</label><textarea name="message" required></textarea></div>
+                        <button type="submit" class="form-submit">Envoyer le message</button>
+                        <div class="form-success" id="contact-success">Message envoye avec succes !</div>
                     </form>
                 </div>
             </div>
@@ -285,23 +521,251 @@
     </section>
 </div>
 
-<!-- ================================================================== -->
-<!-- PAGE: ESPACE MEMBRES                                                -->
-<!-- ================================================================== -->
+<!-- ================================================================ -->
+<!-- ESPACE MEMBRES                                                    -->
+<!-- ================================================================ -->
 <div id="page-membres" class="page">
     <section>
         <div class="container">
-            <h2 class="section-title">Espace Membres</h2>
-            <p class="section-sub">Connectez-vous pour acceder aux ressources reservees</p>
-            <div class="form-card">
-                <h3 style="text-align:center;margin-bottom:24px;color:var(--navy)">Connexion</h3>
-                <form onsubmit="event.preventDefault();alert('Fonctionnalite en cours de developpement')">
-                    <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
-                    <div class="form-group"><label>Mot de passe</label><input type="password" name="password" required></div>
-                    <button type="submit" class="form-submit">Se connecter</button>
-                </form>
-                <p class="text-center mt-24" style="font-size:13px;color:var(--gray-500)">Pas encore membre ? <a href="#adhesion" onclick="navigate('adhesion')">Adherer maintenant</a></p>
+
+            <!-- LOGIN -->
+            <div id="login-section">
+                <div class="section-line section-line-center"></div>
+                <h2 class="section-title section-title-center">Espace Membres</h2>
+                <p class="section-sub section-sub-center">Connectez-vous pour acceder a votre espace</p>
+                <div class="form-card">
+                    <h3 style="text-align:center;margin-bottom:28px;color:var(--primary);font-size:22px;font-weight:800">Connexion</h3>
+                    <form onsubmit="doLogin(event)">
+                        <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                        <div class="form-group"><label>Mot de passe</label><input type="password" name="password" required></div>
+                        <button type="submit" class="form-submit">Se connecter</button>
+                        <div id="login-error" style="display:none;margin-top:12px;padding:10px;background:#fef2f2;color:#b91c1c;border-radius:6px;text-align:center;font-weight:600"></div>
+                    </form>
+                    <p class="text-center mt-24" style="font-size:14px;color:var(--gray-500)">Pas encore membre ? <a href="#adhesion" onclick="navigate('adhesion')" style="font-weight:700">Adherer maintenant</a></p>
+                </div>
             </div>
+
+            <!-- MEMBER AREA (hidden until login) -->
+            <div id="member-area" style="display:none">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom:4px">Bienvenue, <span id="welcome-name"></span></h2>
+                        <p style="color:var(--gray-500)">Votre espace personnel AFFI</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="doLogout()" style="font-size:13px;padding:8px 20px">Deconnexion</button>
+                </div>
+
+                <!-- TABS -->
+                <div class="member-tabs">
+                    <button class="mtab active" data-tab="dashboard" onclick="switchMemberTab('dashboard')">Tableau de bord</button>
+                    <button class="mtab" data-tab="directory" onclick="switchMemberTab('directory')">Annuaire</button>
+                    <button class="mtab" data-tab="announcements" onclick="switchMemberTab('announcements')">Annonces</button>
+                    <button class="mtab" data-tab="profile" onclick="switchMemberTab('profile')">Mon Profil & CV</button>
+                    <button class="mtab" data-tab="messages" onclick="switchMemberTab('messages')">Messages</button>
+                    <button class="mtab" data-tab="notifications" onclick="switchMemberTab('notifications')">Notifications</button>
+                    <button class="mtab" data-tab="admin" onclick="switchMemberTab('admin')" id="admin-tab" style="display:none;background:var(--accent);color:#fff">Administration</button>
+                </div>
+
+                <!-- TAB: DASHBOARD -->
+                <div id="mtab-dashboard" class="mtab-content">
+                    <div class="cards-grid" style="grid-template-columns:repeat(3,1fr)">
+                        <div class="card" onclick="switchMemberTab('directory')" style="cursor:pointer">
+                            <div class="card-body text-center" style="padding:36px">
+                                <div style="font-size:48px;margin-bottom:12px">&#128101;</div>
+                                <div class="card-title">Annuaire Membres</div>
+                                <div class="card-text">Recherchez des collegues par nom, entreprise ou secteur</div>
+                            </div>
+                        </div>
+                        <div class="card" onclick="switchMemberTab('announcements')" style="cursor:pointer">
+                            <div class="card-body text-center" style="padding:36px">
+                                <div style="font-size:48px;margin-bottom:12px">&#128227;</div>
+                                <div class="card-title">Annonces</div>
+                                <div class="card-text">Publiez et consultez les annonces des membres (emploi, collaborations)</div>
+                            </div>
+                        </div>
+                        <div class="card" onclick="switchMemberTab('profile')" style="cursor:pointer">
+                            <div class="card-body text-center" style="padding:36px">
+                                <div style="font-size:48px;margin-bottom:12px">&#128196;</div>
+                                <div class="card-title">Mon Profil & CV</div>
+                                <div class="card-text">Mettez a jour votre profil, votre CV et importez vos donnees LinkedIn</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: DIRECTORY -->
+                <div id="mtab-directory" class="mtab-content" style="display:none">
+                    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+                        <input type="text" id="dir-search" placeholder="Rechercher un membre..." oninput="onDirSearch(this.value)" style="flex:1;min-width:200px;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
+                        <select id="dir-sector" onchange="onDirSector()" style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
+                            <option value="">Tous les secteurs</option>
+                            <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
+                            <option>Infrastructure</option><option>Maintenance</option>
+                            <option>Ingenierie & Conseil</option><option>Numerique & IA</option>
+                            <option>Gestion de projet</option><option>Recherche & Formation</option>
+                        </select>
+                    </div>
+                    <div class="member-grid" id="directory-grid">
+                        <p style="text-align:center;color:var(--gray-400);padding:40px;grid-column:1/-1">Chargement...</p>
+                    </div>
+                </div>
+
+                <!-- TAB: ANNOUNCEMENTS -->
+                <div id="mtab-announcements" class="mtab-content" style="display:none">
+                    <div class="card" style="margin-bottom:24px">
+                        <div class="card-body">
+                            <h3 style="margin-bottom:16px;color:var(--primary);font-weight:800">Publier une annonce</h3>
+                            <form onsubmit="postAnnouncement(event)">
+                                <div style="display:grid;grid-template-columns:1fr auto;gap:12px;margin-bottom:12px">
+                                    <input type="text" name="title" placeholder="Titre de l'annonce" required style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
+                                    <select name="category" style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
+                                        <option value="general">General</option>
+                                        <option value="emploi">Offre d'emploi</option>
+                                        <option value="collaboration">Collaboration</option>
+                                    </select>
+                                </div>
+                                <textarea name="content" placeholder="Contenu de votre annonce..." required style="width:100%;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px;min-height:80px;margin-bottom:12px;resize:vertical"></textarea>
+                                <button type="submit" class="btn btn-accent" style="font-size:14px;padding:10px 24px">Publier</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="announcements-list">
+                        <p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p>
+                    </div>
+                </div>
+
+                <!-- TAB: PROFILE & CV -->
+                <div id="mtab-profile" class="mtab-content" style="display:none">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+                        <!-- Profile Form -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                                    <h3 style="color:var(--primary);font-weight:800">Mon Profil</h3>
+                                    <button class="btn btn-primary" onclick="importLinkedIn()" style="font-size:12px;padding:8px 16px;background:#0077b5">&#128279; Importer LinkedIn</button>
+                                </div>
+                                <form onsubmit="saveProfile(event)">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                        <div class="form-group"><label>Prenom</label><input type="text" id="prof-first_name"></div>
+                                        <div class="form-group"><label>Nom</label><input type="text" id="prof-last_name"></div>
+                                    </div>
+                                    <div class="form-group"><label>Telephone</label><input type="tel" id="prof-phone"></div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                        <div class="form-group"><label>Entreprise</label><input type="text" id="prof-company"></div>
+                                        <div class="form-group"><label>Fonction</label><input type="text" id="prof-job_title"></div>
+                                    </div>
+                                    <div class="form-group"><label>Secteur</label><select id="prof-sector">
+                                        <option value="">Selectionner...</option>
+                                        <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
+                                        <option>Infrastructure</option><option>Maintenance</option>
+                                        <option>Ingenierie & Conseil</option><option>Numerique & IA</option>
+                                        <option>Gestion de projet</option><option>Recherche & Formation</option>
+                                    </select></div>
+                                    <div class="form-group"><label>Bio / Presentation</label><textarea id="prof-bio" style="min-height:80px"></textarea></div>
+                                    <div class="form-group"><label>URL LinkedIn</label><input type="url" id="prof-linkedin_url" placeholder="https://linkedin.com/in/..."></div>
+                                    <button type="submit" class="form-submit">Enregistrer le profil</button>
+                                    <div class="form-success" id="profile-success">Profil mis a jour !</div>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- CV -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h3 style="color:var(--primary);font-weight:800;margin-bottom:20px">Mon CV</h3>
+                                <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px" id="cv-date"></p>
+                                <form onsubmit="saveCv(event)">
+                                    <div class="form-group">
+                                        <label>CV (texte libre)</label>
+                                        <textarea id="prof-cv" placeholder="Decrivez votre parcours, competences, formations, experiences..." style="min-height:320px;font-size:14px"></textarea>
+                                    </div>
+                                    <button type="submit" class="form-submit">Enregistrer mon CV</button>
+                                    <div class="form-success" id="cv-success">CV mis a jour !</div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: MESSAGES -->
+                <div id="mtab-messages" class="mtab-content" style="display:none">
+                    <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;min-height:500px">
+                        <div class="card" style="overflow-y:auto;max-height:600px">
+                            <div class="card-header">Conversations</div>
+                            <div id="conversations-list"><p class="empty-msg">Chargement...</p></div>
+                        </div>
+                        <div id="thread-panel" class="card" style="display:none"></div>
+                    </div>
+                </div>
+
+                <!-- TAB: NOTIFICATIONS -->
+                <div id="mtab-notifications" class="mtab-content" style="display:none">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <h3 style="color:var(--primary)">Notifications</h3>
+                        <button class="btn btn-primary" onclick="markAllNotifRead()" style="font-size:12px;padding:6px 16px">Tout marquer lu</button>
+                    </div>
+                    <div id="notif-list"><p class="empty-msg">Chargement...</p></div>
+                </div>
+
+                <!-- TAB: ADMIN -->
+                <div id="mtab-admin" class="mtab-content" style="display:none">
+                    <div class="adm-nav">
+                        <button class="adm-nav-btn active" data-section="adm-dashboard" onclick="switchAdminSection('adm-dashboard')">Tableau de bord</button>
+                        <button class="adm-nav-btn" data-section="adm-members" onclick="switchAdminSection('adm-members')">Membres</button>
+                        <button class="adm-nav-btn" data-section="adm-events" onclick="switchAdminSection('adm-events')">Evenements</button>
+                        <button class="adm-nav-btn" data-section="adm-news" onclick="switchAdminSection('adm-news')">Actualites</button>
+                        <button class="adm-nav-btn" data-section="adm-announcements" onclick="switchAdminSection('adm-announcements')">Annonces membres</button>
+                        <button class="adm-nav-btn" data-section="adm-messages" onclick="switchAdminSection('adm-messages')">Messages</button>
+                    </div>
+
+                    <!-- Admin Dashboard -->
+                    <div id="adm-dashboard" class="adm-section" style="display:block">
+                        <div id="adm-dashboard-content"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
+                    </div>
+
+                    <!-- Admin Members -->
+                    <div id="adm-members" class="adm-section">
+                        <div class="adm-toolbar">
+                            <input type="text" placeholder="Rechercher un membre..." oninput="loadAdminMembers(document.getElementById('adm-status-filter').value, this.value)" style="flex:1;min-width:200px">
+                            <select id="adm-status-filter" onchange="loadAdminMembers(this.value)">
+                                <option value="">Tous les statuts</option>
+                                <option value="active">Actifs</option>
+                                <option value="pending">En attente</option>
+                                <option value="blocked">Bloques</option>
+                            </select>
+                        </div>
+                        <div id="adm-members-list"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
+                    </div>
+
+                    <!-- Admin Events -->
+                    <div id="adm-events" class="adm-section">
+                        <div class="adm-toolbar">
+                            <button class="btn btn-accent" onclick="showEventForm()" style="font-size:13px;padding:8px 20px">+ Nouvel evenement</button>
+                        </div>
+                        <div id="adm-events-list"></div>
+                    </div>
+
+                    <!-- Admin News -->
+                    <div id="adm-news" class="adm-section">
+                        <div class="adm-toolbar">
+                            <button class="btn btn-accent" onclick="showNewsForm()" style="font-size:13px;padding:8px 20px">+ Nouvelle actualite</button>
+                        </div>
+                        <div id="adm-news-list"></div>
+                    </div>
+
+                    <!-- Admin Announcements Moderation -->
+                    <div id="adm-announcements" class="adm-section">
+                        <h3 style="margin-bottom:16px;color:var(--primary)">Moderation des annonces membres</h3>
+                        <div id="adm-announcements-list"></div>
+                    </div>
+
+                    <!-- Admin Messages -->
+                    <div id="adm-messages" class="adm-section">
+                        <h3 style="margin-bottom:16px;color:var(--primary)">Messages de contact</h3>
+                        <div id="adm-messages-list"></div>
+                    </div>
+                </div>
+
+            </div><!-- /member-area -->
         </div>
     </section>
 </div>
@@ -312,48 +776,49 @@
         <div class="footer-grid">
             <div>
                 <h4>AFFI</h4>
-                <p>Association Ferroviaire Francaise des Ingenieurs et Cadres. Depuis 1995, nous rassemblons les professionnels du secteur ferroviaire.</p>
-                <p style="margin-top:12px">60 rue Anatole France<br>92300 Levallois-Perret</p>
+                <p>Association Ferroviaire Francaise des Ingenieurs et Cadres. Depuis 1996, nous rassemblons les professionnels du secteur ferroviaire pour promouvoir l'excellence et l'innovation.</p>
+                <p style="margin-top:16px">60 rue Anatole France<br>92300 Levallois-Perret<br>contact@ingenieur-ferroviaire.net</p>
             </div>
             <div>
-                <h4>Navigation</h4>
+                <h4>L'Association</h4>
                 <ul class="footer-links">
-                    <li><a href="#accueil" onclick="navigate('accueil')">Accueil</a></li>
-                    <li><a href="#identite" onclick="navigate('identite')">L'association</a></li>
-                    <li><a href="#evenements" onclick="navigate('evenements')">Evenements</a></li>
-                    <li><a href="#publications" onclick="navigate('publications')">Publications</a></li>
+                    <li><a href="#identite" onclick="navigate('identite')">Presentation</a></li>
+                    <li><a href="#identite" onclick="navigate('identite')">Nos Actions</a></li>
+                    <li><a href="#identite" onclick="navigate('identite')">Historique</a></li>
+                    <li><a href="#identite" onclick="navigate('identite')">Le Bureau</a></li>
                 </ul>
             </div>
             <div>
-                <h4>Membres</h4>
+                <h4>Activites</h4>
                 <ul class="footer-links">
+                    <li><a href="#agenda" onclick="navigate('agenda')">Agenda</a></li>
+                    <li><a href="#evenements" onclick="navigate('evenements')">Evenements</a></li>
+                    <li><a href="#publications" onclick="navigate('publications')">Publications</a></li>
                     <li><a href="#adhesion" onclick="navigate('adhesion')">Adherer</a></li>
-                    <li><a href="#membres" onclick="navigate('membres')">Espace membres</a></li>
-                    <li><a href="#contact" onclick="navigate('contact')">Contact</a></li>
+                    <li><a href="#membres" onclick="navigate('membres')">Espace Membres</a></li>
                 </ul>
             </div>
             <div>
                 <h4>Partenaires</h4>
                 <ul class="footer-links">
-                    <li><a href="https://www.fif.french4dev.com/fr" target="_blank">FIF</a></li>
-                    <li><a href="https://www.sncf.com" target="_blank">SNCF</a></li>
-                    <li><a href="https://www.alstom.com" target="_blank">Alstom</a></li>
-                    <li><a href="https://www.ratp.fr" target="_blank">RATP</a></li>
+                    <li><a href="#">SNCF</a></li>
+                    <li><a href="#">RATP</a></li>
+                    <li><a href="#">Alstom</a></li>
+                    <li><a href="#">Arcadis</a></li>
+                    <li><a href="#">Certifer</a></li>
+                    <li><a href="#">FIF</a></li>
+                    <li><a href="#">Vossloh</a></li>
                 </ul>
             </div>
         </div>
-        <div class="footer-bar">
-            &copy; 2026 AFFI — Tous droits reserves &middot; Mentions legales &middot; Politique de confidentialite
-        </div>
+        <div class="footer-bar">&copy; 2026 AFFI — Tous droits reserves &middot; <a href="#" style="color:rgba(255,255,255,.4)">Mentions legales</a> &middot; <a href="#" style="color:rgba(255,255,255,.4)">Confidentialite</a></div>
     </div>
 </footer>
 
 <script src="/js/app.js"></script>
-<script>
-function submitAdhesion(e) {
-    e.preventDefault();
-    document.getElementById('adhesion-success').style.display = 'block';
-}
-</script>
+<script src="/js/members.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/social.js"></script>
+<script src="/js/map.js"></script>
 </body>
 </html>

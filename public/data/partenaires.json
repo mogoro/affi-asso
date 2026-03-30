@@ -1,0 +1,110 @@
+[
+  {
+    "id": 1,
+    "name": "Alstom",
+    "description": "Leader mondial de la mobilite intelligente et durable, Alstom concoit et fabrique des trains, des systemes de signalisation et des solutions de mobilite. L'entreprise propose une gamme complete allant des tramways aux TGV, ainsi que des services de maintenance ferroviaire.",
+    "city": "Saint-Ouen-sur-Seine",
+    "address": "48 rue Albert Dhalenne, 93400 Saint-Ouen-sur-Seine",
+    "website": "https://www.alstom.com",
+    "sector": "Construction de materiel roulant ferroviaire"
+  },
+  {
+    "id": 2,
+    "name": "Arcadis",
+    "description": "Societe internationale de conseil et d'ingenierie specialisee dans l'environnement, les infrastructures et les batiments. Arcadis accompagne les projets ferroviaires en France, de la conception a la maitrise d'oeuvre, en passant par les etudes environnementales.",
+    "city": "Paris",
+    "address": "97 rue de Richelieu, 75002 Paris",
+    "website": "https://www.arcadis.com/fr-fr",
+    "sector": "Ingenierie et conseil"
+  },
+  {
+    "id": 3,
+    "name": "BEA-TT (Bureau d'Enquetes sur les Accidents de Transport Terrestre)",
+    "description": "Organisme public independant charge d'enqueter sur les accidents et incidents graves de transport terrestre, y compris ferroviaire. Le BEA-TT formule des recommandations de securite pour prevenir la recurrence des accidents.",
+    "city": "Paris",
+    "address": "Tour Pascal B, 92055 La Defense cedex",
+    "website": "https://www.bea-tt.developpement-durable.gouv.fr",
+    "sector": "Securite et enquetes"
+  },
+  {
+    "id": 4,
+    "name": "Certifer",
+    "description": "Organisme independant d'evaluation et de certification dans le domaine ferroviaire et des transports guides. Certifer intervient sur la securite, l'interoperabilite et la conformite des systemes ferroviaires en France et a l'international.",
+    "city": "Paris",
+    "address": "45 rue de Londres, 75008 Paris",
+    "website": "https://www.certifer.fr",
+    "sector": "Certification et evaluation ferroviaire"
+  },
+  {
+    "id": 5,
+    "name": "EPSF (Etablissement Public de Securite Ferroviaire)",
+    "description": "Autorite nationale de securite ferroviaire en France, l'EPSF delivre les autorisations d'exercice aux entreprises ferroviaires et les agrements de securite. Il assure le controle et la supervision de la securite du systeme ferroviaire francais.",
+    "city": "Amiens",
+    "address": "60 rue de la Vallee, 80000 Amiens",
+    "website": "https://www.securite-ferroviaire.fr",
+    "sector": "Autorite de securite ferroviaire"
+  },
+  {
+    "id": 6,
+    "name": "FIF (Federation des Industries Ferroviaires)",
+    "description": "Organisation professionnelle representant les industriels du secteur ferroviaire en France. La FIF regroupe les constructeurs, equipementiers et fournisseurs de la filiere ferroviaire et defend leurs interets aupres des pouvoirs publics.",
+    "city": "Paris",
+    "address": "60 rue de la Boetie, 75008 Paris",
+    "website": "https://www.ffrail.fr",
+    "sector": "Organisation professionnelle"
+  },
+  {
+    "id": 7,
+    "name": "Framafer",
+    "description": "Entreprise specialisee dans la construction et la maintenance des infrastructures ferroviaires, notamment la pose et le renouvellement de voies. Framafer intervient sur les chantiers de travaux ferroviaires pour le compte de gestionnaires d'infrastructure.",
+    "city": "Paris",
+    "address": "15-17 rue Jean-Philippe Rameau, 93200 Saint-Denis",
+    "website": "https://www.framafer.fr",
+    "sector": "Construction et maintenance d'infrastructures ferroviaires"
+  },
+  {
+    "id": 8,
+    "name": "RATP (Regie Autonome des Transports Parisiens)",
+    "description": "Operateur majeur de transport public en Ile-de-France, la RATP exploite le metro, le RER, les tramways et les bus parisiens. Elle est egalement present a l'international en tant qu'operateur et ingenieur de systemes de transport.",
+    "city": "Paris",
+    "address": "54 quai de la Rapee, 75012 Paris",
+    "website": "https://www.ratp.fr",
+    "sector": "Operateur de transport public"
+  },
+  {
+    "id": 9,
+    "name": "SNCF Reseau",
+    "description": "Gestionnaire de l'infrastructure ferroviaire francaise, SNCF Reseau est responsable de l'entretien, de la modernisation et du developpement du reseau ferre national. L'entreprise assure egalement la gestion des circulations et l'attribution des sillons.",
+    "city": "Saint-Denis",
+    "address": "15-17 rue Jean-Philippe Rameau, 93200 Saint-Denis",
+    "website": "https://www.sncf-reseau.com",
+    "sector": "Gestionnaire d'infrastructure ferroviaire"
+  },
+  {
+    "id": 10,
+    "name": "Vossloh",
+    "description": "Groupe industriel specialise dans les infrastructures ferroviaires, Vossloh fournit des systemes d'attache de rails, des aiguillages et des services de maintenance de voie. L'entreprise est un acteur majeur de l'entretien et de la modernisation des voies ferrees.",
+    "city": "Reichshoffen",
+    "address": "Zone industrielle, 67110 Reichshoffen",
+    "website": "https://www.vossloh.com",
+    "sector": "Equipements d'infrastructure ferroviaire"
+  },
+  {
+    "id": 11,
+    "name": "UIC (Union Internationale des Chemins de fer)",
+    "description": "Organisation mondiale rassemblant les acteurs du secteur ferroviaire, l'UIC promeut le transport ferroviaire et favorise la cooperation internationale. Elle elabore des normes et des standards techniques pour le secteur ferroviaire mondial.",
+    "city": "Paris",
+    "address": "16 rue Jean Rey, 75015 Paris",
+    "website": "https://www.uic.org",
+    "sector": "Organisation internationale ferroviaire"
+  },
+  {
+    "id": 12,
+    "name": "Universite de l'Ingenierie",
+    "description": "Organisme de formation continue dedie aux metiers de l'ingenierie, proposant des parcours specialises dans les domaines ferroviaires et des transports. Il accompagne le developpement des competences des professionnels de l'ingenierie.",
+    "city": "Paris",
+    "address": "3 rue Leon Bonnat, 75016 Paris",
+    "website": "https://www.syntec-ingenierie.fr",
+    "sector": "Formation et ingenierie"
+  }
+]

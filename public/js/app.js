@@ -20,7 +20,7 @@ function navigate(page) {
     if (page === 'ecoles') { loadEcoles(); loadStages(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
-    if (page === 'accueil') loadHome();
+    if (page === 'accueil') { loadHome(); loadPartenaires(); }
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
 }
 
@@ -250,6 +250,33 @@ function onPubFilter() {
         document.getElementById('pub-region')?.value || '',
         document.getElementById('pub-sector')?.value || ''
     );
+}
+
+// === PARTENAIRES ===
+async function loadPartenaires() {
+    try {
+        const res = await fetch('/data/partenaires.json');
+        const partenaires = await res.json();
+        const el = document.getElementById('partenaires-detail');
+        if (!el) return;
+        el.innerHTML = `
+            <h3 style="text-align:center;color:var(--primary);margin-bottom:20px;font-size:18px;font-weight:800">Qui sont nos partenaires ?</h3>
+            <div class="partenaires-cards">
+                ${partenaires.map(p => `
+                    <div class="partenaire-fiche">
+                        <div class="pf-header">
+                            <div class="pf-name">${esc(p.name)}</div>
+                            <span class="card-tag">${esc(p.sector)}</span>
+                        </div>
+                        <div class="pf-desc">${esc(p.description)}</div>
+                        <div class="pf-footer">
+                            <span class="pf-loc">&#128205; ${esc(p.city)}${p.address ? ' — ' + esc(p.address) : ''}</span>
+                            <a href="${esc(p.website)}" target="_blank" rel="noopener" class="pf-link">&#128279; Site web</a>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch (e) { console.warn('Partenaires:', e); }
 }
 
 // === ECOLES & PARTENAIRES ACADEMIQUES ===

@@ -205,23 +205,36 @@ function renderPublicAnnuaire(members) {
     if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);grid-column:1/-1;padding:40px">Aucun expert trouve</p>'; return; }
     el.innerHTML = members.map(m => {
         const initials = (m.first_name || '?')[0] + (m.last_name || '?')[0];
-        return `<div class="member-card">
-            <div class="member-avatar">${esc(initials.toUpperCase())}${m.is_mentor ? '<span class="mentor-badge" title="Disponible pour conseiller">&#127891;</span>' : ''}</div>
-            <div class="member-info">
-                <div class="member-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
-                <div class="member-job">${esc(m.job_title || '')}</div>
-                <div class="member-company">${esc(m.company || '')}</div>
-                <div class="member-tags">
-                    ${m.sector ? `<span class="card-tag">${esc(m.sector)}</span>` : ''}
-                    ${m.specialty ? `<span class="card-tag card-tag-specialty">${esc(m.specialty)}</span>` : ''}
-                    ${m.region ? `<span class="card-tag" style="background:var(--purple);color:#fff">${esc(m.region)}</span>` : ''}
-                    ${m.is_board ? '<span class="card-tag card-tag-primary">Bureau</span>' : ''}
-                    ${m.is_mentor ? '<span class="card-tag card-tag-mentor">Mentor</span>' : ''}
+        return `<div class="member-card-v2" onclick="toggleMemberDetail(this)">
+            <div class="mc-header">
+                <div class="member-avatar">${esc(initials.toUpperCase())}${m.is_mentor ? '<span class="mentor-badge" title="Disponible pour conseiller">&#127891;</span>' : ''}</div>
+                <div class="mc-identity">
+                    <div class="member-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
+                    <div class="member-job">${esc(m.job_title || '')}</div>
+                    <div class="member-company">${esc(m.company || '')}</div>
                 </div>
-                ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" style="font-size:12px;margin-top:4px;display:inline-block">LinkedIn</a>` : ''}
+            </div>
+            <div class="mc-details">
+                ${m.region ? `<div class="mc-detail-row"><span class="mc-icon">&#128205;</span> ${esc(m.region)}</div>` : ''}
+                ${m.bio ? `<div class="mc-bio">${esc((m.bio || '').substring(0, 150))}${(m.bio||'').length > 150 ? '...' : ''}</div>` : ''}
+                ${m.linkedin_url ? `<div class="mc-detail-row"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="mc-linkedin">&#128279; Profil LinkedIn</a></div>` : ''}
+            </div>
+            <div class="mc-tags">
+                ${m.sector ? `<span class="card-tag">${esc(m.sector)}</span>` : ''}
+                ${m.specialty ? `<span class="card-tag card-tag-specialty">${esc(m.specialty)}</span>` : ''}
+                ${m.region ? `<span class="card-tag card-tag-region">${esc(m.region)}</span>` : ''}
+                ${m.is_board ? '<span class="card-tag card-tag-primary">Bureau</span>' : ''}
+                ${m.is_mentor ? '<span class="card-tag card-tag-mentor">Mentor disponible</span>' : ''}
+            </div>
+            <div class="mc-rgpd">
+                <span class="mc-rgpd-icon">&#128994; Publie avec consentement (RGPD)</span>
             </div>
         </div>`;
     }).join('');
+}
+
+function toggleMemberDetail(card) {
+    card.classList.toggle('mc-expanded');
 }
 
 let _pubSearch;

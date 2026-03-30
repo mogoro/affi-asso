@@ -71,7 +71,8 @@ class handler(BaseHTTPRequestHandler):
             where = " AND ".join(clauses)
             rows = fetchall(f"""
                 SELECT id, first_name, last_name, company, job_title, sector, photo_url, bio,
-                       membership_type, is_board, specialty, is_mentor
+                       membership_type, is_board, specialty, is_mentor, region, linkedin_url,
+                       consent_annuaire, joined_at
                 FROM members WHERE {where}
                 ORDER BY last_name ASC LIMIT 200
             """, params)

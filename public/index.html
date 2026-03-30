@@ -364,7 +364,13 @@
         <div class="container">
             <div class="section-line section-line-center"></div>
             <h2 class="section-title section-title-center">Annuaire des Experts Ferroviaires</h2>
-            <p class="section-sub section-sub-center">Retrouvez les experts de l'AFFI — publie avec leur accord (RGPD)</p>
+            <p class="section-sub section-sub-center">Retrouvez les experts de l'AFFI</p>
+            <div class="rgpd-banner">
+                <span class="rgpd-banner-icon">&#128274;</span>
+                <div>
+                    <strong>Protection des donnees (RGPD)</strong> — Seuls les profils des membres ayant explicitement consenti a leur publication sont affiches. Chaque membre peut retirer son consentement a tout moment depuis son espace personnel. <a href="#contact" onclick="navigate('contact')">Contactez le DPO</a>
+                </div>
+            </div>
             <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
                 <input type="text" id="pub-search" placeholder="Rechercher par nom, entreprise..." oninput="onPubSearch(this.value)" style="flex:1;min-width:200px;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
                 <select id="pub-specialty" onchange="onPubFilter()" style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
@@ -689,6 +695,9 @@
 
                 <!-- TAB: DIRECTORY -->
                 <div id="mtab-directory" class="mtab-content" style="display:none">
+                    <div class="rgpd-notice">
+                        <span>&#128274;</span> Cet annuaire est reserve aux membres connectes. Les donnees affichees sont protegees (RGPD). L'indicateur <strong>&#128994; Profil public</strong> signifie que le membre a consenti a la publication dans l'annuaire public. <strong>&#128308; Profil prive</strong> signifie que le profil n'est visible qu'ici.
+                    </div>
                     <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
                         <input type="text" id="dir-search" placeholder="Rechercher un membre..." oninput="onDirSearch(this.value)" style="flex:1;min-width:200px;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
                         <select id="dir-sector" onchange="onDirFilter()" style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">

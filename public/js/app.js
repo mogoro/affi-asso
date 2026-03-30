@@ -193,7 +193,7 @@ async function loadPublicAnnuaire(search, specialty, region, sector) {
     if (region) params.set('region', region);
     if (sector) params.set('sector', sector);
     try {
-        const res = await fetch(`${API}/api/annuaire?${params}`);
+        const res = await fetch(`${API}/api/members?action=public_annuaire&${params}`);
         const members = await res.json();
         renderPublicAnnuaire(members);
     } catch (e) { console.warn('Annuaire:', e); }

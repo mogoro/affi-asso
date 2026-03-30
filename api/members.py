@@ -15,7 +15,34 @@ class handler(BaseHTTPRequestHandler):
         qs = parse_qs(urlparse(self.path).query)
         action = qs.get("action", ["directory"])[0]
 
-        if action == "directory":
+        if action == "public_annuaire":
+            # Annuaire public — pas de login requis, consent_annuaire=true uniquement
+            search = qs.get("search", [""])[0]
+            specialty = qs.get("specialty", [""])[0]
+            region = qs.get("region", [""])[0]
+            sector = qs.get("sector", [""])[0]
+            clauses = ["status = 'active'", "consent_annuaire = TRUE", "archived_at IS NULL"]
+            params = []
+            if search:
+                clauses.append("(first_name ILIKE %s OR last_name ILIKE %s OR company ILIKE %s)")
+                s = f"%%{search}%%"
+                params.extend([s, s, s])
+            if specialty:
+                clauses.append("specialty = %s"); params.append(specialty)
+            if region:
+                clauses.append("region = %s"); params.append(region)
+            if sector:
+                clauses.append("sector = %s"); params.append(sector)
+            where = " AND ".join(clauses)
+            rows = fetchall(f"""
+                SELECT id, first_name, last_name, company, job_title, sector, specialty,
+                       region, photo_url, bio, is_mentor, is_board, linkedin_url
+                FROM members WHERE {where}
+                ORDER BY last_name ASC LIMIT 200
+            """, params)
+            return self._json(200, rows)
+
+        elif action == "directory":
             # Annuaire membres (accessible aux membres connectes)
             if not user:
                 return self._json(401, {"error": "Connexion requise"})

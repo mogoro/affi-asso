@@ -253,29 +253,49 @@ function onPubFilter() {
 }
 
 // === PARTENAIRES ===
+const PARTENAIRES_LOGOS = {
+    'Alstom': '/images/logos/alstom.png',
+    'Arcadis': '/images/logos/arcadis.png',
+    'BEA-TT': '/images/logos/bea-tt.png',
+    'Certifer': '/images/logos/certifer.png',
+    'EPSF': '/images/logos/epsf.png',
+    'FIF': '/images/logos/fif.png',
+    'Framafer': '/images/logos/framafer.png',
+    'RATP': '/images/logos/ratp.png',
+    'SNCF Reseau': '/images/logos/sncf.png',
+    'Vossloh': '/images/logos/vossloh.png',
+    'UIC': '/images/logos/uic.png',
+    'Universite de l\'Ingenierie': '/images/logos/udi.png',
+};
+
 async function loadPartenaires() {
     try {
         const res = await fetch('/data/partenaires.json');
         const partenaires = await res.json();
-        const el = document.getElementById('partenaires-detail');
+        const el = document.getElementById('partenaires-unified');
         if (!el) return;
-        el.innerHTML = `
-            <h3 style="text-align:center;color:var(--primary);margin-bottom:20px;font-size:18px;font-weight:800">Qui sont nos partenaires ?</h3>
-            <div class="partenaires-cards">
-                ${partenaires.map(p => `
-                    <div class="partenaire-fiche">
-                        <div class="pf-header">
-                            <div class="pf-name">${esc(p.name)}</div>
-                            <span class="card-tag">${esc(p.sector)}</span>
-                        </div>
-                        <div class="pf-desc">${esc(p.description)}</div>
-                        <div class="pf-footer">
-                            <span class="pf-loc">&#128205; ${esc(p.city)}${p.address ? ' — ' + esc(p.address) : ''}</span>
-                            <a href="${esc(p.website)}" target="_blank" rel="noopener" class="pf-link">&#128279; Site web</a>
-                        </div>
+        el.innerHTML = `<div class="partenaires-unified-grid">
+            ${partenaires.map(p => {
+                const logoKey = Object.keys(PARTENAIRES_LOGOS).find(k => p.name.includes(k));
+                const logo = logoKey ? PARTENAIRES_LOGOS[logoKey] : '';
+                return `<a href="${esc(p.website)}" target="_blank" rel="noopener" class="pu-card">
+                    <div class="pu-logo">${logo ? `<img src="${logo}" alt="${esc(p.name)}">` : `<span style="font-size:24px;font-weight:800;color:var(--primary)">${esc(p.name.substring(0,3))}</span>`}</div>
+                    <div class="pu-body">
+                        <div class="pu-name">${esc(p.name)}</div>
+                        <div class="pu-sector">${esc(p.sector)}</div>
+                        <div class="pu-desc">${esc(p.description)}</div>
+                        <div class="pu-loc">&#128205; ${esc(p.city)}</div>
                     </div>
-                `).join('')}
-            </div>`;
+                </a>`;
+            }).join('')}
+            <a class="pu-card pu-card-simple">
+                <div class="pu-logo"><span style="font-size:16px;font-weight:800;color:var(--primary)">Saferail</span></div>
+                <div class="pu-body">
+                    <div class="pu-name">Saferail</div>
+                    <div class="pu-sector">A Colas Rail Company</div>
+                </div>
+            </a>
+        </div>`;
     } catch (e) { console.warn('Partenaires:', e); }
 }
 

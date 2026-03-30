@@ -192,12 +192,16 @@ async function loadProfile() {
         const p = await res.json();
         if (p.error) return;
         // Fill form
-        for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty']) {
+        for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region']) {
             const inp = document.getElementById('prof-' + k);
             if (inp) inp.value = p[k] || '';
         }
         const mentorCb = document.getElementById('prof-is_mentor');
         if (mentorCb) mentorCb.checked = !!p.is_mentor;
+        const consentAnn = document.getElementById('prof-consent_annuaire');
+        if (consentAnn) consentAnn.checked = !!p.consent_annuaire;
+        const consentNl = document.getElementById('prof-consent_newsletter');
+        if (consentNl) consentNl.checked = !!p.consent_newsletter;
         const cvEl = document.getElementById('prof-cv');
         if (cvEl) cvEl.value = p.cv_text || '';
         const cvDate = document.getElementById('cv-date');
@@ -209,12 +213,16 @@ async function saveProfile(evt) {
     evt.preventDefault();
     const f = evt.target;
     const data = {};
-    for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty']) {
+    for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region']) {
         const inp = document.getElementById('prof-' + k);
         if (inp) data[k] = inp.value;
     }
     const mentorCb = document.getElementById('prof-is_mentor');
     if (mentorCb) data.is_mentor = mentorCb.checked;
+    const consentAnn = document.getElementById('prof-consent_annuaire');
+    if (consentAnn) data.consent_annuaire = consentAnn.checked;
+    const consentNl = document.getElementById('prof-consent_newsletter');
+    if (consentNl) data.consent_newsletter = consentNl.checked;
     try {
         await fetch(`${API}/api/members`, {
             method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},

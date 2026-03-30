@@ -22,6 +22,12 @@ CREATE TABLE IF NOT EXISTS members (
     is_board        BOOLEAN DEFAULT FALSE,
     specialty       VARCHAR(100),
     is_mentor       BOOLEAN DEFAULT FALSE,
+    region          VARCHAR(100),
+    role            VARCHAR(20) DEFAULT 'member',
+    consent_annuaire BOOLEAN DEFAULT FALSE,
+    consent_newsletter BOOLEAN DEFAULT FALSE,
+    consent_date    TIMESTAMP,
+    archived_at     TIMESTAMP,
     created_at      TIMESTAMP DEFAULT NOW()
 );
 
@@ -203,6 +209,31 @@ CREATE INDEX IF NOT EXISTS idx_publications_date ON publications(published_at DE
 CREATE INDEX IF NOT EXISTS idx_news_date ON news(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_member ON subscriptions(member_id);
+-- Logs (journalisation RGPD)
+CREATE TABLE IF NOT EXISTS logs (
+    id              SERIAL PRIMARY KEY,
+    action          VARCHAR(50) NOT NULL,
+    user_id         INT REFERENCES members(id) ON DELETE SET NULL,
+    target_id       INT,
+    target_type     VARCHAR(50),
+    details         TEXT,
+    ip_address      VARCHAR(45),
+    created_at      TIMESTAMP DEFAULT NOW()
+);
+
+-- Consentements RGPD
+CREATE TABLE IF NOT EXISTS consentements (
+    id              SERIAL PRIMARY KEY,
+    member_id       INT REFERENCES members(id) ON DELETE CASCADE,
+    consent_type    VARCHAR(50) NOT NULL,
+    granted         BOOLEAN DEFAULT FALSE,
+    consent_date    TIMESTAMP DEFAULT NOW(),
+    version_cgu     VARCHAR(20) DEFAULT '1.0'
+);
+
+CREATE INDEX IF NOT EXISTS idx_logs_user ON logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_logs_date ON logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_consentements_member ON consentements(member_id);
 CREATE INDEX IF NOT EXISTS idx_members_specialty ON members(specialty);
 CREATE INDEX IF NOT EXISTS idx_quizz_scores_quizz ON quizz_scores(quizz_id, score DESC);
 CREATE INDEX IF NOT EXISTS idx_replays_category ON replays(category);

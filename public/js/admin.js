@@ -23,6 +23,7 @@ function switchAdminSection(id) {
     if (id === 'adm-news') loadAdminNews();
     if (id === 'adm-announcements') loadAdminAnnouncements();
     if (id === 'adm-messages') loadAdminMessages();
+    if (id === 'adm-logs') loadAdminLogs();
 }
 
 async function adminFetch(action, params) {
@@ -51,7 +52,10 @@ async function loadAdminDashboard() {
             <div class="kpi-card" style="border-top-color:var(--green)"><div class="kpi-val">${s.active_members||0}</div><div class="kpi-label">Actifs</div></div>
             <div class="kpi-card" style="border-top-color:var(--orange)"><div class="kpi-val">${s.pending_members||0}</div><div class="kpi-label">En attente</div></div>
             <div class="kpi-card" style="border-top-color:var(--accent)"><div class="kpi-val">${s.unread_messages||0}</div><div class="kpi-label">Messages non lus</div></div>
+            <div class="kpi-card" style="border-top-color:var(--teal)"><div class="kpi-val">${s.mentors||0}</div><div class="kpi-label">Mentors</div></div>
+            <div class="kpi-card" style="border-top-color:var(--purple)"><div class="kpi-val">${s.consent_annuaire||0}</div><div class="kpi-label">Annuaire public</div></div>
         </div>
+        ${s.incomplete_profiles > 0 ? `<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;font-size:14px;color:#92400e"><strong>Alerte :</strong> ${s.incomplete_profiles} profil(s) incomplet(s) (secteur, entreprise ou specialite manquant)</div>` : ''}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
             <div class="card"><div class="card-body">
                 <h3 style="color:var(--primary);margin-bottom:16px">Derniers inscrits</h3>
@@ -64,6 +68,14 @@ async function loadAdminDashboard() {
             <div class="card"><div class="card-body">
                 <h3 style="color:var(--primary);margin-bottom:16px">Par secteur</h3>
                 ${(s.by_sector||[]).map(x => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(x.sector||'Non renseigne')}</span><strong>${x.n}</strong></div>`).join('')}
+            </div></div>
+            <div class="card"><div class="card-body">
+                <h3 style="color:var(--primary);margin-bottom:16px">Par region</h3>
+                ${(s.by_region||[]).map(x => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(x.region||'Non renseignee')}</span><strong>${x.n}</strong></div>`).join('')}
+            </div></div>
+            <div class="card"><div class="card-body">
+                <h3 style="color:var(--primary);margin-bottom:16px">Par specialite</h3>
+                ${(s.by_specialty||[]).map(x => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(x.specialty||'Non renseignee')}</span><strong>${x.n}</strong></div>`).join('')}
             </div></div>
         </div>`;
 }
@@ -265,6 +277,197 @@ async function loadAdminAnnouncements() {
                 ${!a.is_active ? `<button onclick="adminAction('approve_announcement',${a.id})" class="adm-btn adm-btn-ok" title="Approuver">&#10003;</button>` : `<button onclick="adminAction('reject_announcement',${a.id})" class="adm-btn adm-btn-warn" title="Masquer">&#10007;</button>`}
                 <button onclick="adminAction('delete_announcement',${a.id})" class="adm-btn adm-btn-danger">&#128465;</button>
             </td>
+        </tr>`).join('')}</tbody></table>`;
+}
+
+// === CREATE MEMBER ===
+function showCreateMemberForm() {
+    const html = `<div class="adm-modal-bg" id="create-member-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+        <h3 style="margin-bottom:20px;color:var(--primary)">Creer un nouveau membre</h3>
+        <form onsubmit="createMember(event)">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Prenom *</label><input id="cm-fn" required></div>
+                <div class="form-group"><label>Nom *</label><input id="cm-ln" required></div>
+            </div>
+            <div class="form-group"><label>Email *</label><input type="email" id="cm-email" required></div>
+            <div class="form-group"><label>Mot de passe</label><input id="cm-pw" value="affi2026" placeholder="Par defaut: affi2026"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Entreprise</label><input id="cm-company"></div>
+                <div class="form-group"><label>Fonction</label><input id="cm-job"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Secteur</label><select id="cm-sector">
+                    <option value="">Selectionner...</option>
+                    <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
+                    <option>Infrastructure</option><option>Maintenance</option>
+                    <option>Ingenierie & Conseil</option><option>Numerique & IA</option>
+                    <option>Gestion de projet</option><option>Recherche & Formation</option>
+                </select></div>
+                <div class="form-group"><label>Specialite</label><select id="cm-specialty">
+                    <option value="">Selectionner...</option>
+                    <option>Signalisation / ERTMS</option><option>Materiel Roulant</option>
+                    <option>Infrastructure / Voie</option><option>Energie</option>
+                    <option>Telecoms</option><option>Exploitation</option>
+                </select></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Region</label><select id="cm-region">
+                    <option value="">Selectionner...</option>
+                    <option>Ile-de-France</option><option>Auvergne-Rhone-Alpes</option>
+                    <option>Hauts-de-France</option><option>Occitanie</option>
+                    <option>Grand Est</option><option>Provence-Alpes-Cote d'Azur</option>
+                    <option>Nouvelle-Aquitaine</option><option>Pays de la Loire</option>
+                    <option>Bretagne</option><option>Normandie</option>
+                </select></div>
+                <div class="form-group"><label>Role</label><select id="cm-role">
+                    <option value="member">Membre</option>
+                    <option value="moderator">Moderateur</option>
+                    <option value="admin">Administrateur</option>
+                </select></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+                <label><input type="checkbox" id="cm-consent-ann"> Consent annuaire public</label>
+                <label><input type="checkbox" id="cm-consent-nl"> Consent newsletter</label>
+                <label><input type="checkbox" id="cm-mentor"> Mentor</label>
+            </div>
+            <button type="submit" class="btn btn-accent" style="width:100%">Creer le membre</button>
+        </form>
+    </div></div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+async function createMember(evt) {
+    evt.preventDefault();
+    const role = document.getElementById('cm-role').value;
+    const res = await adminPost({
+        action: 'create_member',
+        first_name: document.getElementById('cm-fn').value,
+        last_name: document.getElementById('cm-ln').value,
+        email: document.getElementById('cm-email').value,
+        password: document.getElementById('cm-pw').value || 'affi2026',
+        company: document.getElementById('cm-company').value,
+        job_title: document.getElementById('cm-job').value,
+        sector: document.getElementById('cm-sector').value,
+        specialty: document.getElementById('cm-specialty').value,
+        region: document.getElementById('cm-region').value,
+        role: role,
+        is_admin: role === 'admin',
+        is_mentor: document.getElementById('cm-mentor').checked,
+        consent_annuaire: document.getElementById('cm-consent-ann').checked,
+        consent_newsletter: document.getElementById('cm-consent-nl').checked,
+        status: 'active',
+    });
+    if (res.ok) {
+        alert(res.message);
+        document.getElementById('create-member-modal')?.remove();
+        loadAdminMembers();
+    } else {
+        alert(res.error || 'Erreur');
+    }
+}
+
+// === IMPORT CSV ===
+function showImportForm() {
+    const html = `<div class="adm-modal-bg" id="import-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+        <h3 style="margin-bottom:20px;color:var(--primary)">Import de membres (CSV)</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Format attendu : fichier CSV avec colonnes <strong>email, first_name, last_name, company, job_title, sector, specialty, region, consent_annuaire (Oui/Non), consent_newsletter (Oui/Non)</strong>. Le mot de passe par defaut est "affi2026".</p>
+        <div class="form-group">
+            <label>Fichier CSV</label>
+            <input type="file" id="import-file" accept=".csv,.txt" style="padding:8px">
+        </div>
+        <div id="import-preview" style="display:none;margin-bottom:16px;max-height:200px;overflow-y:auto;font-size:12px;background:var(--gray-50);padding:12px;border-radius:var(--radius)"></div>
+        <div style="display:flex;gap:12px">
+            <button class="btn btn-primary" onclick="previewImport()" style="flex:1">Verifier</button>
+            <button class="btn btn-accent" id="btn-do-import" onclick="doImport()" style="flex:1;display:none">Importer</button>
+        </div>
+        <div id="import-result" style="display:none;margin-top:16px;padding:12px;border-radius:var(--radius);font-size:13px"></div>
+    </div></div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+let importRows = [];
+function previewImport() {
+    const file = document.getElementById('import-file').files[0];
+    if (!file) return alert('Selectionnez un fichier');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const lines = e.target.result.split('\n').filter(l => l.trim());
+        if (lines.length < 2) return alert('Fichier vide ou invalide');
+        const headers = lines[0].split(/[,;]/).map(h => h.trim().toLowerCase().replace(/['"]/g,''));
+        importRows = [];
+        for (let i = 1; i < lines.length; i++) {
+            const vals = lines[i].split(/[,;]/).map(v => v.trim().replace(/^["']|["']$/g,''));
+            const row = {};
+            headers.forEach((h, j) => { row[h] = vals[j] || ''; });
+            if (row.email) importRows.push(row);
+        }
+        const preview = document.getElementById('import-preview');
+        preview.style.display = 'block';
+        preview.innerHTML = `<strong>${importRows.length} lignes detectees</strong><br>` +
+            importRows.slice(0,5).map(r => `${r.first_name || r.prenom || ''} ${r.last_name || r.nom || ''} — ${r.email}`).join('<br>') +
+            (importRows.length > 5 ? `<br>... et ${importRows.length - 5} autres` : '');
+        document.getElementById('btn-do-import').style.display = 'block';
+    };
+    reader.readAsText(file);
+}
+
+async function doImport() {
+    // Normalize field names (support French headers)
+    const normalized = importRows.map(r => ({
+        email: r.email || '',
+        first_name: r.first_name || r.prenom || '',
+        last_name: r.last_name || r.nom || '',
+        company: r.company || r.entreprise || '',
+        job_title: r.job_title || r.fonction || '',
+        sector: r.sector || r.secteur || '',
+        specialty: r.specialty || r.specialite || r.expertise_ferroviaire || '',
+        region: r.region || '',
+        consent_annuaire: r.consent_annuaire || r.consentement_annuaire || '',
+        consent_newsletter: r.consent_newsletter || r.consentement_newsletters || '',
+    }));
+    const res = await adminPost({ action: 'import_csv', rows: normalized });
+    const el = document.getElementById('import-result');
+    el.style.display = 'block';
+    if (res.ok) {
+        el.style.background = '#ecfdf5'; el.style.color = '#065f46';
+        el.innerHTML = `<strong>${res.imported} membre(s) importe(s)</strong>` +
+            (res.errors.length ? `<br>Erreurs:<br>${res.errors.join('<br>')}` : '');
+        loadAdminMembers();
+    } else {
+        el.style.background = '#fef2f2'; el.style.color = '#991b1b';
+        el.textContent = res.error || 'Erreur';
+    }
+}
+
+// === EXPORT CSV ===
+function exportMembers() {
+    const status = document.getElementById('adm-status-filter')?.value || '';
+    const url = `${API}/api/admin?action=export_csv${status ? '&status=' + status : ''}&token=${authToken}`;
+    // Use fetch with auth header
+    fetch(url, { headers: { 'Authorization': 'Bearer ' + authToken } })
+        .then(r => r.blob())
+        .then(blob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'affi_membres_export.csv';
+            a.click();
+        })
+        .catch(e => alert('Erreur export: ' + e.message));
+}
+
+// === LOGS ===
+async function loadAdminLogs() {
+    const items = await adminFetch('logs', {});
+    const el = document.getElementById('adm-logs-list');
+    if (!el) return;
+    if (!items.length) { el.innerHTML = '<p class="empty-msg">Aucun log</p>'; return; }
+    el.innerHTML = `<table class="adm-table"><thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Details</th><th>IP</th></tr></thead><tbody>
+        ${items.map(l => `<tr>
+            <td style="font-size:12px;white-space:nowrap">${formatDate(l.created_at)}</td>
+            <td>${l.first_name ? esc(l.first_name) + ' ' + esc(l.last_name) : '#' + (l.user_id||'?')}</td>
+            <td><span class="card-tag">${esc(l.action)}</span></td>
+            <td style="font-size:13px">${esc(l.details||'')}</td>
+            <td style="font-size:12px;color:var(--gray-400)">${esc(l.ip_address||'')}</td>
         </tr>`).join('')}</tbody></table>`;
 }
 

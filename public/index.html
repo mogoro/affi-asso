@@ -38,6 +38,7 @@
                     <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-cartographie'),300)">Carte des membres</a>
                 </div>
             </div>
+            <a class="nav-link" data-page="annuaire" onclick="navigate('annuaire')">Annuaire</a>
             <a class="nav-link" data-page="agenda" onclick="navigate('agenda')">Agenda</a>
             <a class="nav-link" data-page="evenements" onclick="navigate('evenements')">Evenements</a>
             <a class="nav-link" data-page="replays" onclick="navigate('replays')">Replays</a>
@@ -351,6 +352,56 @@
             </div>
             <div id="map-container" style="height:500px;width:100%;background:var(--gray-100);border-radius:var(--radius)"></div>
             <div id="map-legend" style="margin-top:16px"></div>
+        </div>
+    </section>
+</div>
+
+<!-- ================================================================ -->
+<!-- ANNUAIRE PUBLIC DES EXPERTS                                       -->
+<!-- ================================================================ -->
+<div id="page-annuaire" class="page">
+    <section>
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Annuaire des Experts Ferroviaires</h2>
+            <p class="section-sub section-sub-center">Retrouvez les experts de l'AFFI — publie avec leur accord (RGPD)</p>
+            <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
+                <input type="text" id="pub-search" placeholder="Rechercher par nom, entreprise..." oninput="onPubSearch(this.value)" style="flex:1;min-width:200px;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
+                <select id="pub-specialty" onchange="onPubFilter()" style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
+                    <option value="">Toutes specialites</option>
+                    <option>Signalisation / ERTMS</option>
+                    <option>Materiel Roulant</option>
+                    <option>Infrastructure / Voie</option>
+                    <option>Energie</option>
+                    <option>Telecoms</option>
+                    <option>Exploitation</option>
+                </select>
+                <select id="pub-region" onchange="onPubFilter()" style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
+                    <option value="">Toutes regions</option>
+                    <option>Ile-de-France</option>
+                    <option>Auvergne-Rhone-Alpes</option>
+                    <option>Hauts-de-France</option>
+                    <option>Occitanie</option>
+                    <option>Grand Est</option>
+                    <option>Provence-Alpes-Cote d'Azur</option>
+                    <option>Nouvelle-Aquitaine</option>
+                    <option>Pays de la Loire</option>
+                    <option>Bretagne</option>
+                    <option>Normandie</option>
+                    <option>Bourgogne-Franche-Comte</option>
+                    <option>Centre-Val de Loire</option>
+                </select>
+                <select id="pub-sector" onchange="onPubFilter()" style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
+                    <option value="">Tous les secteurs</option>
+                    <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
+                    <option>Infrastructure</option><option>Maintenance</option>
+                    <option>Ingenierie & Conseil</option><option>Numerique & IA</option>
+                </select>
+            </div>
+            <div class="member-grid" id="public-annuaire-grid">
+                <p style="text-align:center;color:var(--gray-400);padding:40px;grid-column:1/-1">Chargement...</p>
+            </div>
+            <p style="text-align:center;margin-top:24px;font-size:12px;color:var(--gray-400)">Ces informations sont publiees avec l'accord des experts (RGPD). <a href="#contact" onclick="navigate('contact')">Contactez-nous</a> pour toute demande.</p>
         </div>
     </section>
 </div>
@@ -725,9 +776,35 @@
                                         <option>Telecoms</option>
                                         <option>Exploitation</option>
                                     </select></div>
+                                    <div class="form-group"><label>Region</label><select id="prof-region">
+                                        <option value="">Selectionner...</option>
+                                        <option>Ile-de-France</option>
+                                        <option>Auvergne-Rhone-Alpes</option>
+                                        <option>Hauts-de-France</option>
+                                        <option>Occitanie</option>
+                                        <option>Grand Est</option>
+                                        <option>Provence-Alpes-Cote d'Azur</option>
+                                        <option>Nouvelle-Aquitaine</option>
+                                        <option>Pays de la Loire</option>
+                                        <option>Bretagne</option>
+                                        <option>Normandie</option>
+                                        <option>Bourgogne-Franche-Comte</option>
+                                        <option>Centre-Val de Loire</option>
+                                    </select></div>
                                     <div class="form-group" style="display:flex;align-items:center;gap:12px">
                                         <input type="checkbox" id="prof-is_mentor" style="width:20px;height:20px">
                                         <label for="prof-is_mentor" style="margin:0;cursor:pointer">Disponible pour conseiller / mentorer</label>
+                                    </div>
+                                    <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;margin-bottom:16px">
+                                        <h4 style="color:var(--primary);margin-bottom:8px;font-size:14px">Consentements RGPD</h4>
+                                        <div class="form-group" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                                            <input type="checkbox" id="prof-consent_annuaire" style="width:18px;height:18px">
+                                            <label for="prof-consent_annuaire" style="margin:0;cursor:pointer;font-size:14px">J'accepte que mon profil soit visible dans l'annuaire public</label>
+                                        </div>
+                                        <div class="form-group" style="display:flex;align-items:center;gap:12px;margin-bottom:0">
+                                            <input type="checkbox" id="prof-consent_newsletter" style="width:18px;height:18px">
+                                            <label for="prof-consent_newsletter" style="margin:0;cursor:pointer;font-size:14px">J'accepte de recevoir la newsletter AFFI</label>
+                                        </div>
                                     </div>
                                     <div class="form-group"><label>Bio / Presentation</label><textarea id="prof-bio" style="min-height:80px"></textarea></div>
                                     <div class="form-group"><label>URL LinkedIn</label><input type="url" id="prof-linkedin_url" placeholder="https://linkedin.com/in/..."></div>
@@ -783,6 +860,7 @@
                         <button class="adm-nav-btn" data-section="adm-news" onclick="switchAdminSection('adm-news')">Actualites</button>
                         <button class="adm-nav-btn" data-section="adm-announcements" onclick="switchAdminSection('adm-announcements')">Annonces membres</button>
                         <button class="adm-nav-btn" data-section="adm-messages" onclick="switchAdminSection('adm-messages')">Messages</button>
+                        <button class="adm-nav-btn" data-section="adm-logs" onclick="switchAdminSection('adm-logs')">Journal RGPD</button>
                     </div>
 
                     <!-- Admin Dashboard -->
@@ -800,6 +878,9 @@
                                 <option value="pending">En attente</option>
                                 <option value="blocked">Bloques</option>
                             </select>
+                            <button class="btn btn-accent" onclick="showCreateMemberForm()" style="font-size:13px;padding:8px 20px">+ Nouveau membre</button>
+                            <button class="btn btn-primary" onclick="showImportForm()" style="font-size:13px;padding:8px 20px">Import CSV</button>
+                            <button class="btn btn-primary" onclick="exportMembers()" style="font-size:13px;padding:8px 20px;background:var(--teal)">Export CSV</button>
                         </div>
                         <div id="adm-members-list"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
                     </div>
@@ -831,6 +912,12 @@
                         <h3 style="margin-bottom:16px;color:var(--primary)">Messages de contact</h3>
                         <div id="adm-messages-list"></div>
                     </div>
+
+                    <!-- Admin Logs RGPD -->
+                    <div id="adm-logs" class="adm-section">
+                        <h3 style="margin-bottom:16px;color:var(--primary)">Journal d'activite (RGPD)</h3>
+                        <div id="adm-logs-list"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
+                    </div>
                 </div>
 
             </div><!-- /member-area -->
@@ -859,6 +946,7 @@
             <div>
                 <h4>Activites</h4>
                 <ul class="footer-links">
+                    <li><a href="#annuaire" onclick="navigate('annuaire')">Annuaire Experts</a></li>
                     <li><a href="#agenda" onclick="navigate('agenda')">Agenda</a></li>
                     <li><a href="#evenements" onclick="navigate('evenements')">Evenements</a></li>
                     <li><a href="#replays" onclick="navigate('replays')">Replays</a></li>

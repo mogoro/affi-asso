@@ -2,7 +2,7 @@
  * AFFI — SPA Router, Slider, Page Logic
  */
 const API = window.location.origin;
-const PAGES = ['accueil','identite','agenda','evenements','publications','replays','quizz','adhesion','contact','membres'];
+const PAGES = ['accueil','identite','annuaire','agenda','evenements','publications','replays','quizz','adhesion','contact','membres'];
 
 // === ROUTER ===
 function navigate(page) {
@@ -15,6 +15,7 @@ function navigate(page) {
     history.pushState(null, '', '#' + page);
     if (page === 'agenda') { loadAgenda(); if (typeof loadCourses === 'function') loadCourses(); }
     if (page === 'evenements') loadEvents();
+    if (page === 'annuaire') loadPublicAnnuaire();
     if (page === 'publications') loadPublications();
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
@@ -182,6 +183,59 @@ async function loadPublications() {
                 </div>
             </div>`).join('');
     } catch (e) { console.warn('Pubs:', e); }
+}
+
+// === ANNUAIRE PUBLIC ===
+async function loadPublicAnnuaire(search, specialty, region, sector) {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (specialty) params.set('specialty', specialty);
+    if (region) params.set('region', region);
+    if (sector) params.set('sector', sector);
+    try {
+        const res = await fetch(`${API}/api/annuaire?${params}`);
+        const members = await res.json();
+        renderPublicAnnuaire(members);
+    } catch (e) { console.warn('Annuaire:', e); }
+}
+
+function renderPublicAnnuaire(members) {
+    const el = document.getElementById('public-annuaire-grid');
+    if (!el) return;
+    if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);grid-column:1/-1;padding:40px">Aucun expert trouve</p>'; return; }
+    el.innerHTML = members.map(m => {
+        const initials = (m.first_name || '?')[0] + (m.last_name || '?')[0];
+        return `<div class="member-card">
+            <div class="member-avatar">${esc(initials.toUpperCase())}${m.is_mentor ? '<span class="mentor-badge" title="Disponible pour conseiller">&#127891;</span>' : ''}</div>
+            <div class="member-info">
+                <div class="member-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
+                <div class="member-job">${esc(m.job_title || '')}</div>
+                <div class="member-company">${esc(m.company || '')}</div>
+                <div class="member-tags">
+                    ${m.sector ? `<span class="card-tag">${esc(m.sector)}</span>` : ''}
+                    ${m.specialty ? `<span class="card-tag card-tag-specialty">${esc(m.specialty)}</span>` : ''}
+                    ${m.region ? `<span class="card-tag" style="background:var(--purple);color:#fff">${esc(m.region)}</span>` : ''}
+                    ${m.is_board ? '<span class="card-tag card-tag-primary">Bureau</span>' : ''}
+                    ${m.is_mentor ? '<span class="card-tag card-tag-mentor">Mentor</span>' : ''}
+                </div>
+                ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" style="font-size:12px;margin-top:4px;display:inline-block">LinkedIn</a>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+let _pubSearch;
+function onPubSearch(v) {
+    clearTimeout(_pubSearch);
+    _pubSearch = setTimeout(() => onPubFilter(), 300);
+}
+function onPubFilter() {
+    loadPublicAnnuaire(
+        document.getElementById('pub-search')?.value || '',
+        document.getElementById('pub-specialty')?.value || '',
+        document.getElementById('pub-region')?.value || '',
+        document.getElementById('pub-sector')?.value || ''
+    );
 }
 
 // === REPLAYS / MEDIATHEQUE ===

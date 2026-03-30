@@ -1,9 +1,9 @@
-"""API /api/admin — Administration complete (membres, evenements, news, publications, annonces, messages)."""
+"""API /api/admin — Administration complete (membres, evenements, news, publications, annonces, messages, import/export, RGPD)."""
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
-import json
+import json, csv, io
 from api._shared.db import fetchall, fetchone, execute, get_conn
-from api.auth import get_member_from_token
+from api.auth import get_member_from_token, hash_pw
 
 class handler(BaseHTTPRequestHandler):
     def _get_admin(self):
@@ -73,8 +73,8 @@ class handler(BaseHTTPRequestHandler):
         elif action == "dashboard":
             stats = {}
             for key, sql in [
-                ("total_members", "SELECT COUNT(*) FROM members"),
-                ("active_members", "SELECT COUNT(*) FROM members WHERE status='active'"),
+                ("total_members", "SELECT COUNT(*) FROM members WHERE archived_at IS NULL"),
+                ("active_members", "SELECT COUNT(*) FROM members WHERE status='active' AND archived_at IS NULL"),
                 ("pending_members", "SELECT COUNT(*) FROM members WHERE status='pending'"),
                 ("blocked_members", "SELECT COUNT(*) FROM members WHERE status='blocked'"),
                 ("total_events", "SELECT COUNT(*) FROM events"),
@@ -85,13 +85,52 @@ class handler(BaseHTTPRequestHandler):
                 ("pending_announcements", "SELECT COUNT(*) FROM member_announcements WHERE is_active=FALSE"),
                 ("unread_messages", "SELECT COUNT(*) FROM contact_messages WHERE is_read=FALSE"),
                 ("total_messages", "SELECT COUNT(*) FROM contact_messages"),
+                ("mentors", "SELECT COUNT(*) FROM members WHERE is_mentor=TRUE AND status='active'"),
+                ("consent_annuaire", "SELECT COUNT(*) FROM members WHERE consent_annuaire=TRUE AND status='active'"),
             ]:
                 r = fetchone(sql)
                 stats[key] = list(r.values())[0] if r else 0
             stats["by_sector"] = fetchall("SELECT sector, COUNT(*) as n FROM members WHERE status='active' AND sector IS NOT NULL GROUP BY sector ORDER BY n DESC")
             stats["by_type"] = fetchall("SELECT membership_type as type, COUNT(*) as n FROM members GROUP BY membership_type ORDER BY n DESC")
+            stats["by_region"] = fetchall("SELECT region, COUNT(*) as n FROM members WHERE status='active' AND region IS NOT NULL GROUP BY region ORDER BY n DESC")
+            stats["by_specialty"] = fetchall("SELECT specialty, COUNT(*) as n FROM members WHERE status='active' AND specialty IS NOT NULL GROUP BY specialty ORDER BY n DESC")
             stats["recent_members"] = fetchall("SELECT id, first_name, last_name, email, company, status, joined_at FROM members ORDER BY joined_at DESC LIMIT 5")
+            # Alertes
+            stats["incomplete_profiles"] = fetchone("SELECT COUNT(*) FROM members WHERE status='active' AND (sector IS NULL OR company IS NULL OR specialty IS NULL)")
+            stats["incomplete_profiles"] = list(stats["incomplete_profiles"].values())[0] if stats["incomplete_profiles"] else 0
             return self._json(200, stats)
+
+        elif action == "export_csv":
+            status_f = qs.get("status", [""])[0]
+            sector_f = qs.get("sector", [""])[0]
+            region_f = qs.get("region", [""])[0]
+            clauses, params = ["archived_at IS NULL"], []
+            if status_f: clauses.append("status = %s"); params.append(status_f)
+            if sector_f: clauses.append("sector = %s"); params.append(sector_f)
+            if region_f: clauses.append("region = %s"); params.append(region_f)
+            where = " WHERE " + " AND ".join(clauses)
+            rows = fetchall(f"""SELECT id, first_name, last_name, email, phone, company, job_title, sector,
+                specialty, region, membership_type, status, is_mentor, is_board, consent_annuaire,
+                consent_newsletter, joined_at, last_login
+                FROM members {where} ORDER BY last_name ASC""", params)
+            output = io.StringIO()
+            if rows:
+                writer = csv.DictWriter(output, fieldnames=rows[0].keys())
+                writer.writeheader()
+                writer.writerows(rows)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/csv; charset=utf-8")
+            self.send_header("Content-Disposition", "attachment; filename=affi_membres_export.csv")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(output.getvalue().encode("utf-8"))
+            return
+
+        elif action == "logs":
+            rows = fetchall("""SELECT l.*, m.first_name, m.last_name
+                FROM logs l LEFT JOIN members m ON l.user_id = m.id
+                ORDER BY l.created_at DESC LIMIT 100""")
+            return self._json(200, rows)
 
         return self._json(400, {"error": "Action inconnue"})
 
@@ -126,7 +165,9 @@ class handler(BaseHTTPRequestHandler):
 
         elif action == "update_member":
             fields = {}
-            for k in ("first_name","last_name","email","phone","company","job_title","sector","membership_type","status"):
+            for k in ("first_name","last_name","email","phone","company","job_title","sector",
+                       "membership_type","status","specialty","region","role","is_mentor",
+                       "is_admin","is_board","consent_annuaire","consent_newsletter"):
                 if k in body:
                     fields[k] = body[k]
             if fields:
@@ -134,8 +175,69 @@ class handler(BaseHTTPRequestHandler):
                 execute(f"UPDATE members SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
             return self._json(200, {"ok": True, "message": "Membre mis a jour"})
 
+        elif action == "create_member":
+            email = (body.get("email") or "").strip().lower()
+            if not email:
+                return self._json(400, {"error": "Email requis"})
+            existing = fetchone("SELECT id FROM members WHERE email = %s", [email])
+            if existing:
+                return self._json(400, {"error": "Email deja utilise"})
+            password = body.get("password", "affi2026")
+            pw_hash = hash_pw(password)
+            execute("""INSERT INTO members (email, password_hash, first_name, last_name, phone, company,
+                job_title, sector, specialty, region, membership_type, status, is_admin, is_board,
+                is_mentor, role, consent_annuaire, consent_newsletter, consent_date)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())""",
+                [email, pw_hash, body.get("first_name",""), body.get("last_name",""),
+                 body.get("phone"), body.get("company"), body.get("job_title"),
+                 body.get("sector"), body.get("specialty"), body.get("region"),
+                 body.get("membership_type","standard"), body.get("status","active"),
+                 body.get("is_admin", False), body.get("is_board", False),
+                 body.get("is_mentor", False), body.get("role", "member"),
+                 body.get("consent_annuaire", False), body.get("consent_newsletter", False)])
+            self._log(admin["id"], "create_member", f"Cree: {email}")
+            return self._json(200, {"ok": True, "message": f"Membre {email} cree"})
+
+        elif action == "import_csv":
+            rows_data = body.get("rows", [])
+            if not rows_data:
+                return self._json(400, {"error": "Aucune donnee a importer"})
+            imported, errors = 0, []
+            for i, row in enumerate(rows_data):
+                email = (row.get("email") or "").strip().lower()
+                if not email:
+                    errors.append(f"Ligne {i+1}: email manquant")
+                    continue
+                existing = fetchone("SELECT id FROM members WHERE email = %s", [email])
+                if existing:
+                    errors.append(f"Ligne {i+1}: {email} existe deja")
+                    continue
+                pw_hash = hash_pw("affi2026")
+                try:
+                    execute("""INSERT INTO members (email, password_hash, first_name, last_name, company,
+                        job_title, sector, specialty, region, membership_type, status,
+                        consent_annuaire, consent_newsletter, consent_date)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())""",
+                        [email, pw_hash, row.get("first_name",""), row.get("last_name",""),
+                         row.get("company"), row.get("job_title"), row.get("sector"),
+                         row.get("specialty"), row.get("region"),
+                         row.get("membership_type","standard"), row.get("status","active"),
+                         row.get("consent_annuaire","").lower() in ("oui","true","1"),
+                         row.get("consent_newsletter","").lower() in ("oui","true","1")])
+                    imported += 1
+                except Exception as e:
+                    errors.append(f"Ligne {i+1}: {str(e)[:80]}")
+            self._log(admin["id"], "import_csv", f"Importe: {imported}, Erreurs: {len(errors)}")
+            return self._json(200, {"ok": True, "imported": imported, "errors": errors})
+
+        elif action == "archive_member":
+            execute("UPDATE members SET archived_at=NOW(), status='blocked' WHERE id=%s AND is_admin=FALSE", [body["id"]])
+            self._log(admin["id"], "archive_member", f"Archive: #{body['id']}")
+            return self._json(200, {"ok": True, "message": "Membre archive"})
+
         elif action == "delete_member":
             execute("DELETE FROM members WHERE id=%s AND is_admin=FALSE", [body["id"]])
+            self._log(admin["id"], "delete_member", f"Supprime: #{body['id']}")
             return self._json(200, {"ok": True, "message": "Membre supprime"})
 
         # === EVENTS ===
@@ -215,6 +317,14 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
+
+    def _log(self, user_id, action, details=""):
+        try:
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0] if self.client_address else "")
+            execute("INSERT INTO logs (action, user_id, details, ip_address) VALUES (%s,%s,%s,%s)",
+                    [action, user_id, details, ip])
+        except Exception:
+            pass
 
     def _json(self, code, data):
         self.send_response(code)

@@ -57,7 +57,8 @@ class handler(BaseHTTPRequestHandler):
             full = fetchone("""
                 SELECT id, email, first_name, last_name, phone, company, job_title, sector,
                        bio, photo_url, membership_type, status, is_admin, is_board,
-                       linkedin_url, cv_text, cv_updated_at, joined_at, specialty, is_mentor
+                       linkedin_url, cv_text, cv_updated_at, joined_at, specialty, is_mentor,
+                       region, role, consent_annuaire, consent_newsletter
                 FROM members WHERE id = %s
             """, [user["id"]])
             return self._json(200, full)
@@ -104,7 +105,7 @@ class handler(BaseHTTPRequestHandler):
 
         if action == "update_profile":
             fields = {}
-            for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url","specialty","is_mentor"):
+            for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url","specialty","is_mentor","region","consent_annuaire","consent_newsletter"):
                 if k in body:
                     fields[k] = body[k]
             if fields:

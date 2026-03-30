@@ -29,20 +29,25 @@
         <div class="nav-links" id="nav-links">
             <a class="nav-link active" data-page="accueil" onclick="navigate('accueil')">Accueil</a>
             <div class="nav-dropdown">
-                <a class="nav-link" data-page="identite" onclick="navigate('identite')">Identite</a>
+                <a class="nav-link" data-page="identite" onclick="navigate('identite')">L'AFFI</a>
                 <div class="nav-dropdown-menu">
                     <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-association'),100)">L'association</a>
                     <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-actions'),100)">Ses actions</a>
                     <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-historique'),100)">Historique</a>
                     <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-organigramme'),100)">Organigramme</a>
                     <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-cartographie'),300)">Carte des membres</a>
+                    <a onclick="navigate('annuaire')" style="border-top:1px solid var(--gray-200);margin-top:4px;padding-top:12px">Annuaire des experts</a>
                 </div>
             </div>
-            <a class="nav-link" data-page="annuaire" onclick="navigate('annuaire')">Annuaire</a>
-            <a class="nav-link" data-page="agenda" onclick="navigate('agenda')">Agenda</a>
-            <a class="nav-link" data-page="evenements" onclick="navigate('evenements')">Evenements</a>
-            <a class="nav-link" data-page="replays" onclick="navigate('replays')">Replays</a>
-            <a class="nav-link" data-page="quizz" onclick="navigate('quizz')">Quizz</a>
+            <div class="nav-dropdown">
+                <a class="nav-link" data-page="agenda" onclick="navigate('agenda')">Activites</a>
+                <div class="nav-dropdown-menu">
+                    <a onclick="navigate('agenda')">Agenda</a>
+                    <a onclick="navigate('evenements')">Evenements</a>
+                    <a onclick="navigate('replays')">Replays & Webinaires</a>
+                    <a onclick="navigate('quizz')">Quizz du Rail</a>
+                </div>
+            </div>
             <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles')">Ecoles & Etudiants</a>
             <a class="nav-link" data-page="adhesion" onclick="navigate('adhesion')">Adherer</a>
             <a class="nav-link" data-page="membres" onclick="navigate('membres')">Espace Membres</a>

@@ -1,0 +1,67 @@
+{
+  "id": "mr_confort",
+  "title": "Quizz du Rail — Confort & Amenagements Voyageurs",
+  "description": "Testez vos connaissances sur le confort et les amenagements voyageurs du materiel roulant ferroviaire : suspension, climatisation, accessibilite et equipements.",
+  "questions": [
+    {
+      "question": "Quel est le role de la suspension primaire sur un bogie ferroviaire ?",
+      "choices": ["Relier la caisse au bogie", "Relier les boites d'essieux au chassis de bogie pour filtrer les vibrations de la voie", "Amortir les mouvements de lacet de la caisse", "Supporter le pantographe"],
+      "answer": 1,
+      "explanation": "La suspension primaire est situee entre les boites d'essieux et le chassis de bogie. Elle filtre les irregularites de la voie (defauts de rail, joints) et protege ainsi le bogie et la caisse des chocs et vibrations."
+    },
+    {
+      "question": "La suspension secondaire se situe entre :",
+      "choices": ["Les roues et les essieux", "Les essieux et le chassis de bogie", "Le chassis de bogie et la caisse du vehicule", "La caisse et le toit du vehicule"],
+      "answer": 2,
+      "explanation": "La suspension secondaire est placee entre le chassis de bogie et la caisse. Elle assure le confort des voyageurs en filtrant les mouvements de roulis, tangage et lacet transmis par le bogie."
+    },
+    {
+      "question": "Qu'est-ce que la pendulation active sur un train ?",
+      "choices": ["Un systeme qui fait pivoter les bogies dans les courbes", "Un systeme qui incline la caisse vers l'interieur de la courbe pour compenser la force centrifuge", "Un systeme de suspension passive", "Un dispositif de freinage en courbe"],
+      "answer": 1,
+      "explanation": "La pendulation active incline la caisse du vehicule vers l'interieur de la courbe grace a des verins, permettant de circuler plus vite en courbe tout en maintenant le confort des voyageurs (ex : Pendolino, TGV P01)."
+    },
+    {
+      "question": "Combien de niveaux (etages) comporte une rame TGV Duplex ?",
+      "choices": ["1 niveau", "2 niveaux", "3 niveaux", "2 niveaux dans les remorques et 1 dans les motrices"],
+      "answer": 3,
+      "explanation": "Le TGV Duplex comporte 2 niveaux dans les voitures remorques (voyageurs) et 1 seul niveau dans les motrices d'extremite, qui abritent les equipements de traction."
+    },
+    {
+      "question": "Que signifie l'accessibilite PMR dans le contexte ferroviaire ?",
+      "choices": ["Protection du Materiel Roulant", "Personnes a Mobilite Reduite", "Programme de Modernisation du Reseau", "Plan de Maintenance et Reparation"],
+      "answer": 1,
+      "explanation": "PMR designe les Personnes a Mobilite Reduite. La reglementation impose des amenagements specifiques : espaces UFR (Utilisateur de Fauteuil Roulant), lacunes reduites, signalisation podotactile, annonces sonores et visuelles."
+    },
+    {
+      "question": "Quel systeme equipe les trains modernes pour informer les voyageurs en temps reel ?",
+      "choices": ["Le SAEIV (Systeme d'Aide a l'Exploitation et d'Information Voyageurs)", "Le GSM-R", "L'ETCS", "Le KVB"],
+      "answer": 0,
+      "explanation": "Le SAEIV (Systeme d'Aide a l'Exploitation et d'Information Voyageurs) gere les annonces sonores, les ecrans d'affichage, les informations de desserte et les correspondances en temps reel a bord des trains."
+    },
+    {
+      "question": "La climatisation des voitures TGV doit maintenir une temperature interieure d'environ :",
+      "choices": ["18 degres C en toute saison", "22 degres C en ete et 20 degres C en hiver", "25 degres C en permanence", "Variable selon la vitesse du train"],
+      "answer": 1,
+      "explanation": "La climatisation des TGV est reglee pour maintenir environ 22 degres C en ete (refroidissement) et 20 degres C en hiver (chauffage), avec des variations possibles selon les zones du train."
+    },
+    {
+      "question": "Quel est l'interet principal de l'intercirculation entre les voitures d'un train ?",
+      "choices": ["Reduire le bruit aerodynamique", "Permettre la libre circulation des voyageurs d'une voiture a l'autre sans sortir du train", "Ameliorer la traction du train", "Faciliter le passage des catenaires"],
+      "answer": 1,
+      "explanation": "L'intercirculation (soufflets ou passerelles articulees entre voitures) permet aux voyageurs et au personnel de circuler librement dans tout le train, facilitant l'acces au bar, aux toilettes et la verification des billets."
+    },
+    {
+      "question": "Les portes louvoyantes des TGV et trains Corail modernes sont :",
+      "choices": ["Des portes battantes classiques", "Des portes coulissantes s'ouvrant vers l'exterieur puis coulissant le long de la caisse", "Des portes a guillotine", "Des portes pliantes"],
+      "answer": 1,
+      "explanation": "Les portes louvoyantes sont des portes coulissantes a effacement lateral : elles s'ecartent legerement vers l'exterieur puis glissent le long de la caisse, liberant toute la largeur de l'ouverture sans empieter sur l'espace interieur."
+    },
+    {
+      "question": "L'insonorisation d'un TGV a 300 km/h vise a maintenir un niveau sonore interieur inferieur a :",
+      "choices": ["50 dB(A)", "65 dB(A)", "80 dB(A)", "90 dB(A)"],
+      "answer": 1,
+      "explanation": "Les TGV modernes visent un niveau sonore interieur d'environ 62 a 66 dB(A) a 300 km/h, grace a l'isolation phonique des parois, du plancher, des vitres feuilletees et des joints d'etancheite."
+    }
+  ]
+}

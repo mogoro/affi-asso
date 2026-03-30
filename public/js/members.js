@@ -89,6 +89,7 @@ function switchMemberTab(tab) {
     if (tab === 'carriere') { if (typeof loadJobs === 'function') loadJobs(); }
     if (tab === 'formations') { if (typeof loadCourses === 'function') loadCourses(); }
     if (tab === 'cartographie') { if (typeof loadMap === 'function') loadMap(); }
+    if (tab === 'proposer') loadMyProposals();
     if (tab === 'profile') loadProfile();
     if (tab === 'messages') loadConversations();
     if (tab === 'notifications') loadNotifications();
@@ -276,6 +277,80 @@ async function importLinkedIn() {
         document.getElementById('prof-linkedin_url').value = url;
         alert('URL LinkedIn enregistree. Completez votre profil avec vos informations LinkedIn.');
     } catch (e) { alert('Erreur: ' + e.message); }
+}
+
+// === PROPOSITIONS ===
+async function proposeEvent(evt) {
+    evt.preventDefault();
+    try {
+        const res = await fetch(`${API}/api/members`, {
+            method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
+            body: JSON.stringify({
+                action: 'propose_event',
+                title: document.getElementById('pe-title').value,
+                event_type: document.getElementById('pe-type').value,
+                location: document.getElementById('pe-location').value,
+                start_date: document.getElementById('pe-start').value,
+                end_date: document.getElementById('pe-end').value || null,
+                description: document.getElementById('pe-desc').value,
+            })
+        });
+        const data = await res.json();
+        const el = document.getElementById('pe-success');
+        el.textContent = data.message; el.style.display = 'block';
+        evt.target.reset();
+        setTimeout(() => el.style.display = 'none', 5000);
+        loadMyProposals();
+    } catch (e) { alert('Erreur: ' + e.message); }
+}
+
+async function proposeNews(evt) {
+    evt.preventDefault();
+    try {
+        const res = await fetch(`${API}/api/members`, {
+            method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
+            body: JSON.stringify({
+                action: 'propose_news',
+                title: document.getElementById('pn-title').value,
+                excerpt: document.getElementById('pn-excerpt').value,
+                content: document.getElementById('pn-content').value,
+            })
+        });
+        const data = await res.json();
+        const el = document.getElementById('pn-success');
+        el.textContent = data.message; el.style.display = 'block';
+        evt.target.reset();
+        setTimeout(() => el.style.display = 'none', 5000);
+        loadMyProposals();
+    } catch (e) { alert('Erreur: ' + e.message); }
+}
+
+async function loadMyProposals() {
+    try {
+        const res = await fetch(`${API}/api/members`, {
+            method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
+            body: JSON.stringify({action: 'my_proposals'})
+        });
+        const data = await res.json();
+        const el = document.getElementById('my-proposals');
+        if (!el) return;
+        const all = [
+            ...(data.events||[]).map(e => ({...e, type: 'Evenement', published: e.is_published})),
+            ...(data.news||[]).map(n => ({...n, type: 'Actualite', published: n.is_published})),
+            ...(data.announcements||[]).map(a => ({...a, type: 'Annonce', published: a.is_active})),
+        ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+        if (!all.length) { el.innerHTML = '<p class="empty-msg">Aucune proposition</p>'; return; }
+        el.innerHTML = all.map(p => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <div>
+                    <span class="card-tag" style="margin-right:8px">${esc(p.type)}</span>
+                    <strong>${esc(p.title)}</strong>
+                    <span style="font-size:12px;color:var(--gray-400);margin-left:8px">${formatDate(p.created_at)}</span>
+                </div>
+                <span class="adm-badge ${p.published ? 'adm-badge-active' : 'adm-badge-pending'}">${p.published ? 'Publie' : 'En attente'}</span>
+            </div>
+        `).join('');
+    } catch (e) { console.warn('Proposals:', e); }
 }
 
 // === ADMIN ===

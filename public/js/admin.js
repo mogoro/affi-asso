@@ -23,6 +23,7 @@ function switchAdminSection(id) {
     if (id === 'adm-news') loadAdminNews();
     if (id === 'adm-announcements') loadAdminAnnouncements();
     if (id === 'adm-messages') loadAdminMessages();
+    if (id === 'adm-pending') loadPendingContent();
     if (id === 'adm-logs') loadAdminLogs();
 }
 
@@ -187,8 +188,11 @@ async function loadAdminEvents() {
             <td><strong>${esc(e.title)}</strong></td>
             <td><span class="card-tag">${esc(e.event_type||'')}</span></td>
             <td style="font-size:13px">${esc(e.location||'')}</td>
-            <td>${e.is_published ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--gray-400)">Non</span>'}</td>
-            <td class="adm-actions"><button onclick="adminAction('delete_event',${e.id})" class="adm-btn adm-btn-danger">&#128465;</button></td>
+            <td>${e.is_published ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>'}</td>
+            <td class="adm-actions">
+                ${!e.is_published ? `<button onclick="adminAction('publish_event',${e.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_event',${e.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
+                <button onclick="adminAction('delete_event',${e.id})" class="adm-btn adm-btn-danger">&#128465;</button>
+            </td>
         </tr>`).join('')}</tbody></table>`;
 }
 
@@ -236,8 +240,11 @@ async function loadAdminNews() {
         ${items.map(n => `<tr>
             <td style="font-size:13px">${formatDate(n.published_at)}</td>
             <td><strong>${esc(n.title)}</strong></td>
-            <td>${n.is_published ? '<span style="color:var(--green)">Oui</span>' : 'Non'}</td>
-            <td class="adm-actions"><button onclick="adminAction('delete_news',${n.id})" class="adm-btn adm-btn-danger">&#128465;</button></td>
+            <td>${n.is_published ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>'}</td>
+            <td class="adm-actions">
+                ${!n.is_published ? `<button onclick="adminAction('publish_news',${n.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_news',${n.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
+                <button onclick="adminAction('delete_news',${n.id})" class="adm-btn adm-btn-danger">&#128465;</button>
+            </td>
         </tr>`).join('')}</tbody></table>`;
 }
 
@@ -469,6 +476,72 @@ async function loadAdminLogs() {
             <td style="font-size:13px">${esc(l.details||'')}</td>
             <td style="font-size:12px;color:var(--gray-400)">${esc(l.ip_address||'')}</td>
         </tr>`).join('')}</tbody></table>`;
+}
+
+// === PENDING CONTENT (MODERATION) ===
+async function loadPendingContent() {
+    const data = await adminFetch('pending_content', {});
+    const badge = document.getElementById('pending-count-badge');
+    if (badge) badge.textContent = data.total > 0 ? data.total : '';
+    const el = document.getElementById('adm-pending-list');
+    if (!el) return;
+    if (!data.total) { el.innerHTML = '<p class="empty-msg" style="color:var(--green)">&#10003; Aucun contenu en attente de validation</p>'; return; }
+    let html = '';
+    if (data.events.length) {
+        html += `<h4 style="color:var(--primary);margin:16px 0 8px">Evenements proposes (${data.events.length})</h4>`;
+        html += data.events.map(e => `
+            <div class="announcement-card">
+                <div class="ann-header">
+                    <span><strong>${esc(e.title)}</strong></span>
+                    <span class="ann-date">${formatDate(e.created_at)}</span>
+                </div>
+                <div style="font-size:13px;color:var(--gray-500);margin-bottom:8px">
+                    ${e.event_type ? `<span class="card-tag">${esc(e.event_type)}</span>` : ''}
+                    ${e.location ? ` &#128205; ${esc(e.location)}` : ''}
+                    ${e.start_date ? ` &#128197; ${formatDate(e.start_date)}` : ''}
+                </div>
+                <div class="ann-content">${esc(e.description || '')}</div>
+                <div class="ann-author">Propose par ${esc(e.first_name||'')} ${esc(e.last_name||'')}</div>
+                <div style="margin-top:12px;display:flex;gap:8px">
+                    <button onclick="adminAction('publish_event',${e.id})" class="btn btn-accent" style="font-size:12px;padding:6px 16px">Publier</button>
+                    <button onclick="adminAction('delete_event',${e.id})" class="btn btn-primary" style="font-size:12px;padding:6px 16px;background:var(--gray-500)">Rejeter</button>
+                </div>
+            </div>`).join('');
+    }
+    if (data.news.length) {
+        html += `<h4 style="color:var(--primary);margin:16px 0 8px">Actualites proposees (${data.news.length})</h4>`;
+        html += data.news.map(n => `
+            <div class="announcement-card">
+                <div class="ann-header">
+                    <span><strong>${esc(n.title)}</strong></span>
+                    <span class="ann-date">${formatDate(n.created_at)}</span>
+                </div>
+                <div class="ann-content">${esc(n.content || n.excerpt || '')}</div>
+                <div class="ann-author">Propose par ${esc(n.first_name||'')} ${esc(n.last_name||'')}</div>
+                <div style="margin-top:12px;display:flex;gap:8px">
+                    <button onclick="adminAction('publish_news',${n.id})" class="btn btn-accent" style="font-size:12px;padding:6px 16px">Publier</button>
+                    <button onclick="adminAction('delete_news',${n.id})" class="btn btn-primary" style="font-size:12px;padding:6px 16px;background:var(--gray-500)">Rejeter</button>
+                </div>
+            </div>`).join('');
+    }
+    if (data.announcements.length) {
+        html += `<h4 style="color:var(--primary);margin:16px 0 8px">Annonces proposees (${data.announcements.length})</h4>`;
+        html += data.announcements.map(a => `
+            <div class="announcement-card">
+                <div class="ann-header">
+                    <span class="ann-cat" style="background:var(--teal)">${esc(a.category)}</span>
+                    <span class="ann-date">${formatDate(a.created_at)}</span>
+                </div>
+                <div class="ann-title">${esc(a.title)}</div>
+                <div class="ann-content">${esc(a.content || '')}</div>
+                <div class="ann-author">Par ${esc(a.first_name||'')} ${esc(a.last_name||'')}</div>
+                <div style="margin-top:12px;display:flex;gap:8px">
+                    <button onclick="adminAction('approve_announcement',${a.id})" class="btn btn-accent" style="font-size:12px;padding:6px 16px">Publier</button>
+                    <button onclick="adminAction('delete_announcement',${a.id})" class="btn btn-primary" style="font-size:12px;padding:6px 16px;background:var(--gray-500)">Rejeter</button>
+                </div>
+            </div>`).join('');
+    }
+    el.innerHTML = html;
 }
 
 // === MESSAGES ===

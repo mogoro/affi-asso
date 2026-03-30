@@ -1,0 +1,117 @@
+{
+  "id": "infra_voie",
+  "title": "Quizz du Rail — Technologie de la Voie Ferree",
+  "description": "Testez vos connaissances sur la technologie de la voie ferree : rails, traverses, appareils de voie et geometrie.",
+  "questions": [
+    {
+      "question": "Quel est l'ecartement standard des voies ferrees en France et dans la majorite de l'Europe ?",
+      "choices": [
+        "1000 mm (voie metrique)",
+        "1435 mm (voie normale)",
+        "1520 mm (voie large russe)",
+        "1668 mm (voie large iberique)"
+      ],
+      "answer": 1,
+      "explanation": "L'ecartement standard (voie normale) est de 1435 mm, mesure entre les faces internes des deux rails. C'est la norme adoptee par la majorite des reseaux europeens."
+    },
+    {
+      "question": "Que designe le rail UIC 60 ?",
+      "choices": [
+        "Un rail de 60 metres de longueur",
+        "Un rail dont la masse lineique est de 60 kg par metre",
+        "Un rail pouvant supporter 60 tonnes par essieu",
+        "Un rail fabrique selon 60 normes UIC"
+      ],
+      "answer": 1,
+      "explanation": "Le rail UIC 60 est un profil de rail dont la masse lineique est d'environ 60 kg/m. C'est le profil standard utilise sur les lignes principales et les LGV en France."
+    },
+    {
+      "question": "Qu'est-ce qu'un LRS (Long Rail Soude) ?",
+      "choices": [
+        "Un rail de plus de 100 metres fabrique en usine",
+        "Un rail continu obtenu en soudant bout a bout des barres de rail elementaires, eliminant les joints",
+        "Un rail special pour les lignes a grande vitesse uniquement",
+        "Un rail en alliage leger pour les ponts"
+      ],
+      "answer": 1,
+      "explanation": "Le LRS est obtenu en soudant des barres de rail (par soudure aluminothermique ou electrique) pour former un rail continu de plusieurs centaines de metres, supprimant les joints qui generent bruit et usure."
+    },
+    {
+      "question": "Quel est le role principal du ballast dans la voie ferree ?",
+      "choices": [
+        "Isoler electriquement les rails",
+        "Repartir les charges, assurer le drainage et permettre le calage de la geometrie de la voie",
+        "Proteger les traverses contre la corrosion",
+        "Reduire le bruit des trains"
+      ],
+      "answer": 1,
+      "explanation": "Le ballast (pierres concassees) repartit les charges transmises par les traverses sur le sol, assure le drainage des eaux de pluie et permet le reglage de la geometrie de la voie par bourrage."
+    },
+    {
+      "question": "Quelle est l'alternative au ballast utilisee notamment sur certaines LGV et en tunnel ?",
+      "choices": [
+        "La voie sur sable compacte",
+        "La voie sur dalle beton (slab track)",
+        "La voie sur enrobe bitumineux",
+        "La voie sur gravier fin"
+      ],
+      "answer": 1,
+      "explanation": "La voie sur dalle beton (slab track) remplace le ballast par une dalle en beton sur laquelle les rails sont fixes. Elle offre une meilleure stabilite et necessite moins d'entretien, mais coute plus cher a construire."
+    },
+    {
+      "question": "Qu'est-ce qu'un appareil de voie de type aiguillage ?",
+      "choices": [
+        "Un dispositif electrique pour alimenter les rails",
+        "Un dispositif mecanique permettant a un train de passer d'une voie a une autre",
+        "Un systeme de freinage installe dans les gares de triage",
+        "Un capteur de detection de presence des trains"
+      ],
+      "answer": 1,
+      "explanation": "Un aiguillage est un appareil de voie compose de lames mobiles (aiguilles) et d'un coeur de croisement, permettant de diriger un train d'une voie vers une autre."
+    },
+    {
+      "question": "Qu'est-ce que le devers d'une voie en courbe ?",
+      "choices": [
+        "L'ecart entre les deux rails en largeur",
+        "La surelevation du rail exterieur par rapport au rail interieur dans une courbe",
+        "La pente longitudinale de la voie",
+        "L'usure laterale du rail en courbe"
+      ],
+      "answer": 1,
+      "explanation": "Le devers est la difference de hauteur entre le rail exterieur (sureleve) et le rail interieur en courbe. Il compense une partie de la force centrifuge subie par les trains."
+    },
+    {
+      "question": "Quel est l'ordre de grandeur du rayon minimal de courbure sur les LGV francaises a 300 km/h ?",
+      "choices": [
+        "500 metres",
+        "2 000 metres",
+        "5 000 metres",
+        "10 000 metres"
+      ],
+      "answer": 2,
+      "explanation": "Sur les LGV francaises, le rayon de courbure minimal en exploitation a 300 km/h est d'environ 5 000 metres, voire davantage, pour garantir le confort des voyageurs et la securite."
+    },
+    {
+      "question": "Pourquoi realise-t-on le meulage preventif des rails ?",
+      "choices": [
+        "Pour augmenter l'adherence par temps de pluie",
+        "Pour eliminer les defauts de surface, reduire le bruit et prolonger la duree de vie des rails",
+        "Pour reduire l'ecartement de la voie",
+        "Pour preparer les rails avant la soudure"
+      ],
+      "answer": 1,
+      "explanation": "Le meulage preventif des rails permet d'eliminer les micro-defauts de surface (usure ondulatoire, head checks), de reduire le bruit de roulement et de retarder l'apparition de fissures de fatigue."
+    },
+    {
+      "question": "Quel type de traverse est majoritairement utilise sur les lignes principales du reseau ferre francais ?",
+      "choices": [
+        "Traverses en bois de chene",
+        "Traverses en acier",
+        "Traverses en beton bi-bloc ou monobloc",
+        "Traverses en plastique recycle"
+      ],
+      "answer": 2,
+      "explanation": "Les traverses en beton (bi-bloc type VAX ou monobloc) sont majoritaires sur les lignes principales et les LGV. Elles offrent une meilleure stabilite et duree de vie que les traverses en bois."
+    }
+  ]
+}

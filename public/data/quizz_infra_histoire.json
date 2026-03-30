@@ -1,0 +1,117 @@
+{
+  "id": "infra_histoire",
+  "title": "Quizz du Rail — Histoire de l'Infrastructure Ferroviaire",
+  "description": "Testez vos connaissances sur l'histoire de l'infrastructure ferroviaire en France et en Europe, des premieres lignes aux LGV.",
+  "questions": [
+    {
+      "question": "Quelle est la premiere ligne de chemin de fer a traction a vapeur ouverte en France ?",
+      "choices": [
+        "Paris - Saint-Germain-en-Laye (1837)",
+        "Saint-Etienne - Andrezieux (1827)",
+        "Lyon - Marseille (1856)",
+        "Paris - Versailles (1839)"
+      ],
+      "answer": 1,
+      "explanation": "La ligne Saint-Etienne - Andrezieux, ouverte en 1827, est la premiere ligne de chemin de fer a traction a vapeur en France, initialement destinee au transport du charbon."
+    },
+    {
+      "question": "En quelle annee la ligne a grande vitesse (LGV) Sud-Est Paris-Lyon a-t-elle ete mise en service ?",
+      "choices": [
+        "1978",
+        "1981",
+        "1985",
+        "1990"
+      ],
+      "answer": 1,
+      "explanation": "La LGV Sud-Est a ete inauguree le 27 septembre 1981, permettant de relier Paris a Lyon en environ 2 heures avec le TGV."
+    },
+    {
+      "question": "Quel celebre viaduc ferroviaire construit par Gustave Eiffel se situe dans le Cantal ?",
+      "choices": [
+        "Le viaduc de Millau",
+        "Le viaduc de Garabit",
+        "Le viaduc de Barentin",
+        "Le viaduc des Fades"
+      ],
+      "answer": 1,
+      "explanation": "Le viaduc de Garabit, construit entre 1882 et 1884 par Gustave Eiffel, enjambe la Truyere dans le Cantal. Le viaduc de Millau est un ouvrage routier bien plus recent (2004)."
+    },
+    {
+      "question": "En quelle annee le tunnel sous la Manche a-t-il ete inaugure ?",
+      "choices": [
+        "1990",
+        "1992",
+        "1994",
+        "1996"
+      ],
+      "answer": 2,
+      "explanation": "Le tunnel sous la Manche a ete inaugure le 6 mai 1994, reliant Coquelles (France) a Folkestone (Angleterre) sur environ 50 km dont 37 km sous la mer."
+    },
+    {
+      "question": "Le tunnel ferroviaire du Mont-Cenis (ou Frejus) relie la France a quel pays ?",
+      "choices": [
+        "La Suisse",
+        "L'Espagne",
+        "L'Italie",
+        "L'Allemagne"
+      ],
+      "answer": 2,
+      "explanation": "Le tunnel ferroviaire du Frejus, perce entre 1857 et 1871, relie Modane (France) a Bardonecchia (Italie) sous les Alpes. C'est le premier grand tunnel alpin."
+    },
+    {
+      "question": "Quel organisme a ete cree en 1997 pour gerer l'infrastructure ferroviaire francaise, separement de l'exploitation ?",
+      "choices": [
+        "SNCF Reseau",
+        "Reseau Ferre de France (RFF)",
+        "EPSF",
+        "ARAFER"
+      ],
+      "answer": 1,
+      "explanation": "Reseau Ferre de France (RFF) a ete cree en 1997 pour devenir proprietaire et gestionnaire de l'infrastructure ferroviaire. Il a ete integre a SNCF Reseau en 2015."
+    },
+    {
+      "question": "La Compagnie Paris-Lyon-Mediterranee (PLM) faisait partie de quel systeme d'organisation ferroviaire ?",
+      "choices": [
+        "Le monopole d'Etat depuis 1848",
+        "Les grandes compagnies privees du XIXe siecle",
+        "Les chemins de fer departementaux",
+        "Les reseaux de tramways interurbains"
+      ],
+      "answer": 1,
+      "explanation": "La PLM etait l'une des six grandes compagnies privees qui exploitaient le reseau ferroviaire francais au XIXe siecle, avant la nationalisation et la creation de la SNCF en 1938."
+    },
+    {
+      "question": "En quelle annee la SNCF a-t-elle ete creee par nationalisation des compagnies ferroviaires privees ?",
+      "choices": [
+        "1920",
+        "1938",
+        "1945",
+        "1958"
+      ],
+      "answer": 1,
+      "explanation": "La SNCF a ete creee le 1er janvier 1938, regroupant les anciennes compagnies privees (PLM, Nord, Est, Ouest-Etat, Midi, PO) en une societe nationale."
+    },
+    {
+      "question": "Quelle a ete la premiere ligne de chemin de fer electrifiee en courant continu 1500 V en France ?",
+      "choices": [
+        "Paris - Lyon (1950)",
+        "Paris - Bordeaux (1938)",
+        "Paris - Vierzon (1926)",
+        "Toulouse - Tarbes (1920)"
+      ],
+      "answer": 2,
+      "explanation": "La ligne Paris-Vierzon a ete electrifiee en 1500 V continu a partir de 1926, dans le cadre du programme d'electrification de la Compagnie du PO."
+    },
+    {
+      "question": "Quelle ligne a grande vitesse (LGV) a ete la derniere mise en service en France (en 2017) ?",
+      "choices": [
+        "LGV Est Europeenne phase 2",
+        "LGV Bretagne-Pays de la Loire et LGV Sud Europe Atlantique",
+        "LGV Rhin-Rhone branche Est",
+        "LGV Mediterranee prolongement"
+      ],
+      "answer": 1,
+      "explanation": "Les LGV Bretagne-Pays de la Loire (Le Mans - Rennes) et Sud Europe Atlantique (Tours - Bordeaux) ont ete mises en service simultanement le 2 juillet 2017."
+    }
+  ]
+}

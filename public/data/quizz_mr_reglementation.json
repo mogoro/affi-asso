@@ -1,0 +1,67 @@
+{
+  "id": "mr_reglementation",
+  "title": "Quizz du Rail — Reglementation du Materiel Roulant",
+  "description": "Testez vos connaissances sur la reglementation applicable au materiel roulant ferroviaire en France et en Europe.",
+  "questions": [
+    {
+      "question": "Quel organisme francais est charge de delivrer les autorisations de mise en service du materiel roulant ?",
+      "choices": ["SNCF Reseau", "EPSF", "DGITM", "ERA"],
+      "answer": 1,
+      "explanation": "L'Etablissement Public de Securite Ferroviaire (EPSF) est l'autorite nationale de securite en France, chargee de delivrer les autorisations de mise en service du materiel roulant."
+    },
+    {
+      "question": "Que signifie le sigle STI LOC&PAS ?",
+      "choices": ["Specification Technique d'Interoperabilite Locomotives et Passagers", "Specification Technique d'Interoperabilite Locomotives et Materiel Roulant Voyageurs", "Standard Technique International Locomotives et Passagers", "Systeme Technique d'Identification Locomotives et Passagers"],
+      "answer": 1,
+      "explanation": "La STI LOC&PAS (Locomotives et Materiel Roulant Voyageurs) definit les exigences essentielles pour l'interoperabilite du materiel roulant sur le reseau ferroviaire europeen."
+    },
+    {
+      "question": "Qu'est-ce que l'EVR dans le contexte ferroviaire europeen ?",
+      "choices": ["Evaluation des Vehicules Roulants", "Enregistrement des Voies et Routes", "European Vehicle Register (Registre Europeen des Vehicules)", "Entretien des Vehicules et Rames"],
+      "answer": 2,
+      "explanation": "L'EVR (European Vehicle Register) est le registre europeen dans lequel chaque vehicule ferroviaire autorise a circuler doit etre immatricule avec un numero a 12 chiffres."
+    },
+    {
+      "question": "Que designe le sigle ECM en matiere de maintenance du materiel roulant ?",
+      "choices": ["Entreprise Certifiee de Maintenance", "Entite en Charge de la Maintenance", "Equipe de Controle du Materiel", "Evaluation et Conformite du Materiel"],
+      "answer": 1,
+      "explanation": "L'ECM (Entite en Charge de la Maintenance) est l'organisme responsable de la maintenance d'un vehicule ferroviaire, conformement au reglement europeen."
+    },
+    {
+      "question": "La certification ECM est obligatoire pour les wagons de fret depuis quelle reglementation ?",
+      "choices": ["Directive 2004/49/CE", "Reglement (UE) 445/2011", "Directive 2008/57/CE", "Reglement (UE) 2016/798"],
+      "answer": 1,
+      "explanation": "Le reglement (UE) 445/2011 a rendu obligatoire la certification des ECM pour les wagons de fret, etendue ensuite a tous les vehicules par le 4eme paquet ferroviaire."
+    },
+    {
+      "question": "Quel organisme europeen joue un role central dans l'harmonisation des regles d'autorisation du materiel roulant ?",
+      "choices": ["EPSF", "ERA (Agence de l'Union Europeenne pour les Chemins de Fer)", "UIC", "CER"],
+      "answer": 1,
+      "explanation": "L'ERA (European Union Agency for Railways) est chargee de l'harmonisation technique et de la delivrance des autorisations de vehicules valables dans toute l'UE depuis le 4eme paquet ferroviaire."
+    },
+    {
+      "question": "Que sont les essais en ligne dans le processus d'homologation du materiel roulant ?",
+      "choices": ["Des tests informatiques de simulation", "Des essais de circulation reelle sur le reseau ferroviaire", "Des verifications documentaires", "Des tests en usine avant livraison"],
+      "answer": 1,
+      "explanation": "Les essais en ligne consistent a faire circuler le materiel roulant sur le reseau ferroviaire reel pour verifier sa compatibilite technique, ses performances de freinage, son comportement dynamique, etc."
+    },
+    {
+      "question": "La directive securite ferroviaire du 4eme paquet ferroviaire porte le numero :",
+      "choices": ["Directive 2004/49/CE", "Directive 2008/110/CE", "Directive (UE) 2016/798", "Directive 2012/34/UE"],
+      "answer": 2,
+      "explanation": "La directive (UE) 2016/798 relative a la securite ferroviaire fait partie du pilier technique du 4eme paquet ferroviaire et remplace la directive 2004/49/CE."
+    },
+    {
+      "question": "Que verifie la compatibilite technique d'un vehicule avec un itineraire ?",
+      "choices": ["Uniquement le gabarit du vehicule", "La compatibilite entre les caracteristiques du vehicule et celles de l'infrastructure", "Seulement la vitesse maximale autorisee", "Le confort des voyageurs"],
+      "answer": 1,
+      "explanation": "La compatibilite technique verifie l'adequation entre le vehicule et l'infrastructure : gabarit, charge a l'essieu, systeme de signalisation, tension d'alimentation, ecartement des voies, etc."
+    },
+    {
+      "question": "Le marquage CE sur un sous-systeme ferroviaire atteste :",
+      "choices": ["Que le materiel est fabrique en Europe", "La conformite aux exigences essentielles des STI et directives europeennes", "Que le prix est conforme au marche europeen", "Que l'entretien est assure par un organisme certifie"],
+      "answer": 1,
+      "explanation": "Le marquage CE atteste que le sous-systeme ou constituant d'interoperabilite est conforme aux exigences essentielles definies par les STI et les directives europeennes applicables."
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "id": "infra_energie",
+  "title": "Quizz du Rail — Alimentation Electrique Ferroviaire",
+  "description": "Testez vos connaissances sur l'alimentation electrique du reseau ferroviaire : catenaires, sous-stations, tensions et technologies.",
+  "questions": [
+    {
+      "question": "Quelles sont les deux tensions d'electrification utilisees sur le reseau ferre national francais ?",
+      "choices": [
+        "750 V DC et 15 kV AC",
+        "1500 V DC et 25 kV AC 50 Hz",
+        "3000 V DC et 25 kV AC 50 Hz",
+        "1500 V DC et 15 kV AC 16,7 Hz"
+      ],
+      "answer": 1,
+      "explanation": "Le reseau francais utilise deux systemes : le 1500 V courant continu (historique, sud et sud-ouest) et le 25 kV courant alternatif 50 Hz (lignes plus recentes et toutes les LGV)."
+    },
+    {
+      "question": "Quel dispositif le train utilise-t-il pour capter le courant depuis la catenaire ?",
+      "choices": [
+        "Le transformateur",
+        "Le pantographe",
+        "Le disjoncteur principal",
+        "Le frotteur"
+      ],
+      "answer": 1,
+      "explanation": "Le pantographe est l'organe de captage monte sur le toit du train. Son archet frotte contre le fil de contact de la catenaire pour capter le courant electrique."
+    },
+    {
+      "question": "Quel est le role d'une sous-station electrique ferroviaire ?",
+      "choices": [
+        "Stocker l'energie electrique dans des batteries",
+        "Transformer et/ou redresser l'electricite du reseau haute tension pour alimenter la catenaire",
+        "Produire de l'electricite a partir de panneaux solaires",
+        "Reguler la vitesse des trains"
+      ],
+      "answer": 1,
+      "explanation": "Les sous-stations convertissent l'electricite du reseau de transport haute tension (63 kV ou 225 kV) en tension adaptee a la catenaire (1500 V DC ou 25 kV AC)."
+    },
+    {
+      "question": "Qu'est-ce que le systeme d'alimentation 2x25 kV utilise sur les LGV ?",
+      "choices": [
+        "Une alimentation en 50 000 volts",
+        "Un systeme avec un autotransformateur et un feeder negatif a -25 kV, permettant d'espacer davantage les sous-stations",
+        "Deux catenaires paralleles alimentees a 25 kV chacune",
+        "Un doublage de la puissance des sous-stations classiques"
+      ],
+      "answer": 1,
+      "explanation": "Le 2x25 kV utilise un feeder a -25 kV et des autotransformateurs le long de la ligne. Cela cree une tension de 50 kV entre feeder et catenaire, permettant d'espacer les sous-stations jusqu'a 50-80 km."
+    },
+    {
+      "question": "Sur quel type de reseau ferroviaire trouve-t-on couramment l'alimentation par troisieme rail ?",
+      "choices": [
+        "Les LGV francaises",
+        "Les metros et certains reseaux suburbains (ex : RER sur certaines sections)",
+        "Les lignes de fret transeuropeennes",
+        "Les lignes de montagne"
+      ],
+      "answer": 1,
+      "explanation": "L'alimentation par troisieme rail est utilisee dans les metros et sur certains reseaux suburbains (comme des sections du RER ou le reseau sud de Londres). La tension est generalement de 750 V DC."
+    },
+    {
+      "question": "Qu'est-ce qu'une section de separation de phases sur une ligne electrifiee en 25 kV ?",
+      "choices": [
+        "Un troncon ou les trains doivent rouler au diesel",
+        "Une zone ou le pantographe doit etre abaisse car deux phases electriques differentes se rencontrent",
+        "Un dispositif de protection contre la foudre",
+        "Une zone de limitation de vitesse pour raisons electriques"
+      ],
+      "answer": 1,
+      "explanation": "La section de separation de phases est une zone neutre (non alimentee) entre deux secteurs alimentes par des phases differentes du reseau triphasique. Le conducteur doit couper la traction en la franchissant."
+    },
+    {
+      "question": "Comment le retour de courant de traction s'effectue-t-il principalement dans une installation ferroviaire ?",
+      "choices": [
+        "Par un cable enterre specifique",
+        "Par les rails de roulement et la terre",
+        "Par la catenaire elle-meme en circuit ferme",
+        "Par un fil de retour aerien separe"
+      ],
+      "answer": 1,
+      "explanation": "Le courant de traction revient a la sous-station principalement par les rails de roulement, avec une partie par la terre. C'est pourquoi l'isolation electrique des rails est un enjeu important."
+    },
+    {
+      "question": "Qu'est-ce que le freinage regeneratif (ou par recuperation) ?",
+      "choices": [
+        "Un freinage utilisant des patins magnetiques sur les rails",
+        "Un freinage ou les moteurs fonctionnent en generatrices et renvoient l'energie electrique dans la catenaire",
+        "Un freinage a air comprime classique",
+        "Un systeme de freinage par retro-fusees"
+      ],
+      "answer": 1,
+      "explanation": "Lors du freinage regeneratif, les moteurs de traction deviennent des generatrices. L'energie cinetique du train est convertie en electricite renvoyee dans la catenaire, utilisable par d'autres trains."
+    },
+    {
+      "question": "Quel est l'ordre de grandeur de la puissance electrique consommee par un TGV Duplex a pleine vitesse (320 km/h) ?",
+      "choices": [
+        "1 a 2 MW",
+        "4 a 5 MW",
+        "8 a 10 MW",
+        "15 a 20 MW"
+      ],
+      "answer": 2,
+      "explanation": "Un TGV Duplex a une puissance installee d'environ 9,3 MW. A pleine vitesse (320 km/h), la puissance effectivement consommee est de l'ordre de 8 a 10 MW pour vaincre la resistance aerodynamique."
+    },
+    {
+      "question": "Pourquoi le 25 kV alternatif 50 Hz est-il prefere au 1500 V continu pour les electrifications recentes ?",
+      "choices": [
+        "Parce qu'il permet d'utiliser des locomotives plus legeres",
+        "Parce que la tension plus elevee permet de transporter la meme puissance avec un courant plus faible, reduisant les pertes et l'infrastructure necessaire",
+        "Parce qu'il est moins dangereux pour les personnes",
+        "Parce qu'il est compatible avec toutes les locomotives anciennes"
+      ],
+      "answer": 1,
+      "explanation": "A puissance egale, le 25 kV necessite un courant environ 17 fois plus faible que le 1500 V. Cela reduit les pertes par effet Joule, permet des catenaires plus legeres et espace davantage les sous-stations."
+    }
+  ]
+}

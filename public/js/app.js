@@ -305,12 +305,64 @@ function closeReplay() {
 }
 
 // === QUIZZ DU RAIL ===
+const QUIZZ_CATALOG = [
+    { file: 'quizz_march_2026.json', cat: 'General', icon: '&#128646;' },
+    { file: 'quizz_infra_histoire.json', cat: 'Infrastructure', icon: '&#128218;' },
+    { file: 'quizz_infra_reglementation.json', cat: 'Infrastructure', icon: '&#9878;' },
+    { file: 'quizz_infra_signalisation.json', cat: 'Infrastructure', icon: '&#128681;' },
+    { file: 'quizz_infra_voie.json', cat: 'Infrastructure', icon: '&#128740;' },
+    { file: 'quizz_infra_energie.json', cat: 'Infrastructure', icon: '&#9889;' },
+    { file: 'quizz_mr_histoire.json', cat: 'Materiel Roulant', icon: '&#128644;' },
+    { file: 'quizz_mr_reglementation.json', cat: 'Materiel Roulant', icon: '&#9878;' },
+    { file: 'quizz_mr_traction.json', cat: 'Materiel Roulant', icon: '&#9881;' },
+    { file: 'quizz_mr_freinage.json', cat: 'Materiel Roulant', icon: '&#128721;' },
+    { file: 'quizz_mr_confort.json', cat: 'Materiel Roulant', icon: '&#128186;' },
+];
 let quizzData = null;
 let quizzState = { current: 0, score: 0, answers: [], finished: false };
+let quizzCatalogData = [];
 
 async function loadQuizz() {
+    // Load metadata for all quizzes
+    quizzCatalogData = [];
+    const el = document.getElementById('quizz-container');
+    if (el) el.innerHTML = '<p class="empty-msg">Chargement du catalogue...</p>';
     try {
-        const res = await fetch('/data/quizz_march_2026.json');
+        const results = await Promise.all(QUIZZ_CATALOG.map(q =>
+            fetch(`/data/${q.file}`).then(r => r.json()).then(d => ({...d, cat: q.cat, icon: q.icon, file: q.file})).catch(() => null)
+        ));
+        quizzCatalogData = results.filter(Boolean);
+        renderQuizzCatalog('');
+    } catch (e) { console.warn('Quizz:', e); }
+}
+
+function filterQuizzCat(btn, cat) {
+    document.querySelectorAll('#page-quizz .replay-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderQuizzCatalog(cat);
+}
+
+function renderQuizzCatalog(cat) {
+    const el = document.getElementById('quizz-container');
+    if (!el) return;
+    const filtered = cat ? quizzCatalogData.filter(q => q.cat === cat) : quizzCatalogData;
+    el.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+            ${filtered.map(q => `
+                <div class="quizz-catalog-card" onclick="selectQuizz('${q.file}')">
+                    <div class="qcc-icon">${q.icon}</div>
+                    <span class="card-tag card-tag-${q.cat === 'Infrastructure' ? 'specialty' : q.cat === 'Materiel Roulant' ? 'primary' : ''}" style="margin-bottom:8px">${esc(q.cat)}</span>
+                    <div class="qcc-title">${esc(q.title.replace('Quizz du Rail — ',''))}</div>
+                    <div class="qcc-desc">${esc(q.description)}</div>
+                    <div class="qcc-meta">${q.questions.length} questions</div>
+                </div>
+            `).join('')}
+        </div>`;
+}
+
+async function selectQuizz(file) {
+    try {
+        const res = await fetch(`/data/${file}`);
         quizzData = await res.json();
         quizzState = { current: 0, score: 0, answers: [], finished: false };
         renderQuizzIntro();
@@ -326,7 +378,10 @@ function renderQuizzIntro() {
             <h3>${esc(quizzData.title)}</h3>
             <p>${esc(quizzData.description)}</p>
             <p style="margin:16px 0;color:var(--gray-500)">${quizzData.questions.length} questions &middot; Choix multiple &middot; Correction immediate</p>
-            <button class="btn btn-accent" onclick="startQuizz()">Commencer le Quizz</button>
+            <div style="display:flex;gap:12px;justify-content:center">
+                <button class="btn btn-accent" onclick="startQuizz()">Commencer le Quizz</button>
+                <button class="btn btn-primary" onclick="loadQuizz()" style="background:var(--gray-500)">Retour au catalogue</button>
+            </div>
         </div>`;
 }
 

@@ -1,0 +1,117 @@
+{
+  "id": "infra_reglementation",
+  "title": "Quizz du Rail — Reglementation de l'Infrastructure",
+  "description": "Testez vos connaissances sur la reglementation de l'infrastructure ferroviaire : cadre legislatif, organismes de controle et reforme ferroviaire.",
+  "questions": [
+    {
+      "question": "Quel est le role principal de l'EPSF (Etablissement Public de Securite Ferroviaire) ?",
+      "choices": [
+        "Gerer le reseau ferroviaire national",
+        "Delivrer les autorisations et certificats de securite ferroviaire",
+        "Fixer les tarifs des peages ferroviaires",
+        "Exploiter les gares de voyageurs"
+      ],
+      "answer": 1,
+      "explanation": "L'EPSF est l'autorite nationale de securite ferroviaire. Il delivre les autorisations de mise en exploitation commerciale, les certificats et agr ements de securite."
+    },
+    {
+      "question": "Que signifie STI dans le contexte ferroviaire europeen ?",
+      "choices": [
+        "Systeme de Transport Integre",
+        "Specifications Techniques d'Interoperabilite",
+        "Standard Technique International",
+        "Service de Trafic Intermodal"
+      ],
+      "answer": 1,
+      "explanation": "Les STI (Specifications Techniques d'Interoperabilite) sont des reglements europeens qui definissent les exigences techniques pour assurer l'interoperabilite du systeme ferroviaire europeen."
+    },
+    {
+      "question": "Quel organisme est le regulateur du secteur des transports ferroviaires en France depuis 2015 ?",
+      "choices": [
+        "L'EPSF",
+        "La DGITM",
+        "L'ART (ex-ARAFER)",
+        "SNCF Reseau"
+      ],
+      "answer": 2,
+      "explanation": "L'Autorite de Regulation des Transports (ART), anciennement ARAFER, est le regulateur independant qui veille a l'acces equitable au reseau ferroviaire et au niveau des redevances."
+    },
+    {
+      "question": "La reforme ferroviaire de 2018 (loi du 27 juin 2018) a notamment prevu :",
+      "choices": [
+        "La privatisation totale de la SNCF",
+        "La transformation de la SNCF en societe anonyme a capitaux publics et la fin du recrutement au statut",
+        "La suppression de SNCF Reseau",
+        "Le transfert de la gestion des TER aux departements"
+      ],
+      "answer": 1,
+      "explanation": "La reforme de 2018 a transforme la SNCF en SA a capitaux publics, avec arret du recrutement au statut de cheminot pour les nouveaux entrants, et ouverture a la concurrence."
+    },
+    {
+      "question": "Quel texte legislatif francais encadre principalement le secteur ferroviaire ?",
+      "choices": [
+        "Le Code de la route",
+        "Le Code des transports",
+        "Le Code de l'urbanisme",
+        "Le Code de la construction"
+      ],
+      "answer": 1,
+      "explanation": "Le Code des transports, dans sa partie relative au transport ferroviaire, regroupe l'ensemble des dispositions legislatives applicables au secteur ferroviaire en France."
+    },
+    {
+      "question": "Que sont les redevances d'infrastructure (ou peages ferroviaires) ?",
+      "choices": [
+        "Les frais payes par les voyageurs pour acceder aux gares",
+        "Les sommes versees par les entreprises ferroviaires au gestionnaire d'infrastructure pour utiliser le reseau",
+        "Les taxes percues par l'Etat sur les billets de train",
+        "Les couts de maintenance payes par les collectivites locales"
+      ],
+      "answer": 1,
+      "explanation": "Les redevances d'infrastructure sont les peages payes par les entreprises ferroviaires a SNCF Reseau pour l'utilisation des sillons (droits de circulation sur le reseau)."
+    },
+    {
+      "question": "Quel paquet ferroviaire europeen a ouvert le transport ferroviaire de fret a la concurrence sur l'ensemble du reseau ?",
+      "choices": [
+        "Le premier paquet ferroviaire (2001)",
+        "Le deuxieme paquet ferroviaire (2004)",
+        "Le troisieme paquet ferroviaire (2007)",
+        "Le quatrieme paquet ferroviaire (2016)"
+      ],
+      "answer": 0,
+      "explanation": "Le premier paquet ferroviaire (directives de 2001) a pose les bases de l'ouverture a la concurrence du fret ferroviaire, effective en France depuis 2006 sur l'ensemble du reseau."
+    },
+    {
+      "question": "Quel document un gestionnaire d'infrastructure doit-il publier pour decrire les conditions d'acces au reseau ?",
+      "choices": [
+        "Le plan de transport",
+        "Le Document de Reference du Reseau (DRR)",
+        "Le rapport annuel de securite",
+        "Le cahier des charges d'exploitation"
+      ],
+      "answer": 1,
+      "explanation": "Le Document de Reference du Reseau (DRR), publie par SNCF Reseau, decrit les caracteristiques du reseau, les conditions d'acces, les tarifs et les procedures d'attribution des sillons."
+    },
+    {
+      "question": "Qu'est-ce qu'un certificat de securite unique delivre par l'Agence de l'Union Europeenne pour les Chemins de fer (ERA) ?",
+      "choices": [
+        "Un document attestant de la conformite du materiel roulant",
+        "Un certificat autorisant une entreprise ferroviaire a circuler dans un ou plusieurs Etats membres",
+        "Une licence d'exploitation de gare",
+        "Un permis de conduire pour les conducteurs de trains"
+      ],
+      "answer": 1,
+      "explanation": "Depuis 2019, l'ERA delivre un certificat de securite unique qui permet a une entreprise ferroviaire d'operer dans un ou plusieurs Etats membres de l'UE, simplifiant les anciennes procedures nationales."
+    },
+    {
+      "question": "Que designe la notion de separation entre gestionnaire d'infrastructure et entreprise ferroviaire dans le droit europeen ?",
+      "choices": [
+        "L'interdiction pour un meme groupe de posseder des trains et des gares",
+        "La separation au moins fonctionnelle entre la gestion du reseau et l'exploitation des services de transport",
+        "La privatisation obligatoire de l'infrastructure",
+        "L'interdiction de subventions publiques au transport ferroviaire"
+      ],
+      "answer": 1,
+      "explanation": "Le droit europeen impose une separation au moins fonctionnelle et comptable entre le gestionnaire d'infrastructure et les entreprises ferroviaires, pour garantir un acces equitable au reseau."
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "id": "infra_signalisation",
+  "title": "Quizz du Rail — Signalisation & ERTMS",
+  "description": "Testez vos connaissances sur la signalisation ferroviaire francaise et le systeme europeen ERTMS/ETCS.",
+  "questions": [
+    {
+      "question": "Que signifie BAL dans la signalisation ferroviaire francaise ?",
+      "choices": [
+        "Bloc Automatique Lumineux",
+        "Balise Automatique de Ligne",
+        "Base d'Alerte Lumineuse",
+        "Bloc d'Arret de Ligne"
+      ],
+      "answer": 0,
+      "explanation": "Le BAL (Bloc Automatique Lumineux) est le systeme de cantonnement le plus utilise sur le reseau ferre national. Il decoupe la ligne en cantons proteges par des signaux lumineux."
+    },
+    {
+      "question": "Quel systeme de signalisation est utilise sur les LGV francaises pour la tres grande vitesse ?",
+      "choices": [
+        "Le BAL classique",
+        "Le BAPR",
+        "La TVM (Transmission Voie-Machine)",
+        "Le KVB seul"
+      ],
+      "answer": 2,
+      "explanation": "La TVM (Transmission Voie-Machine), dans ses versions TVM300 et TVM430, est le systeme de signalisation en cabine utilise sur les LGV francaises, transmettant les informations par les circuits de voie."
+    },
+    {
+      "question": "Que signifie un signal carre (deux feux rouges horizontaux) dans la signalisation francaise ?",
+      "choices": [
+        "Ralentissement a 30 km/h",
+        "Arret absolu : interdiction de franchir le signal en aucun cas",
+        "Voie libre avec prudence",
+        "Arret avec possibilite de reprise de marche a vue"
+      ],
+      "answer": 1,
+      "explanation": "Le carre (deux feux rouges horizontaux) est un signal d'arret absolu. Il ne peut etre franchi qu'apres autorisation expresse du poste ou selon des procedures reglementaires specifiques."
+    },
+    {
+      "question": "Combien de niveaux d'application le systeme ETCS (European Train Control System) comporte-t-il ?",
+      "choices": [
+        "2 niveaux",
+        "3 niveaux",
+        "4 niveaux",
+        "5 niveaux"
+      ],
+      "answer": 1,
+      "explanation": "L'ETCS comporte 3 niveaux : Niveau 1 (supervision ponctuelle par Eurobalises), Niveau 2 (transmission continue par GSM-R/RBC) et Niveau 3 (cantonnement mobile avec integrite train embarquee)."
+    },
+    {
+      "question": "Quel est le role du KVB (Controle de Vitesse par Balises) ?",
+      "choices": [
+        "Gerer les aiguillages a distance",
+        "Controler le respect de la signalisation et des limitations de vitesse par le conducteur",
+        "Transmettre les communications radio aux mecaniciens",
+        "Alimenter en electricite les circuits de voie"
+      ],
+      "answer": 1,
+      "explanation": "Le KVB est un systeme de controle de vitesse ponctuel qui surveille le respect de la signalisation et des limitations de vitesse par le mecanicien, et peut declencher un freinage d'urgence."
+    },
+    {
+      "question": "Dans le systeme ETCS Niveau 2, quel equipement au sol calcule et transmet les autorisations de mouvement ?",
+      "choices": [
+        "L'Eurobalise",
+        "L'Euroloop",
+        "Le RBC (Radio Block Centre)",
+        "Le LEU (Lineside Electronic Unit)"
+      ],
+      "answer": 2,
+      "explanation": "Le RBC (Radio Block Centre) est le centre de gestion qui calcule les autorisations de mouvement (MA) et les transmet en continu aux trains via la radio GSM-R en ETCS Niveau 2."
+    },
+    {
+      "question": "Que signifie BAPR dans la signalisation ferroviaire ?",
+      "choices": [
+        "Bloc Automatique a Permissivite Restreinte",
+        "Balise Automatique de Protection Rapprochee",
+        "Bloc d'Alerte et de Protection Renforcee",
+        "Base Autonome de Poste de Regulation"
+      ],
+      "answer": 0,
+      "explanation": "Le BAPR (Bloc Automatique a Permissivite Restreinte) est un systeme de cantonnement utilise sur les lignes a trafic moyen. Ses signaux de cantonnement sont des semaphores (arret non absolu)."
+    },
+    {
+      "question": "Quel systeme de radiocommunication est appele a remplacer le GSM-R dans le cadre de l'evolution de l'ERTMS ?",
+      "choices": [
+        "La 5G publique",
+        "Le FRMCS (Future Railway Mobile Communication System)",
+        "Le Wi-Fi ferroviaire",
+        "Le TETRA"
+      ],
+      "answer": 1,
+      "explanation": "Le FRMCS (Future Railway Mobile Communication System) est le successeur du GSM-R. Base sur des technologies 4G/5G, il offrira un debit superieur pour les besoins futurs de l'ERTMS."
+    },
+    {
+      "question": "Quelle est la difference fondamentale entre le cantonnement fixe et le cantonnement mobile ?",
+      "choices": [
+        "Le cantonnement fixe utilise des balises, le mobile utilise des satellites",
+        "Le cantonnement fixe decoupe la voie en sections predefinies, le mobile adapte l'espacement en temps reel selon la position des trains",
+        "Le cantonnement fixe est reserve au fret, le mobile aux voyageurs",
+        "Il n'y a pas de difference, ce sont deux noms pour le meme concept"
+      ],
+      "answer": 1,
+      "explanation": "Le cantonnement fixe divise la voie en cantons de longueur predeterminee. Le cantonnement mobile (ETCS Niveau 3) adapte la distance de separation en temps reel, augmentant la capacite de la ligne."
+    },
+    {
+      "question": "Qu'est-ce qu'une Eurobalise dans le systeme ERTMS ?",
+      "choices": [
+        "Une antenne radio installee le long des voies",
+        "Un transpondeur fixe au sol qui transmet des informations ponctuelles au train qui le franchit",
+        "Un capteur de temperature des rails",
+        "Un dispositif de comptage des essieux"
+      ],
+      "answer": 1,
+      "explanation": "L'Eurobalise est un transpondeur passif fixe entre les rails qui transmet des telegrammes au train lorsque celui-ci passe au-dessus. Elle fournit des donnees de positionnement et de signalisation."
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "id": "mr_histoire",
+  "title": "Quizz du Rail — Histoire du Materiel Roulant",
+  "description": "Testez vos connaissances sur l'histoire du materiel roulant ferroviaire francais, des premieres locomotives aux TGV modernes.",
+  "questions": [
+    {
+      "question": "En quelle annee le TGV PSE (Paris Sud-Est) a-t-il ete mis en service commercial ?",
+      "choices": ["1979", "1981", "1983", "1985"],
+      "answer": 1,
+      "explanation": "Le TGV PSE a ete mis en service commercial le 27 septembre 1981 sur la ligne Paris-Lyon, inaugurant l'ere de la grande vitesse en France."
+    },
+    {
+      "question": "Quel record de vitesse sur rail le TGV a-t-il etabli le 3 avril 2007 ?",
+      "choices": ["515,3 km/h", "554,3 km/h", "574,8 km/h", "600,2 km/h"],
+      "answer": 2,
+      "explanation": "Le 3 avril 2007, la rame V150 a atteint 574,8 km/h sur la LGV Est europeenne, un record mondial de vitesse sur rail qui tient toujours."
+    },
+    {
+      "question": "Quel est le nom du train a grande vitesse reliant Paris a Londres via le tunnel sous la Manche ?",
+      "choices": ["Thalys", "Eurostar", "ICE", "Lyria"],
+      "answer": 1,
+      "explanation": "L'Eurostar assure la liaison Paris-Londres (et Bruxelles-Londres) via le tunnel sous la Manche depuis 1994."
+    },
+    {
+      "question": "Les voitures Corail ont ete introduites par la SNCF dans les annees :",
+      "choices": ["1965", "1970", "1975", "1980"],
+      "answer": 2,
+      "explanation": "Les voitures Corail (COnfort sur RAIL) ont ete mises en service a partir de 1975, remplacant progressivement les voitures USI et DEV."
+    },
+    {
+      "question": "Quelle locomotive electrique francaise detient le record de vitesse de 331 km/h en 1955 ?",
+      "choices": ["CC 6500", "BB 9004", "CC 7107", "BB 26000"],
+      "answer": 2,
+      "explanation": "Les CC 7107 et BB 9004 ont atteint 331 km/h le 28 et 29 mars 1955 dans les Landes, un record qui a tenu plus de 25 ans."
+    },
+    {
+      "question": "Le Thalys, reliant Paris a Bruxelles, Amsterdam et Cologne, est base sur quelle generation de TGV ?",
+      "choices": ["TGV PSE", "TGV Atlantique", "TGV Reseau / PBKA", "TGV Duplex"],
+      "answer": 2,
+      "explanation": "Le Thalys PBKA est derive du TGV Reseau, adapte pour circuler sous quatre tensions electriques differentes (multi-systeme)."
+    },
+    {
+      "question": "L'automotrice X 72500 est un engin :",
+      "choices": ["Electrique monophase", "Diesel hydraulique", "Diesel electrique (autorail)", "Bi-mode"],
+      "answer": 2,
+      "explanation": "L'X 72500, construit par Alstom, est un autorail diesel a transmission electrique mis en service a partir de 1997 pour les dessertes TER."
+    },
+    {
+      "question": "Quel constructeur a developpe l'AGV (Automotrice a Grande Vitesse) ?",
+      "choices": ["Bombardier", "Siemens", "Alstom", "CAF"],
+      "answer": 2,
+      "explanation": "L'AGV a ete developpe par Alstom comme successeur du TGV, avec une motorisation repartie. Il a ete commercialise sous le nom Italo pour l'operateur NTV en Italie."
+    },
+    {
+      "question": "Le metro sur pneumatiques a ete introduit pour la premiere fois a Paris sur quelle ligne ?",
+      "choices": ["Ligne 1", "Ligne 4", "Ligne 11", "Ligne 6"],
+      "answer": 2,
+      "explanation": "La ligne 11 du metro parisien a ete la premiere a etre equipee de roulement sur pneumatiques en 1956, avant la ligne 1 et la ligne 4."
+    },
+    {
+      "question": "Le tramway Citadis, tres repandu dans les villes francaises, est fabrique par :",
+      "choices": ["Siemens", "Bombardier", "Alstom", "Stadler"],
+      "answer": 2,
+      "explanation": "Le Citadis est une gamme de tramways concus et fabriques par Alstom, deployes dans de nombreuses villes en France (Paris, Bordeaux, Lyon, etc.) et dans le monde."
+    }
+  ]
+}

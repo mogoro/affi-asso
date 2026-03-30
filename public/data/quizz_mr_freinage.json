@@ -1,0 +1,67 @@
+{
+  "id": "mr_freinage",
+  "title": "Quizz du Rail — Systemes de Freinage",
+  "description": "Testez vos connaissances sur les systemes de freinage du materiel roulant ferroviaire : frein pneumatique, electrodynamique, anti-enrayage et reglementation.",
+  "questions": [
+    {
+      "question": "Quel est le principe de fonctionnement de la conduite generale (CG) dans le freinage ferroviaire ?",
+      "choices": ["Une montee en pression dans la CG commande le serrage des freins", "Une chute de pression dans la CG commande le serrage des freins", "La CG ne sert qu'a alimenter les portes", "La CG fonctionne uniquement en mode electrique"],
+      "answer": 1,
+      "explanation": "Le systeme de frein continu automatique fonctionne par depression : une chute de pression dans la conduite generale provoque le serrage des freins. Ce principe assure la securite car toute rupture d'attelage entraine un freinage automatique."
+    },
+    {
+      "question": "Quel est le role de la triple valve (ou distributeur) dans le systeme de freinage pneumatique ?",
+      "choices": ["Alimenter les trois circuits electriques du train", "Commander le serrage, le desserrage et le maintien du freinage en fonction de la pression dans la CG", "Distribuer l'air vers trois vehicules differents", "Regler la vitesse du train en trois paliers"],
+      "answer": 1,
+      "explanation": "La triple valve (ou distributeur dans les versions modernes) detecte les variations de pression dans la conduite generale et commande en consequence le serrage, le desserrage ou le maintien de la pression dans les cylindres de frein."
+    },
+    {
+      "question": "Quelle est la difference principale entre le frein a disque et le frein a semelle (sabot) ?",
+      "choices": ["Le frein a disque agit sur des disques separes, le frein a semelle frotte directement sur la table de roulement", "Le frein a disque est uniquement electrique", "Le frein a semelle est plus performant a grande vitesse", "Il n'y a aucune difference fonctionnelle"],
+      "answer": 0,
+      "explanation": "Le frein a disque utilise des disques montes sur l'essieu ou la roue, preservant la table de roulement. Le frein a semelle (sabot) agit directement sur la surface de roulement, ce qui peut l'endommager mais contribue au nettoyage du rail."
+    },
+    {
+      "question": "Qu'est-ce que le freinage electrodynamique ?",
+      "choices": ["Un freinage utilisant des aimants permanents sur le rail", "Un freinage ou les moteurs de traction fonctionnent en generatrices pour creer un couple resistant", "Un freinage par courants de Foucault dans les roues", "Un freinage commande exclusivement par l'electricite de la catenaire"],
+      "answer": 1,
+      "explanation": "Le freinage electrodynamique transforme les moteurs de traction en generatrices : l'energie cinetique est convertie en energie electrique, creant un couple resistant qui ralentit le train. L'energie peut etre dissipee dans des resistances (rheostatique) ou renvoyee dans la catenaire (regeneratif)."
+    },
+    {
+      "question": "Que signifie le sigle WSP dans le domaine du freinage ferroviaire ?",
+      "choices": ["Wheel Slide Protection (dispositif anti-enrayage)", "Wagon Safety Program", "Wireless Signal Processing", "Weight Speed Parameter"],
+      "answer": 0,
+      "explanation": "Le WSP (Wheel Slide Protection) est le systeme anti-enrayage qui detecte le blocage des roues lors du freinage et relache automatiquement la pression de freinage pour eviter la formation de plats sur les roues."
+    },
+    {
+      "question": "La fiche UIC 541 concerne :",
+      "choices": ["Les systemes de signalisation", "Les caracteristiques du frein des vehicules", "Les normes de confort voyageurs", "Les regles d'attelage"],
+      "answer": 1,
+      "explanation": "Les fiches UIC 540/541 definissent les caracteristiques et prescriptions relatives aux freins des vehicules ferroviaires, y compris les performances de freinage, la conduite generale et les equipements pneumatiques."
+    },
+    {
+      "question": "Quelle est la distance de freinage approximative d'un TGV a 300 km/h en freinage d'urgence ?",
+      "choices": ["Environ 1 500 metres", "Environ 3 000 metres", "Environ 5 000 metres", "Environ 8 000 metres"],
+      "answer": 1,
+      "explanation": "Un TGV lance a 300 km/h a une distance de freinage d'urgence d'environ 3 000 a 3 300 metres, soit pres de 3 kilometres. Cette distance est prise en compte dans la conception de la signalisation des LGV."
+    },
+    {
+      "question": "Le freinage regeneratif permet de :",
+      "choices": ["Regenerer les plaquettes de frein usees", "Renvoyer l'energie electrique produite lors du freinage dans la catenaire", "Recharger le reservoir d'air comprime", "Regenerer l'huile du circuit hydraulique"],
+      "answer": 1,
+      "explanation": "Le freinage regeneratif convertit l'energie cinetique en energie electrique et la renvoie dans la catenaire pour etre reutilisee par d'autres trains, contribuant ainsi aux economies d'energie."
+    },
+    {
+      "question": "Le frein de parking (ou frein d'immobilisation) sert a :",
+      "choices": ["Freiner le train en cas d'urgence pendant la marche", "Immobiliser le vehicule a l'arret pour eviter toute derive", "Ralentir le train en approche de gare", "Tester le systeme de freinage avant depart"],
+      "answer": 1,
+      "explanation": "Le frein de parking (ou frein d'immobilisation) est un frein mecanique qui maintient le vehicule immobile a l'arret, independamment de la pression pneumatique, pour eviter toute derive sur une pente."
+    },
+    {
+      "question": "Le frein electropneumatique (EP) offre quel avantage par rapport au frein pneumatique classique ?",
+      "choices": ["Il est moins couteux", "Il permet une commande quasi instantanee et simultanee sur tous les vehicules du train", "Il fonctionne sans air comprime", "Il est uniquement utilise pour le fret"],
+      "answer": 1,
+      "explanation": "Le frein electropneumatique transmet la commande de freinage par un signal electrique, ce qui assure une action quasi simultanee sur tous les vehicules, contrairement au frein pneumatique pur ou la propagation de la depression dans la CG prend du temps."
+    }
+  ]
+}

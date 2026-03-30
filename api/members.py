@@ -168,9 +168,44 @@ class handler(BaseHTTPRequestHandler):
             category = body.get("category", "general")
             if not title or not content:
                 return self._json(400, {"error": "Titre et contenu requis"})
-            execute("INSERT INTO member_announcements (author_id, title, content, category) VALUES (%s,%s,%s,%s)",
-                    [user["id"], title, content, category])
-            return self._json(200, {"ok": True, "message": "Annonce publiee"})
+            # Admins publish directly, members need approval
+            is_active = bool(user.get("is_admin"))
+            execute("INSERT INTO member_announcements (author_id, title, content, category, is_active) VALUES (%s,%s,%s,%s,%s)",
+                    [user["id"], title, content, category, is_active])
+            msg = "Annonce publiee" if is_active else "Annonce soumise — en attente de validation par un administrateur"
+            return self._json(200, {"ok": True, "message": msg, "published": is_active})
+
+        elif action == "propose_event":
+            title = (body.get("title") or "").strip()
+            if not title:
+                return self._json(400, {"error": "Titre requis"})
+            is_published = bool(user.get("is_admin"))
+            execute("""INSERT INTO events (title, event_type, description, location, start_date, end_date,
+                is_published, created_by) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
+                [title, body.get("event_type","conference"), body.get("description"),
+                 body.get("location"), body.get("start_date"), body.get("end_date"),
+                 is_published, user["id"]])
+            msg = "Evenement cree" if is_published else "Evenement propose — en attente de validation"
+            return self._json(200, {"ok": True, "message": msg, "published": is_published})
+
+        elif action == "propose_news":
+            title = (body.get("title") or "").strip()
+            if not title:
+                return self._json(400, {"error": "Titre requis"})
+            is_published = bool(user.get("is_admin"))
+            execute("INSERT INTO news (title, excerpt, content, is_published, author_id) VALUES (%s,%s,%s,%s,%s)",
+                [title, body.get("excerpt"), body.get("content"), is_published, user["id"]])
+            msg = "Actualite publiee" if is_published else "Actualite proposee — en attente de validation"
+            return self._json(200, {"ok": True, "message": msg, "published": is_published})
+
+        elif action == "my_proposals":
+            events = fetchall("""SELECT id, title, event_type, start_date, is_published, created_at
+                FROM events WHERE created_by = %s ORDER BY created_at DESC LIMIT 20""", [user["id"]])
+            news = fetchall("""SELECT id, title, is_published, published_at, created_at
+                FROM news WHERE author_id = %s ORDER BY created_at DESC LIMIT 20""", [user["id"]])
+            announcements = fetchall("""SELECT id, title, category, is_active, created_at
+                FROM member_announcements WHERE author_id = %s ORDER BY created_at DESC LIMIT 20""", [user["id"]])
+            return self._json(200, {"events": events, "news": news, "announcements": announcements})
 
         # Admin actions
         elif action == "approve_member" and user.get("is_admin"):

@@ -523,8 +523,14 @@
         <div class="container">
             <div class="section-line section-line-center"></div>
             <h2 class="section-title section-title-center">Quizz du Rail</h2>
-            <p class="section-sub section-sub-center">Testez vos connaissances ferroviaires chaque mois</p>
-            <div id="quizz-container" style="max-width:700px;margin:0 auto">
+            <p class="section-sub section-sub-center">Testez vos connaissances ferroviaires — 11 quizz thematiques</p>
+            <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;justify-content:center">
+                <button class="replay-filter active" onclick="filterQuizzCat(this,'')">Tous</button>
+                <button class="replay-filter" onclick="filterQuizzCat(this,'General')">General</button>
+                <button class="replay-filter" onclick="filterQuizzCat(this,'Infrastructure')">Infrastructure</button>
+                <button class="replay-filter" onclick="filterQuizzCat(this,'Materiel Roulant')">Materiel Roulant</button>
+            </div>
+            <div id="quizz-container" style="max-width:900px;margin:0 auto">
                 <div style="text-align:center;color:var(--gray-400);padding:48px">Chargement...</div>
             </div>
         </div>
@@ -662,6 +668,7 @@
                     <button class="mtab" data-tab="announcements" onclick="switchMemberTab('announcements')">Annonces</button>
                     <button class="mtab" data-tab="profile" onclick="switchMemberTab('profile')">Mon Profil & CV</button>
                     <button class="mtab" data-tab="messages" onclick="switchMemberTab('messages')">Messages</button>
+                    <button class="mtab" data-tab="proposer" onclick="switchMemberTab('proposer')">Proposer</button>
                     <button class="mtab" data-tab="notifications" onclick="switchMemberTab('notifications')">Notifications</button>
                     <button class="mtab" data-tab="admin" onclick="switchMemberTab('admin')" id="admin-tab" style="display:none;background:var(--accent);color:#fff">Administration</button>
                 </div>
@@ -851,6 +858,45 @@
                     </div>
                 </div>
 
+                <!-- TAB: PROPOSER -->
+                <div id="mtab-proposer" class="mtab-content" style="display:none">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                        <div class="card"><div class="card-body">
+                            <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Proposer un evenement</h3>
+                            <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">Votre proposition sera soumise aux administrateurs pour validation avant publication.</p>
+                            <form onsubmit="proposeEvent(event)">
+                                <div class="form-group"><label>Titre *</label><input id="pe-title" required></div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                    <div class="form-group"><label>Type</label><select id="pe-type"><option>conference</option><option>visite</option><option>rencontre</option><option>webinaire</option></select></div>
+                                    <div class="form-group"><label>Lieu</label><input id="pe-location"></div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                    <div class="form-group"><label>Date debut</label><input type="datetime-local" id="pe-start" required></div>
+                                    <div class="form-group"><label>Date fin</label><input type="datetime-local" id="pe-end"></div>
+                                </div>
+                                <div class="form-group"><label>Description</label><textarea id="pe-desc" style="min-height:80px"></textarea></div>
+                                <button type="submit" class="btn btn-accent" style="width:100%">Soumettre</button>
+                                <div class="form-success" id="pe-success" style="display:none"></div>
+                            </form>
+                        </div></div>
+                        <div class="card"><div class="card-body">
+                            <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Proposer une actualite</h3>
+                            <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">Partagez une actualite du monde ferroviaire — soumise a validation.</p>
+                            <form onsubmit="proposeNews(event)">
+                                <div class="form-group"><label>Titre *</label><input id="pn-title" required></div>
+                                <div class="form-group"><label>Resume</label><input id="pn-excerpt"></div>
+                                <div class="form-group"><label>Contenu</label><textarea id="pn-content" style="min-height:120px"></textarea></div>
+                                <button type="submit" class="btn btn-accent" style="width:100%">Soumettre</button>
+                                <div class="form-success" id="pn-success" style="display:none"></div>
+                            </form>
+                        </div></div>
+                    </div>
+                    <div class="card" style="margin-top:24px"><div class="card-body">
+                        <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Mes propositions</h3>
+                        <div id="my-proposals"><p class="empty-msg">Chargement...</p></div>
+                    </div></div>
+                </div>
+
                 <!-- TAB: NOTIFICATIONS -->
                 <div id="mtab-notifications" class="mtab-content" style="display:none">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -868,6 +914,7 @@
                         <button class="adm-nav-btn" data-section="adm-events" onclick="switchAdminSection('adm-events')">Evenements</button>
                         <button class="adm-nav-btn" data-section="adm-news" onclick="switchAdminSection('adm-news')">Actualites</button>
                         <button class="adm-nav-btn" data-section="adm-announcements" onclick="switchAdminSection('adm-announcements')">Annonces membres</button>
+                        <button class="adm-nav-btn" data-section="adm-pending" onclick="switchAdminSection('adm-pending')">A valider <span id="pending-count-badge" style="background:var(--accent);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:4px"></span></button>
                         <button class="adm-nav-btn" data-section="adm-messages" onclick="switchAdminSection('adm-messages')">Messages</button>
                         <button class="adm-nav-btn" data-section="adm-logs" onclick="switchAdminSection('adm-logs')">Journal RGPD</button>
                     </div>
@@ -920,6 +967,13 @@
                     <div id="adm-messages" class="adm-section">
                         <h3 style="margin-bottom:16px;color:var(--primary)">Messages de contact</h3>
                         <div id="adm-messages-list"></div>
+                    </div>
+
+                    <!-- Admin Pending Content -->
+                    <div id="adm-pending" class="adm-section">
+                        <h3 style="margin-bottom:16px;color:var(--primary)">Contenus en attente de validation</h3>
+                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Les membres peuvent proposer des evenements, actualites et annonces. En tant qu'administrateur, vous devez valider leur publication.</p>
+                        <div id="adm-pending-list"><p class="empty-msg">Chargement...</p></div>
                     </div>
 
                     <!-- Admin Logs RGPD -->

@@ -60,6 +60,23 @@ class handler(BaseHTTPRequestHandler):
                 ORDER BY a.created_at DESC LIMIT 100""")
             return self._json(200, rows)
 
+        elif action == "pending_content":
+            pending_events = fetchall("""SELECT e.*, m.first_name, m.last_name
+                FROM events e LEFT JOIN members m ON e.created_by = m.id
+                WHERE e.is_published = FALSE ORDER BY e.created_at DESC""")
+            pending_news = fetchall("""SELECT n.*, m.first_name, m.last_name
+                FROM news n LEFT JOIN members m ON n.author_id = m.id
+                WHERE n.is_published = FALSE ORDER BY n.created_at DESC""")
+            pending_announcements = fetchall("""SELECT a.*, m.first_name, m.last_name
+                FROM member_announcements a JOIN members m ON a.author_id = m.id
+                WHERE a.is_active = FALSE ORDER BY a.created_at DESC""")
+            return self._json(200, {
+                "events": pending_events,
+                "news": pending_news,
+                "announcements": pending_announcements,
+                "total": len(pending_events) + len(pending_news) + len(pending_announcements)
+            })
+
         elif action == "messages":
             rows = fetchall("SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 100")
             return self._json(200, rows)
@@ -87,6 +104,8 @@ class handler(BaseHTTPRequestHandler):
                 ("total_messages", "SELECT COUNT(*) FROM contact_messages"),
                 ("mentors", "SELECT COUNT(*) FROM members WHERE is_mentor=TRUE AND status='active'"),
                 ("consent_annuaire", "SELECT COUNT(*) FROM members WHERE consent_annuaire=TRUE AND status='active'"),
+                ("pending_events", "SELECT COUNT(*) FROM events WHERE is_published=FALSE"),
+                ("pending_news", "SELECT COUNT(*) FROM news WHERE is_published=FALSE"),
             ]:
                 r = fetchone(sql)
                 stats[key] = list(r.values())[0] if r else 0
@@ -163,6 +182,14 @@ class handler(BaseHTTPRequestHandler):
             execute("UPDATE members SET is_board=%s WHERE id=%s", [body.get("value", False), body["id"]])
             return self._json(200, {"ok": True})
 
+        elif action == "set_role":
+            mid = body.get("id")
+            new_role = body.get("role", "member")
+            is_admin = new_role == "admin"
+            execute("UPDATE members SET role=%s, is_admin=%s WHERE id=%s", [new_role, is_admin, mid])
+            self._log(admin["id"], "set_role", f"#{mid} -> {new_role}")
+            return self._json(200, {"ok": True, "message": f"Role mis a jour: {new_role}"})
+
         elif action == "update_member":
             fields = {}
             for k in ("first_name","last_name","email","phone","company","job_title","sector",
@@ -173,6 +200,7 @@ class handler(BaseHTTPRequestHandler):
             if fields:
                 sets = ", ".join(f"{k}=%s" for k in fields)
                 execute(f"UPDATE members SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
+            self._log(admin["id"], "update_member", f"#{body.get('id')}")
             return self._json(200, {"ok": True, "message": "Membre mis a jour"})
 
         elif action == "create_member":
@@ -256,8 +284,18 @@ class handler(BaseHTTPRequestHandler):
                 execute(f"UPDATE events SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
             return self._json(200, {"ok": True, "message": "Evenement mis a jour"})
 
+        elif action == "publish_event":
+            execute("UPDATE events SET is_published=TRUE WHERE id=%s", [body["id"]])
+            self._log(admin["id"], "publish_event", f"#{body['id']}")
+            return self._json(200, {"ok": True, "message": "Evenement publie"})
+
+        elif action == "unpublish_event":
+            execute("UPDATE events SET is_published=FALSE WHERE id=%s", [body["id"]])
+            return self._json(200, {"ok": True, "message": "Evenement depublie"})
+
         elif action == "delete_event":
             execute("DELETE FROM events WHERE id=%s", [body["id"]])
+            self._log(admin["id"], "delete_event", f"#{body['id']}")
             return self._json(200, {"ok": True})
 
         # === NEWS ===
@@ -273,8 +311,18 @@ class handler(BaseHTTPRequestHandler):
                 execute(f"UPDATE news SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
             return self._json(200, {"ok": True})
 
+        elif action == "publish_news":
+            execute("UPDATE news SET is_published=TRUE WHERE id=%s", [body["id"]])
+            self._log(admin["id"], "publish_news", f"#{body['id']}")
+            return self._json(200, {"ok": True, "message": "Actualite publiee"})
+
+        elif action == "unpublish_news":
+            execute("UPDATE news SET is_published=FALSE WHERE id=%s", [body["id"]])
+            return self._json(200, {"ok": True, "message": "Actualite depubliee"})
+
         elif action == "delete_news":
             execute("DELETE FROM news WHERE id=%s", [body["id"]])
+            self._log(admin["id"], "delete_news", f"#{body['id']}")
             return self._json(200, {"ok": True})
 
         # === PUBLICATIONS ===

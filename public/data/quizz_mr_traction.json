@@ -1,0 +1,67 @@
+{
+  "id": "mr_traction",
+  "title": "Quizz du Rail — Systemes de Traction",
+  "description": "Testez vos connaissances sur les systemes de traction du materiel roulant ferroviaire : moteurs, convertisseurs, transmissions et architectures.",
+  "questions": [
+    {
+      "question": "Quel type de moteur de traction equipe les TGV de nouvelle generation (Duplex, 2N2) ?",
+      "choices": ["Moteur a courant continu", "Moteur synchrone a aimants permanents", "Moteur asynchrone triphase", "Moteur diesel-electrique"],
+      "answer": 2,
+      "explanation": "Les TGV Duplex et 2N2 utilisent des moteurs asynchrones triphases, alimentes par des onduleurs. Ce type de moteur est robuste, peu couteux en maintenance et offre un excellent rapport poids/puissance."
+    },
+    {
+      "question": "Quelle est la fonction principale d'un onduleur dans une chaine de traction electrique ?",
+      "choices": ["Convertir le courant alternatif en courant continu", "Convertir le courant continu en courant alternatif triphase", "Reguler la tension de la catenaire", "Proteger les moteurs contre les surtensions"],
+      "answer": 1,
+      "explanation": "L'onduleur convertit le courant continu (issu du redresseur ou de la catenaire DC) en courant alternatif triphase a frequence variable pour alimenter les moteurs asynchrones ou synchrones."
+    },
+    {
+      "question": "Un engin bi-mode est un materiel roulant capable de fonctionner :",
+      "choices": ["Sous deux tensions electriques differentes", "En traction electrique et en traction thermique (diesel)", "En mode voyageurs et en mode fret", "Sur voie normale et voie metrique"],
+      "answer": 1,
+      "explanation": "Un engin bi-mode peut fonctionner en traction electrique sous catenaire et en traction thermique (diesel) sur les sections non electrifiees, comme le B 82500 (BGC) ou le Regiolis bi-mode."
+    },
+    {
+      "question": "Qu'est-ce qu'un engin bi-tension ?",
+      "choices": ["Un engin capable de rouler sous 1500 V continu et 25 kV 50 Hz alternatif", "Un engin diesel avec deux moteurs", "Un engin avec deux pantographes identiques", "Un engin pouvant circuler dans deux pays"],
+      "answer": 0,
+      "explanation": "Un engin bi-tension peut circuler sous les deux systemes d'electrification du reseau francais : 1500 V continu (sud) et 25 kV 50 Hz alternatif monophase (nord et LGV)."
+    },
+    {
+      "question": "Quelle est la puissance totale approximative d'une rame TGV Duplex ?",
+      "choices": ["4 400 kW", "6 800 kW", "8 800 kW", "12 000 kW"],
+      "answer": 2,
+      "explanation": "Une rame TGV Duplex developpe environ 8 800 kW (soit environ 12 000 chevaux) repartis sur les deux motrices, permettant d'atteindre 320 km/h en service commercial."
+    },
+    {
+      "question": "Dans une rame articulee de type TGV, ou se situent les bogies ?",
+      "choices": ["Sous chaque voiture", "Aux extremites de chaque voiture", "Partages entre deux voitures adjacentes (intercaisses)", "Uniquement sous les motrices"],
+      "answer": 2,
+      "explanation": "Les rames TGV utilisent des bogies articules places entre deux caisses (bogies intercaisses), ce qui reduit le nombre de bogies, abaisse le centre de gravite et ameliore la stabilite a grande vitesse."
+    },
+    {
+      "question": "Quel avantage principal offre un moteur synchrone a aimants permanents par rapport a un moteur asynchrone ?",
+      "choices": ["Un cout de fabrication plus faible", "Un meilleur rendement energetique", "Une vitesse de rotation plus elevee", "Une plus grande robustesse mecanique"],
+      "answer": 1,
+      "explanation": "Le moteur synchrone a aimants permanents offre un meilleur rendement (moins de pertes rotor) et un rapport poids/puissance superieur, mais il est plus couteux en raison des aimants en terres rares."
+    },
+    {
+      "question": "Quel composant electronique de puissance est au coeur des convertisseurs de traction modernes ?",
+      "choices": ["Thyristor GTO", "IGBT (Insulated Gate Bipolar Transistor)", "Diode de puissance", "Transistor MOSFET"],
+      "answer": 1,
+      "explanation": "L'IGBT est le composant semi-conducteur de puissance standard dans les convertisseurs de traction modernes, ayant remplace les thyristors GTO grace a sa frequence de commutation elevee et sa facilite de commande."
+    },
+    {
+      "question": "La motorisation repartie (par opposition a la motorisation concentree) consiste a :",
+      "choices": ["Placer tous les moteurs dans une seule locomotive", "Repartir les moteurs de traction sous plusieurs voitures de la rame", "Utiliser un seul moteur de grande puissance", "Alterner moteurs diesel et electriques"],
+      "answer": 1,
+      "explanation": "La motorisation repartie distribue les moteurs sous plusieurs voitures (comme sur les AGV, Regiolis, ou TGV M), ce qui ameliore l'adherence, libere de l'espace et permet une meilleure repartition des masses."
+    },
+    {
+      "question": "Quel est le role du bogie moteur dans la chaine de traction ?",
+      "choices": ["Supporter la caisse et assurer le guidage en voie uniquement", "Transmettre l'effort de traction des moteurs aux roues via les essieux", "Uniquement freiner le train", "Alimenter les auxiliaires du train"],
+      "answer": 1,
+      "explanation": "Le bogie moteur supporte la caisse, assure le guidage en voie et transmet l'effort de traction des moteurs aux roues par l'intermediaire de la transmission (reducteur, engrenages)."
+    }
+  ]
+}

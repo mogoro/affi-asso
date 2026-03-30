@@ -111,6 +111,42 @@ async function applyJob(jobId) {
     alert('Candidature envoyee !');
 }
 
+function showJobForm() {
+    const html = `<div class="adm-modal-bg" id="job-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+        <h3 style="margin-bottom:20px;color:var(--primary)">Publier une offre</h3>
+        <form onsubmit="postJob(event)">
+            <div class="form-group"><label>Titre du poste *</label><input name="title" required></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Entreprise</label><input name="company"></div>
+                <div class="form-group"><label>Lieu</label><input name="location"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Type de contrat</label><select name="contract_type">
+                    <option>CDI</option><option>CDD</option>
+                    <option>Stage</option><option>Apprentissage</option>
+                    <option>Alternance</option><option>VIE</option>
+                    <option>Freelance</option><option>Interim</option>
+                </select></div>
+                <div class="form-group"><label>Remuneration</label><input name="salary_range" placeholder="Ex: 45-55k EUR ou 800 EUR/mois"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:12px">
+                <div class="form-group"><label>Secteur</label><select name="sector">
+                    <option value="">Selectionner...</option>
+                    <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
+                    <option>Infrastructure</option><option>Maintenance</option>
+                    <option>Numerique & IA</option><option>Ingenierie & Conseil</option>
+                </select></div>
+                <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:24px">
+                    <input type="checkbox" name="is_freelance"> <label>Freelance</label>
+                </div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea name="description" style="min-height:100px"></textarea></div>
+            <button type="submit" class="btn btn-accent" style="width:100%">Publier l'offre</button>
+        </form>
+    </div></div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
 async function postJob(evt) {
     evt.preventDefault();
     const f = evt.target;
@@ -118,6 +154,7 @@ async function postJob(evt) {
         body: JSON.stringify({action:'post_job', title:f.title.value, company:f.company.value, location:f.location.value,
             contract_type:f.contract_type.value, salary_range:f.salary_range.value, description:f.description.value,
             sector:f.sector.value, is_freelance:f.is_freelance.checked})});
+    document.getElementById('job-modal')?.remove();
     f.reset();
     loadJobs();
 }

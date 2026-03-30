@@ -2,7 +2,7 @@
  * AFFI — SPA Router, Slider, Page Logic
  */
 const API = window.location.origin;
-const PAGES = ['accueil','identite','annuaire','agenda','evenements','publications','replays','quizz','adhesion','contact','membres'];
+const PAGES = ['accueil','identite','annuaire','agenda','evenements','publications','replays','quizz','ecoles','adhesion','contact','membres'];
 
 // === ROUTER ===
 function navigate(page) {
@@ -17,6 +17,7 @@ function navigate(page) {
     if (page === 'evenements') loadEvents();
     if (page === 'annuaire') loadPublicAnnuaire();
     if (page === 'publications') loadPublications();
+    if (page === 'ecoles') { loadEcoles(); loadStages(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
     if (page === 'accueil') loadHome();
@@ -249,6 +250,90 @@ function onPubFilter() {
         document.getElementById('pub-region')?.value || '',
         document.getElementById('pub-sector')?.value || ''
     );
+}
+
+// === ECOLES & PARTENAIRES ACADEMIQUES ===
+let allEcoles = [];
+async function loadEcoles() {
+    try {
+        const res = await fetch('/data/ecoles.json');
+        allEcoles = await res.json();
+        renderEcoles('');
+    } catch (e) { console.warn('Ecoles:', e); }
+}
+
+function filterEcoles(btn, type) {
+    document.querySelectorAll('#page-ecoles .replay-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderEcoles(type);
+}
+
+function renderEcoles(type) {
+    const el = document.getElementById('ecoles-grid');
+    if (!el) return;
+    const filtered = type ? allEcoles.filter(e => e.type === type) : allEcoles;
+    if (!filtered.length) { el.innerHTML = '<p class="empty-msg" style="grid-column:1/-1">Aucune ecole dans cette categorie</p>'; return; }
+    el.innerHTML = filtered.map(e => `
+        <div class="ecole-card${e.partenariat ? ' ecole-partenaire' : ''}">
+            <div class="ecole-header">
+                <div class="ecole-icon">&#127979;</div>
+                <div>
+                    <div class="ecole-name">${esc(e.name)}</div>
+                    <div class="ecole-city">&#128205; ${esc(e.city)} — ${esc(e.region)}</div>
+                </div>
+            </div>
+            <div class="ecole-desc">${esc(e.description)}</div>
+            <div class="ecole-specs">
+                <span class="card-tag">${esc(e.type)}</span>
+                ${e.specialites.map(s => `<span class="card-tag card-tag-specialty">${esc(s)}</span>`).join('')}
+                ${e.partenariat ? '<span class="card-tag card-tag-mentor">Partenaire AFFI</span>' : ''}
+            </div>
+            <a href="${esc(e.website)}" target="_blank" rel="noopener" class="ecole-link">&#128279; Visiter le site web</a>
+        </div>
+    `).join('');
+}
+
+// === STAGES & APPRENTISSAGE ===
+async function loadStages(search, sector, type) {
+    const p = new URLSearchParams({action:'jobs'});
+    if (search) p.set('search', search);
+    if (sector) p.set('sector', sector);
+    try {
+        const res = await fetch(`${API}/api/social?${p}`);
+        let jobs = await res.json();
+        // Filter for student-relevant contract types
+        if (type) {
+            jobs = jobs.filter(j => (j.contract_type||'').toLowerCase().includes(type.toLowerCase()));
+        } else {
+            jobs = jobs.filter(j => {
+                const ct = (j.contract_type||'').toLowerCase();
+                return ct.includes('stage') || ct.includes('apprenti') || ct.includes('alternance') || ct.includes('vie');
+            });
+        }
+        const el = document.getElementById('stages-list');
+        if (!el) return;
+        if (!jobs.length) { el.innerHTML = '<p class="empty-msg">Aucune offre de stage ou apprentissage pour le moment. <a href="#accueil" onclick="navigate(\'accueil\')">Voir toutes les offres d\'emploi</a></p>'; return; }
+        el.innerHTML = jobs.map(j => `
+            <div class="job-card">
+                <div class="job-header">
+                    <div>
+                        <div class="job-title">${esc(j.title)}</div>
+                        <div class="job-company">${esc(j.company)} &middot; ${esc(j.location||'')}</div>
+                    </div>
+                    <div>
+                        <span class="card-tag card-tag-specialty">${esc(j.contract_type||'Stage')}</span>
+                    </div>
+                </div>
+                <div class="job-desc">${esc(j.description||'')}</div>
+                <div class="job-footer">
+                    ${j.salary_range ? `<span class="job-salary">${esc(j.salary_range)}</span>` : ''}
+                    <span class="card-tag">${esc(j.sector||'')}</span>
+                    <span style="font-size:12px;color:var(--gray-400)">${formatDate(j.created_at)}</span>
+                    ${authToken ? `<button onclick="applyJob(${j.id})" class="btn btn-accent" style="font-size:12px;padding:6px 16px;margin-left:auto">Postuler</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+    } catch (e) { console.warn('Stages:', e); }
 }
 
 // === REPLAYS / MEDIATHEQUE ===

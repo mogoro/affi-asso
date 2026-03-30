@@ -43,6 +43,7 @@
             <a class="nav-link" data-page="evenements" onclick="navigate('evenements')">Evenements</a>
             <a class="nav-link" data-page="replays" onclick="navigate('replays')">Replays</a>
             <a class="nav-link" data-page="quizz" onclick="navigate('quizz')">Quizz</a>
+            <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles')">Ecoles & Etudiants</a>
             <a class="nav-link" data-page="adhesion" onclick="navigate('adhesion')">Adherer</a>
             <a class="nav-link" data-page="membres" onclick="navigate('membres')">Espace Membres</a>
         </div>
@@ -147,7 +148,7 @@
         <div class="container">
             <div class="section-line section-line-center"></div>
             <h2 class="section-title section-title-center">Espace Carriere</h2>
-            <p class="section-sub section-sub-center">Offres d'emploi, missions freelance et opportunites dans le ferroviaire</p>
+            <p class="section-sub section-sub-center">Emploi, stages, apprentissage, missions freelance et opportunites dans le ferroviaire</p>
             <div id="home-jobs">
                 <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
                     <input type="text" id="job-search" placeholder="Rechercher une offre..." oninput="loadJobs(this.value,document.getElementById('job-sector').value,document.getElementById('job-freelance').checked)" style="flex:1;min-width:200px;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
@@ -156,6 +157,12 @@
                         <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
                         <option>Infrastructure</option><option>Maintenance</option>
                         <option>Numerique & IA</option><option>Ingenierie & Conseil</option>
+                    </select>
+                    <select id="job-type" onchange="loadJobs(document.getElementById('job-search').value,document.getElementById('job-sector').value,document.getElementById('job-freelance').checked)" style="padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
+                        <option value="">Tous types</option>
+                        <option>CDI</option><option>CDD</option>
+                        <option>Stage</option><option>Apprentissage</option>
+                        <option>VIE</option><option>Freelance</option>
                     </select>
                     <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
                         <input type="checkbox" id="job-freelance" onchange="loadJobs(document.getElementById('job-search').value,document.getElementById('job-sector').value,this.checked)"> Freelance uniquement
@@ -537,6 +544,104 @@
     </section>
 </div>
 
+
+<!-- ================================================================ -->
+<!-- ECOLES & ETUDIANTS                                                -->
+<!-- ================================================================ -->
+<div id="page-ecoles" class="page">
+    <!-- Ecoles partenaires -->
+    <section>
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Ecoles & Partenaires Academiques</h2>
+            <p class="section-sub section-sub-center">Les ecoles d'ingenieurs et formations liees au secteur ferroviaire</p>
+            <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;justify-content:center">
+                <button class="replay-filter active" onclick="filterEcoles(this,'')">Toutes</button>
+                <button class="replay-filter" onclick="filterEcoles(this,'Ecole d\'ingenieurs')">Ecoles d'ingenieurs</button>
+                <button class="replay-filter" onclick="filterEcoles(this,'Universite')">Universites</button>
+                <button class="replay-filter" onclick="filterEcoles(this,'Formation continue')">Formation continue</button>
+                <button class="replay-filter" onclick="filterEcoles(this,'Campus des metiers ferroviaires')">Campus ferroviaire</button>
+            </div>
+            <div class="ecoles-grid" id="ecoles-grid">
+                <p class="empty-msg">Chargement...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Espace Etudiants -->
+    <section class="bg-light">
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Espace Etudiants</h2>
+            <p class="section-sub section-sub-center">L'AFFI accompagne les etudiants et jeunes ingenieurs dans leur parcours ferroviaire</p>
+            <div class="cards-grid" style="grid-template-columns:repeat(3,1fr)">
+                <div class="card"><div class="card-body text-center" style="padding:32px">
+                    <div style="font-size:48px;margin-bottom:12px">&#127891;</div>
+                    <div class="card-title">Adhesion Gratuite</div>
+                    <div class="card-text">Les etudiants beneficient d'une adhesion gratuite a l'AFFI. Acces aux conferences, publications et au reseau de professionnels.</div>
+                    <a class="btn btn-accent mt-24" href="#adhesion" onclick="navigate('adhesion')" style="font-size:13px">Adherer gratuitement</a>
+                </div></div>
+                <div class="card"><div class="card-body text-center" style="padding:32px">
+                    <div style="font-size:48px;margin-bottom:12px">&#128188;</div>
+                    <div class="card-title">Stages & Apprentissage</div>
+                    <div class="card-text">Retrouvez les offres de stages et contrats d'apprentissage proposes par les entreprises partenaires de l'AFFI.</div>
+                    <a class="btn btn-primary mt-24" href="#accueil" onclick="navigate('accueil');setTimeout(()=>document.getElementById('home-jobs')?.scrollIntoView({behavior:'smooth'}),200)" style="font-size:13px">Voir les offres</a>
+                </div></div>
+                <div class="card"><div class="card-body text-center" style="padding:32px">
+                    <div style="font-size:48px;margin-bottom:12px">&#129309;</div>
+                    <div class="card-title">Mentorat</div>
+                    <div class="card-text">Des ingenieurs experimentes se rendent disponibles pour conseiller les etudiants dans leur orientation et leur carriere.</div>
+                    <a class="btn btn-primary mt-24" href="#annuaire" onclick="navigate('annuaire')" style="font-size:13px;background:var(--green)">Trouver un mentor</a>
+                </div></div>
+            </div>
+            <div class="cards-grid" style="grid-template-columns:repeat(2,1fr);margin-top:24px">
+                <div class="card"><div class="card-body" style="padding:28px">
+                    <div style="display:flex;gap:16px;align-items:flex-start">
+                        <div style="font-size:36px">&#127942;</div>
+                        <div>
+                            <div class="card-title">Rail Innovation Challenge</div>
+                            <div class="card-text">Concours annuel d'innovation ferroviaire ouvert aux etudiants. Presentez vos projets devant un jury de professionnels et gagnez en visibilite dans le secteur.</div>
+                        </div>
+                    </div>
+                </div></div>
+                <div class="card"><div class="card-body" style="padding:28px">
+                    <div style="display:flex;gap:16px;align-items:flex-start">
+                        <div style="font-size:36px">&#127760;</div>
+                        <div>
+                            <div class="card-title">Reseau International</div>
+                            <div class="card-text">Via l'UEEIV et nos partenariats (VDEI Allemagne, 20 pays europeens), les etudiants peuvent decouvrir les carrieres ferroviaires a l'international.</div>
+                        </div>
+                    </div>
+                </div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Offres Stages & Apprentissage -->
+    <section>
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Offres de Stages & Apprentissage</h2>
+            <p class="section-sub section-sub-center">Les dernieres opportunites pour les etudiants dans le ferroviaire</p>
+            <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
+                <input type="text" id="stage-search" placeholder="Rechercher un stage ou apprentissage..." oninput="loadStages(this.value,document.getElementById('stage-sector').value,document.getElementById('stage-type').value)" style="flex:1;min-width:200px;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
+                <select id="stage-sector" onchange="loadStages(document.getElementById('stage-search').value,this.value,document.getElementById('stage-type').value)" style="padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
+                    <option value="">Tous secteurs</option>
+                    <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
+                    <option>Infrastructure</option><option>Maintenance</option>
+                    <option>Numerique & IA</option><option>Ingenierie & Conseil</option>
+                </select>
+                <select id="stage-type" onchange="loadStages(document.getElementById('stage-search').value,document.getElementById('stage-sector').value,this.value)" style="padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
+                    <option value="">Tous types</option>
+                    <option value="Stage">Stage</option>
+                    <option value="Apprentissage">Apprentissage</option>
+                    <option value="VIE">VIE</option>
+                </select>
+            </div>
+            <div id="stages-list"><p class="empty-msg">Chargement...</p></div>
+        </div>
+    </section>
+</div>
 
 <!-- ================================================================ -->
 <!-- ADHESION                                                          -->
@@ -1014,6 +1119,7 @@
                     <li><a href="#evenements" onclick="navigate('evenements')">Evenements</a></li>
                     <li><a href="#replays" onclick="navigate('replays')">Replays</a></li>
                     <li><a href="#quizz" onclick="navigate('quizz')">Quizz du Rail</a></li>
+                    <li><a href="#ecoles" onclick="navigate('ecoles')">Ecoles & Etudiants</a></li>
                     <li><a href="#adhesion" onclick="navigate('adhesion')">Adherer</a></li>
                     <li><a href="#membres" onclick="navigate('membres')">Espace Membres</a></li>
                 </ul>

@@ -334,3 +334,63 @@ section{padding:72px 0;}
 .text-center{text-align:center;} .mt-24{margin-top:24px;} .mt-48{margin-top:48px;}
 .hidden{display:none!important;} .page{display:none;} .page.active{display:block;}
 .flex-gap{display:flex;gap:12px;flex-wrap:wrap;}
+
+/* ========== MEMBER CARD TAGS ========== */
+.member-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.card-tag-specialty{background:var(--teal);color:var(--white);}
+.card-tag-mentor{background:var(--green);color:var(--white);}
+.mentor-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid var(--white);}
+.member-avatar{position:relative;}
+
+/* ========== REPLAYS / MEDIATHEQUE ========== */
+.replays-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px;}
+.replay-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:all var(--transition);}
+.replay-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.replay-thumb{position:relative;cursor:pointer;aspect-ratio:16/9;overflow:hidden;background:var(--gray-100);}
+.replay-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .3s;}
+.replay-card:hover .replay-thumb img{transform:scale(1.05);}
+.replay-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);color:var(--white);font-size:48px;opacity:0;transition:opacity .3s;}
+.replay-card:hover .replay-play{opacity:1;}
+.replay-duration{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.75);color:var(--white);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;}
+.replay-body{padding:16px;}
+.replay-title{font-size:16px;font-weight:800;color:var(--gray-900);margin:8px 0 6px;line-height:1.3;}
+.replay-desc{font-size:13px;color:var(--gray-600);line-height:1.6;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.replay-speaker{font-size:13px;color:var(--primary);font-weight:600;}
+.replay-filter{padding:8px 20px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:20px;font-family:inherit;font-size:13px;font-weight:600;color:var(--gray-600);cursor:pointer;transition:all var(--transition);}
+.replay-filter:hover{background:var(--gray-200);}
+.replay-filter.active{background:var(--primary);color:var(--white);border-color:var(--primary);}
+.replay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.replay-modal-content{position:relative;width:100%;max-width:900px;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;}
+.replay-modal-content iframe{width:100%;height:100%;border:none;}
+.replay-modal-close{position:absolute;top:-40px;right:0;background:none;border:none;color:var(--white);font-size:36px;cursor:pointer;z-index:10;}
+
+/* ========== QUIZZ DU RAIL ========== */
+.quizz-intro{text-align:center;padding:48px 24px;background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius);box-shadow:var(--shadow);}
+.quizz-intro h3{font-size:24px;font-weight:900;color:var(--primary);margin-bottom:8px;}
+.quizz-intro p{color:var(--gray-600);font-size:16px;}
+.quizz-progress{height:6px;background:var(--gray-200);border-radius:3px;margin-bottom:24px;overflow:hidden;}
+.quizz-progress-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width .4s ease;}
+.quizz-header{font-size:14px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.quizz-question{font-size:20px;font-weight:800;color:var(--gray-900);line-height:1.4;margin-bottom:24px;}
+.quizz-choices{display:flex;flex-direction:column;gap:10px;}
+.quizz-choice{display:block;width:100%;padding:16px 20px;background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:15px;font-weight:600;color:var(--gray-700);cursor:pointer;text-align:left;transition:all var(--transition);}
+.quizz-choice:hover:not(:disabled){border-color:var(--primary);background:var(--gray-50);color:var(--primary);}
+.quizz-choice:disabled{cursor:default;opacity:.7;}
+.quizz-correct{border-color:var(--green)!important;background:#ecfdf5!important;color:var(--green)!important;opacity:1!important;}
+.quizz-wrong{border-color:var(--accent)!important;background:#fef2f2!important;color:var(--accent)!important;opacity:1!important;}
+.quizz-feedback-correct,.quizz-feedback-wrong{margin-top:20px;padding:16px 20px;border-radius:var(--radius);font-size:14px;line-height:1.6;}
+.quizz-feedback-correct{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;}
+.quizz-feedback-wrong{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;}
+.quizz-result{text-align:center;padding:36px 24px;background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius);margin-bottom:24px;box-shadow:var(--shadow);}
+.quizz-result h3{font-size:24px;font-weight:900;color:var(--primary);margin:12px 0 8px;}
+.quizz-result p{color:var(--gray-600);font-size:16px;}
+.quizz-leaderboard{background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);}
+.quizz-leaderboard h3{font-size:18px;font-weight:800;color:var(--primary);margin-bottom:16px;}
+.leaderboard-list{display:flex;flex-direction:column;gap:6px;}
+.leaderboard-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:var(--radius);background:var(--gray-50);transition:background .2s;}
+.leaderboard-row:hover{background:var(--gray-100);}
+.leaderboard-top{background:linear-gradient(90deg,rgba(212,168,67,.1),rgba(212,168,67,.05));border:1px solid rgba(212,168,67,.3);}
+.leaderboard-rank{width:28px;height:28px;border-radius:50%;background:var(--gray-200);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--gray-600);flex-shrink:0;}
+.leaderboard-top .leaderboard-rank{background:var(--gold);color:var(--white);}
+.leaderboard-name{flex:1;font-weight:600;font-size:14px;color:var(--gray-800);}
+.leaderboard-score{font-weight:800;font-size:14px;color:var(--primary);}

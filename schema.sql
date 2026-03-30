@@ -20,6 +20,36 @@ CREATE TABLE IF NOT EXISTS members (
     last_login      TIMESTAMP,
     is_admin        BOOLEAN DEFAULT FALSE,
     is_board        BOOLEAN DEFAULT FALSE,
+    specialty       VARCHAR(100),
+    is_mentor       BOOLEAN DEFAULT FALSE,
+    created_at      TIMESTAMP DEFAULT NOW()
+);
+
+-- Quizz
+CREATE TABLE IF NOT EXISTS quizz_scores (
+    id              SERIAL PRIMARY KEY,
+    member_id       INT REFERENCES members(id) ON DELETE CASCADE,
+    quizz_id        VARCHAR(50) NOT NULL,
+    score           INT NOT NULL,
+    total           INT NOT NULL,
+    played_at       TIMESTAMP DEFAULT NOW(),
+    UNIQUE(member_id, quizz_id)
+);
+
+-- Replays / Mediatheque
+CREATE TABLE IF NOT EXISTS replays (
+    id              SERIAL PRIMARY KEY,
+    title           VARCHAR(300) NOT NULL,
+    description     TEXT,
+    video_url       TEXT NOT NULL,
+    video_platform  VARCHAR(20) DEFAULT 'youtube',
+    category        VARCHAR(50),
+    speaker_name    VARCHAR(200),
+    speaker_member_id INT REFERENCES members(id),
+    thumbnail_url   TEXT,
+    duration        VARCHAR(20),
+    event_date      DATE,
+    is_published    BOOLEAN DEFAULT TRUE,
     created_at      TIMESTAMP DEFAULT NOW()
 );
 
@@ -173,3 +203,6 @@ CREATE INDEX IF NOT EXISTS idx_publications_date ON publications(published_at DE
 CREATE INDEX IF NOT EXISTS idx_news_date ON news(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_member ON subscriptions(member_id);
+CREATE INDEX IF NOT EXISTS idx_members_specialty ON members(specialty);
+CREATE INDEX IF NOT EXISTS idx_quizz_scores_quizz ON quizz_scores(quizz_id, score DESC);
+CREATE INDEX IF NOT EXISTS idx_replays_category ON replays(category);

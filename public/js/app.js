@@ -2,7 +2,7 @@
  * AFFI — SPA Router, Slider, Page Logic
  */
 const API = window.location.origin;
-const PAGES = ['accueil','identite','agenda','evenements','publications','adhesion','contact','membres'];
+const PAGES = ['accueil','identite','agenda','evenements','publications','replays','quizz','adhesion','contact','membres'];
 
 // === ROUTER ===
 function navigate(page) {
@@ -16,6 +16,8 @@ function navigate(page) {
     if (page === 'agenda') { loadAgenda(); if (typeof loadCourses === 'function') loadCourses(); }
     if (page === 'evenements') loadEvents();
     if (page === 'publications') loadPublications();
+    if (page === 'replays') loadReplays();
+    if (page === 'quizz') loadQuizz();
     if (page === 'accueil') loadHome();
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
 }
@@ -180,6 +182,179 @@ async function loadPublications() {
                 </div>
             </div>`).join('');
     } catch (e) { console.warn('Pubs:', e); }
+}
+
+// === REPLAYS / MEDIATHEQUE ===
+let allReplays = [];
+async function loadReplays() {
+    try {
+        const res = await fetch('/data/replays.json');
+        allReplays = await res.json();
+        renderReplays('');
+    } catch (e) { console.warn('Replays:', e); }
+}
+
+function filterReplays(btn, cat) {
+    document.querySelectorAll('#page-replays .replay-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderReplays(cat);
+}
+
+function renderReplays(cat) {
+    const el = document.getElementById('replays-grid');
+    if (!el) return;
+    const filtered = cat ? allReplays.filter(r => r.category === cat) : allReplays;
+    if (!filtered.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:40px;grid-column:1/-1">Aucun replay dans cette categorie</p>'; return; }
+    el.innerHTML = filtered.map(r => `
+        <div class="replay-card">
+            <div class="replay-thumb" onclick="openReplay('${esc(r.video_url)}')">
+                <img src="${esc(r.thumbnail_url)}" alt="${esc(r.title)}">
+                <div class="replay-play">&#9654;</div>
+                ${r.duration ? `<span class="replay-duration">${esc(r.duration)}</span>` : ''}
+            </div>
+            <div class="replay-body">
+                <span class="card-tag card-tag-primary">${esc(r.category)}</span>
+                <span class="card-date">${formatDate(r.event_date)}</span>
+                <div class="replay-title">${esc(r.title)}</div>
+                <div class="replay-desc">${esc(r.description)}</div>
+                <div class="replay-speaker">&#127908; ${esc(r.speaker_name)}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openReplay(url) {
+    const modal = document.getElementById('replay-modal');
+    const iframe = document.getElementById('replay-iframe');
+    if (modal && iframe) {
+        iframe.src = url;
+        modal.style.display = 'flex';
+    }
+}
+function closeReplay() {
+    const modal = document.getElementById('replay-modal');
+    const iframe = document.getElementById('replay-iframe');
+    if (modal) { modal.style.display = 'none'; iframe.src = ''; }
+}
+
+// === QUIZZ DU RAIL ===
+let quizzData = null;
+let quizzState = { current: 0, score: 0, answers: [], finished: false };
+
+async function loadQuizz() {
+    try {
+        const res = await fetch('/data/quizz_march_2026.json');
+        quizzData = await res.json();
+        quizzState = { current: 0, score: 0, answers: [], finished: false };
+        renderQuizzIntro();
+    } catch (e) { console.warn('Quizz:', e); }
+}
+
+function renderQuizzIntro() {
+    const el = document.getElementById('quizz-container');
+    if (!el || !quizzData) return;
+    el.innerHTML = `
+        <div class="quizz-intro">
+            <div style="font-size:64px;margin-bottom:16px">&#128646;</div>
+            <h3>${esc(quizzData.title)}</h3>
+            <p>${esc(quizzData.description)}</p>
+            <p style="margin:16px 0;color:var(--gray-500)">${quizzData.questions.length} questions &middot; Choix multiple &middot; Correction immediate</p>
+            <button class="btn btn-accent" onclick="startQuizz()">Commencer le Quizz</button>
+        </div>`;
+}
+
+function startQuizz() {
+    quizzState = { current: 0, score: 0, answers: [], finished: false };
+    renderQuizzQuestion();
+}
+
+function renderQuizzQuestion() {
+    const el = document.getElementById('quizz-container');
+    if (!el || !quizzData) return;
+    const q = quizzData.questions[quizzState.current];
+    const num = quizzState.current + 1;
+    const total = quizzData.questions.length;
+    el.innerHTML = `
+        <div class="quizz-progress">
+            <div class="quizz-progress-bar" style="width:${(num / total) * 100}%"></div>
+        </div>
+        <div class="quizz-header">Question ${num} / ${total}</div>
+        <div class="quizz-question">${esc(q.question)}</div>
+        <div class="quizz-choices">
+            ${q.choices.map((c, i) => `
+                <button class="quizz-choice" onclick="answerQuizz(${i})" id="choice-${i}">${esc(c)}</button>
+            `).join('')}
+        </div>
+        <div id="quizz-feedback" style="display:none"></div>`;
+}
+
+function answerQuizz(idx) {
+    const q = quizzData.questions[quizzState.current];
+    const correct = idx === q.answer;
+    if (correct) quizzState.score++;
+    quizzState.answers.push(idx);
+
+    // Disable all buttons & highlight
+    document.querySelectorAll('.quizz-choice').forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === q.answer) btn.classList.add('quizz-correct');
+        else if (i === idx && !correct) btn.classList.add('quizz-wrong');
+    });
+
+    const fb = document.getElementById('quizz-feedback');
+    fb.style.display = 'block';
+    fb.className = correct ? 'quizz-feedback-correct' : 'quizz-feedback-wrong';
+    fb.innerHTML = `
+        <strong>${correct ? '&#9989; Bonne reponse !' : '&#10060; Mauvaise reponse'}</strong>
+        <p>${esc(q.explanation)}</p>
+        <button class="btn btn-primary" onclick="${quizzState.current < quizzData.questions.length - 1 ? 'nextQuestion()' : 'showQuizzResult()'}" style="margin-top:12px">
+            ${quizzState.current < quizzData.questions.length - 1 ? 'Question suivante' : 'Voir le resultat'}
+        </button>`;
+}
+
+function nextQuestion() {
+    quizzState.current++;
+    renderQuizzQuestion();
+}
+
+function showQuizzResult() {
+    const el = document.getElementById('quizz-container');
+    if (!el) return;
+    const total = quizzData.questions.length;
+    const pct = Math.round((quizzState.score / total) * 100);
+    let emoji = '&#128175;', msg = 'Excellent ! Vous etes un expert du rail !';
+    if (pct < 40) { emoji = '&#128556;'; msg = 'Pas mal pour un debut ! Revisez et retentez votre chance.'; }
+    else if (pct < 70) { emoji = '&#128077;'; msg = 'Bien joue ! Encore quelques efforts pour le top 10 !'; }
+    else if (pct < 90) { emoji = '&#127881;'; msg = 'Tres bien ! Vous connaissez bien le ferroviaire.'; }
+
+    // Save score locally
+    const scores = JSON.parse(localStorage.getItem('affi_quizz_scores') || '[]');
+    const name = (currentUser ? currentUser.first_name + ' ' + currentUser.last_name : 'Anonyme');
+    scores.push({ name, score: quizzState.score, total, date: new Date().toISOString(), quizz: quizzData.id });
+    localStorage.setItem('affi_quizz_scores', JSON.stringify(scores));
+
+    // Top 10
+    const quizzScores = scores.filter(s => s.quizz === quizzData.id).sort((a, b) => b.score - a.score).slice(0, 10);
+
+    el.innerHTML = `
+        <div class="quizz-result">
+            <div style="font-size:64px">${emoji}</div>
+            <h3>Votre score : ${quizzState.score} / ${total} (${pct}%)</h3>
+            <p>${msg}</p>
+            <button class="btn btn-accent" onclick="startQuizz()" style="margin-top:16px">Recommencer</button>
+        </div>
+        <div class="quizz-leaderboard">
+            <h3>&#127942; Top 10 — ${esc(quizzData.title)}</h3>
+            <div class="leaderboard-list">
+                ${quizzScores.map((s, i) => `
+                    <div class="leaderboard-row${i < 3 ? ' leaderboard-top' : ''}">
+                        <span class="leaderboard-rank">${i + 1}</span>
+                        <span class="leaderboard-name">${esc(s.name)}</span>
+                        <span class="leaderboard-score">${s.score}/${s.total}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>`;
 }
 
 // === CONTACT ===

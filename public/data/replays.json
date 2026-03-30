@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "title": "Conference Franco-Allemande sur le Systeme Ferroviaire",
+    "description": "Defis et avancees dans le domaine de l'exploitation en autonomie de circulations ferroviaires. Conference organisee conjointement par l'AFFI et la VDEI.",
+    "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "category": "Technique",
+    "speaker_name": "Panel d'experts AFFI-VDEI",
+    "thumbnail_url": "/images/slideshow/conf-franco-allemande-2025.jpg",
+    "duration": "1h45",
+    "event_date": "2025-03-26"
+  },
+  {
+    "id": 2,
+    "title": "Voeux AFFI 2025 avec Frederic DELORME",
+    "description": "Ceremonie des voeux de l'AFFI avec M. Frederic DELORME, PDG de Rails Logistics Europe. Vision et perspectives du fret ferroviaire en Europe.",
+    "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "category": "Innovation",
+    "speaker_name": "Frederic DELORME",
+    "thumbnail_url": "/images/slideshow/voeux-2025-delorme.png",
+    "duration": "1h15",
+    "event_date": "2025-01-27"
+  },
+  {
+    "id": 3,
+    "title": "Securite ferroviaire : Retours d'experience du BEA-TT",
+    "description": "Presentation des enquetes et recommandations du Bureau d'Enquetes sur les Accidents de Transport Terrestre.",
+    "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "category": "Securite",
+    "speaker_name": "Jean-Damien Poncet",
+    "thumbnail_url": "/images/events/beatt.jpg",
+    "duration": "55min",
+    "event_date": "2024-11-15"
+  },
+  {
+    "id": 4,
+    "title": "ERTMS Niveau 3 : vers le cantonnement mobile",
+    "description": "Etat de l'art et perspectives de deploiement de l'ERTMS Niveau 3 en Europe. Impact sur la capacite des lignes et la signalisation.",
+    "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "category": "Technique",
+    "speaker_name": "Marc Antoni",
+    "thumbnail_url": "/images/events/rdv-affi.jpg",
+    "duration": "1h20",
+    "event_date": "2024-09-10"
+  },
+  {
+    "id": 5,
+    "title": "Rail Innovation Challenge 2025 : les laureats",
+    "description": "Presentation des projets innovants laureats du concours annuel de l'AFFI. Intelligence artificielle, maintenance predictive et mobilite durable.",
+    "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "category": "Innovation",
+    "speaker_name": "Francois-Xavier Picard",
+    "thumbnail_url": "/images/events/ric.jpg",
+    "duration": "1h30",
+    "event_date": "2025-06-12"
+  },
+  {
+    "id": 6,
+    "title": "Cybersecurite des systemes ferroviaires",
+    "description": "Les enjeux de cybersecurite dans les systemes de signalisation, de controle-commande et de communication ferroviaire.",
+    "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "category": "Securite",
+    "speaker_name": "Gerard Cambillau",
+    "thumbnail_url": "/images/events/jacques-damas.jpg",
+    "duration": "1h10",
+    "event_date": "2024-05-22"
+  }
+]

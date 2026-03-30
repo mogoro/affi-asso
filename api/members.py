@@ -22,6 +22,8 @@ class handler(BaseHTTPRequestHandler):
             search = qs.get("search", [""])[0]
             sector = qs.get("sector", [""])[0]
             company = qs.get("company", [""])[0]
+            specialty = qs.get("specialty", [""])[0]
+            mentor_only = qs.get("mentor", [""])[0]
             clauses = ["status = 'active'"]
             params = []
             if search:
@@ -34,10 +36,15 @@ class handler(BaseHTTPRequestHandler):
             if company:
                 clauses.append("company ILIKE %s")
                 params.append(f"%%{company}%%")
+            if specialty:
+                clauses.append("specialty = %s")
+                params.append(specialty)
+            if mentor_only == "1":
+                clauses.append("is_mentor = TRUE")
             where = " AND ".join(clauses)
             rows = fetchall(f"""
                 SELECT id, first_name, last_name, company, job_title, sector, photo_url, bio,
-                       membership_type, is_board
+                       membership_type, is_board, specialty, is_mentor
                 FROM members WHERE {where}
                 ORDER BY last_name ASC LIMIT 200
             """, params)
@@ -50,7 +57,7 @@ class handler(BaseHTTPRequestHandler):
             full = fetchone("""
                 SELECT id, email, first_name, last_name, phone, company, job_title, sector,
                        bio, photo_url, membership_type, status, is_admin, is_board,
-                       linkedin_url, cv_text, cv_updated_at, joined_at
+                       linkedin_url, cv_text, cv_updated_at, joined_at, specialty, is_mentor
                 FROM members WHERE id = %s
             """, [user["id"]])
             return self._json(200, full)
@@ -97,7 +104,7 @@ class handler(BaseHTTPRequestHandler):
 
         if action == "update_profile":
             fields = {}
-            for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url"):
+            for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url","specialty","is_mentor"):
                 if k in body:
                     fields[k] = body[k]
             if fields:

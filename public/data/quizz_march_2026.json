@@ -1,0 +1,67 @@
+{
+  "id": "march_2026",
+  "title": "Quizz du Rail — Mars 2026",
+  "description": "Testez vos connaissances sur le ferroviaire francais et europeen !",
+  "questions": [
+    {
+      "question": "Quelle est la vitesse maximale atteinte par le TGV lors de son record du monde en 2007 ?",
+      "choices": ["515 km/h", "574,8 km/h", "600 km/h", "550 km/h"],
+      "answer": 1,
+      "explanation": "Le 3 avril 2007, le TGV V150 a atteint 574,8 km/h sur la LGV Est europeenne, battant le record mondial de vitesse sur rail."
+    },
+    {
+      "question": "Que signifie l'acronyme ERTMS ?",
+      "choices": ["European Rail Traffic Management System", "European Railway Transport Monitoring System", "Electronic Rail Track Management Standard", "European Rail Telecommunication Modernization System"],
+      "answer": 0,
+      "explanation": "ERTMS (European Rail Traffic Management System) est le systeme europeen de gestion du trafic ferroviaire, compose de l'ETCS et du GSM-R."
+    },
+    {
+      "question": "En quelle annee la SNCF a-t-elle ete creee ?",
+      "choices": ["1935", "1937", "1938", "1942"],
+      "answer": 1,
+      "explanation": "La SNCF a ete creee le 1er janvier 1938, par la nationalisation des compagnies privees de chemin de fer."
+    },
+    {
+      "question": "Quel est l'ecartement standard des voies ferrees en France ?",
+      "choices": ["1 000 mm", "1 435 mm", "1 520 mm", "1 600 mm"],
+      "answer": 1,
+      "explanation": "L'ecartement standard (ou ecartement normal) est de 1 435 mm. Il est utilise par la majorite des reseaux europeens."
+    },
+    {
+      "question": "Combien de lignes a grande vitesse (LGV) la France compte-t-elle en 2026 ?",
+      "choices": ["4", "6", "8", "10"],
+      "answer": 2,
+      "explanation": "La France compte 8 LGV en service : Sud-Est, Atlantique, Nord, Rhone-Alpes, Mediterranee, Est europeenne, Rhin-Rhone et Bretagne-Pays de la Loire."
+    },
+    {
+      "question": "Quel organisme delivre les autorisations de mise en exploitation commerciale des materiels roulants en France ?",
+      "choices": ["SNCF Reseau", "EPSF", "ARAFER", "Ministere des Transports"],
+      "answer": 1,
+      "explanation": "L'EPSF (Etablissement Public de Securite Ferroviaire) est l'autorite nationale de securite ferroviaire en France."
+    },
+    {
+      "question": "Quel systeme de signalisation est progressivement deploye sur le reseau europeen pour remplacer les systemes nationaux ?",
+      "choices": ["KVB", "TVM 430", "ETCS", "PZB"],
+      "answer": 2,
+      "explanation": "L'ETCS (European Train Control System) est le composant de signalisation de l'ERTMS, destine a unifier les systemes en Europe."
+    },
+    {
+      "question": "Quelle est la longueur approximative du reseau ferre francais ?",
+      "choices": ["15 000 km", "22 000 km", "28 000 km", "35 000 km"],
+      "answer": 2,
+      "explanation": "Le reseau ferre national francais represente environ 28 000 km de lignes, dont environ 2 800 km de LGV."
+    },
+    {
+      "question": "En quelle annee l'AFFI a-t-elle ete fondee ?",
+      "choices": ["1990", "1994", "1996", "2000"],
+      "answer": 2,
+      "explanation": "L'AFFI a ete fondee en avril 1996, a l'initiative des entreprises ferroviaires francaises, de la FIF, de la SNCF et de la RATP."
+    },
+    {
+      "question": "Quel type de courant est utilise pour alimenter les LGV en France ?",
+      "choices": ["1 500 V continu", "3 000 V continu", "15 kV alternatif 16,7 Hz", "25 kV alternatif 50 Hz"],
+      "answer": 3,
+      "explanation": "Les LGV francaises sont electrifiees en 25 kV alternatif 50 Hz, plus adapte aux grandes vitesses que le 1 500 V continu des lignes classiques."
+    }
+  ]
+}

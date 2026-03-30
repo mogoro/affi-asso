@@ -96,10 +96,12 @@ function switchMemberTab(tab) {
 }
 
 // === DIRECTORY ===
-async function loadDirectory(search, sector) {
+async function loadDirectory(search, sector, specialty, mentor) {
     const params = new URLSearchParams({action: 'directory'});
     if (search) params.set('search', search);
     if (sector) params.set('sector', sector);
+    if (specialty) params.set('specialty', specialty);
+    if (mentor) params.set('mentor', mentor);
     try {
         const res = await fetch(`${API}/api/members?${params}`, {headers: {'Authorization': 'Bearer ' + authToken}});
         const members = await res.json();
@@ -114,13 +116,17 @@ function renderDirectory(members) {
     el.innerHTML = members.map(m => {
         const initials = (m.first_name || '?')[0] + (m.last_name || '?')[0];
         return `<div class="member-card">
-            <div class="member-avatar">${esc(initials.toUpperCase())}</div>
+            <div class="member-avatar">${esc(initials.toUpperCase())}${m.is_mentor ? '<span class="mentor-badge" title="Disponible pour conseiller">&#127891;</span>' : ''}</div>
             <div class="member-info">
                 <div class="member-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
                 <div class="member-job">${esc(m.job_title || '')}</div>
                 <div class="member-company">${esc(m.company || '')}</div>
-                ${m.sector ? `<span class="card-tag">${esc(m.sector)}</span>` : ''}
-                ${m.is_board ? '<span class="card-tag card-tag-primary">Bureau</span>' : ''}
+                <div class="member-tags">
+                    ${m.sector ? `<span class="card-tag">${esc(m.sector)}</span>` : ''}
+                    ${m.specialty ? `<span class="card-tag card-tag-specialty">${esc(m.specialty)}</span>` : ''}
+                    ${m.is_board ? '<span class="card-tag card-tag-primary">Bureau</span>' : ''}
+                    ${m.is_mentor ? '<span class="card-tag card-tag-mentor">Mentor</span>' : ''}
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -129,10 +135,14 @@ function renderDirectory(members) {
 let _dirSearch;
 function onDirSearch(v) {
     clearTimeout(_dirSearch);
-    _dirSearch = setTimeout(() => loadDirectory(v, document.getElementById('dir-sector')?.value), 300);
+    _dirSearch = setTimeout(() => onDirFilter(), 300);
 }
-function onDirSector() {
-    loadDirectory(document.getElementById('dir-search')?.value, document.getElementById('dir-sector')?.value);
+function onDirFilter() {
+    const search = document.getElementById('dir-search')?.value || '';
+    const sector = document.getElementById('dir-sector')?.value || '';
+    const specialty = document.getElementById('dir-specialty')?.value || '';
+    const mentor = document.getElementById('dir-mentor')?.checked ? '1' : '';
+    loadDirectory(search, sector, specialty, mentor);
 }
 
 // === ANNOUNCEMENTS ===
@@ -182,10 +192,12 @@ async function loadProfile() {
         const p = await res.json();
         if (p.error) return;
         // Fill form
-        for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url']) {
+        for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty']) {
             const inp = document.getElementById('prof-' + k);
             if (inp) inp.value = p[k] || '';
         }
+        const mentorCb = document.getElementById('prof-is_mentor');
+        if (mentorCb) mentorCb.checked = !!p.is_mentor;
         const cvEl = document.getElementById('prof-cv');
         if (cvEl) cvEl.value = p.cv_text || '';
         const cvDate = document.getElementById('cv-date');
@@ -197,10 +209,12 @@ async function saveProfile(evt) {
     evt.preventDefault();
     const f = evt.target;
     const data = {};
-    for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url']) {
+    for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty']) {
         const inp = document.getElementById('prof-' + k);
         if (inp) data[k] = inp.value;
     }
+    const mentorCb = document.getElementById('prof-is_mentor');
+    if (mentorCb) data.is_mentor = mentorCb.checked;
     try {
         await fetch(`${API}/api/members`, {
             method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},

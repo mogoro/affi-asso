@@ -220,6 +220,42 @@ function startConversation(memberId, name) {
     setTimeout(() => openThread(memberId, name), 300);
 }
 
+async function showNewMessageForm() {
+    // Charger la liste des membres pour le selecteur
+    try {
+        const res = await fetch(`${API}/api/members?action=directory`, {headers:{'Authorization':'Bearer '+authToken}});
+        const members = await res.json();
+        const others = members.filter(m => m.id !== currentUser.id);
+        const html = `<div class="adm-modal-bg" id="newmsg-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+            <h3 style="margin-bottom:16px;color:var(--primary)">Nouveau message</h3>
+            <div class="form-group"><label>Destinataire</label>
+                <select id="nm-to" style="width:100%;padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
+                    <option value="">Choisir un membre...</option>
+                    ${others.map(m => `<option value="${m.id}">${esc(m.first_name)} ${esc(m.last_name)} — ${esc(m.company||'')}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group"><label>Message</label>
+                <textarea id="nm-content" style="width:100%;padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;min-height:100px" required></textarea>
+            </div>
+            <button onclick="sendNewMessage()" class="btn btn-accent" style="width:100%">Envoyer</button>
+        </div></div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+    } catch (e) { alert('Erreur: ' + e.message); }
+}
+
+async function sendNewMessage() {
+    const toId = document.getElementById('nm-to').value;
+    const content = document.getElementById('nm-content').value;
+    if (!toId || !content) return alert('Selectionnez un destinataire et ecrivez un message');
+    await fetch(`${API}/api/social`, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'send_message', to_member_id: parseInt(toId), content})});
+    document.getElementById('newmsg-modal')?.remove();
+    loadConversations();
+    const sel = document.getElementById('nm-to');
+    const name = sel.options[sel.selectedIndex].text.split(' — ')[0];
+    openThread(parseInt(toId), name);
+}
+
 // === NOTIFICATIONS ===
 async function loadNotifications() {
     if (!authToken) return;

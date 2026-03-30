@@ -207,17 +207,6 @@ class handler(BaseHTTPRequestHandler):
                 FROM member_announcements WHERE author_id = %s ORDER BY created_at DESC LIMIT 20""", [user["id"]])
             return self._json(200, {"events": events, "news": news, "announcements": announcements})
 
-        # Admin actions
-        elif action == "approve_member" and user.get("is_admin"):
-            mid = body.get("member_id")
-            execute("UPDATE members SET status = 'active' WHERE id = %s", [mid])
-            return self._json(200, {"ok": True})
-
-        elif action == "block_member" and user.get("is_admin"):
-            mid = body.get("member_id")
-            execute("UPDATE members SET status = 'blocked' WHERE id = %s", [mid])
-            return self._json(200, {"ok": True})
-
         return self._json(400, {"error": "Action inconnue"})
 
     def do_OPTIONS(self):

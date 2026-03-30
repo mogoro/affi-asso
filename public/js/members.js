@@ -85,10 +85,7 @@ function switchMemberTab(tab) {
 
     if (tab === 'directory') loadDirectory();
     if (tab === 'announcements') loadAnnouncements();
-    if (tab === 'communaute') { if (typeof loadFeed === 'function') loadFeed(); }
-    if (tab === 'carriere') { if (typeof loadJobs === 'function') loadJobs(); }
-    if (tab === 'formations') { if (typeof loadCourses === 'function') loadCourses(); }
-    if (tab === 'cartographie') { if (typeof loadMap === 'function') loadMap(); }
+    // communaute, carriere, formations, cartographie sont sur la page d'accueil et identite
     if (tab === 'proposer') loadMyProposals();
     if (tab === 'profile') loadProfile();
     if (tab === 'messages') loadConversations();
@@ -130,6 +127,9 @@ function renderDirectory(members) {
                 ${m.bio ? `<div class="mc-bio">${esc((m.bio || '').substring(0, 150))}${(m.bio||'').length > 150 ? '...' : ''}</div>` : ''}
                 ${m.joined_at ? `<div class="mc-detail-row"><span class="mc-icon">&#128197;</span> Membre depuis ${formatDate(m.joined_at)}</div>` : ''}
                 ${m.linkedin_url ? `<div class="mc-detail-row"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="mc-linkedin">&#128279; Profil LinkedIn</a></div>` : ''}
+                <div class="mc-detail-row" style="margin-top:6px">
+                    <button onclick="event.stopPropagation();startConversation(${m.id},'${esc(m.first_name)} ${esc(m.last_name)}')" class="btn btn-primary" style="font-size:12px;padding:6px 14px">&#128172; Envoyer un message</button>
+                </div>
             </div>
             <div class="mc-tags">
                 ${m.sector ? `<span class="card-tag">${esc(m.sector)}</span>` : ''}
@@ -351,31 +351,6 @@ async function loadMyProposals() {
             </div>
         `).join('');
     } catch (e) { console.warn('Proposals:', e); }
-}
-
-// === ADMIN ===
-async function loadAdmin() {
-    if (!currentUser || !currentUser.is_admin) return;
-    try {
-        const res = await fetch(`${API}/api/members?action=stats`, {headers: {'Authorization': 'Bearer ' + authToken}});
-        const stats = await res.json();
-        renderAdmin(stats);
-    } catch (e) { console.warn('Admin:', e); }
-}
-
-function renderAdmin(s) {
-    const el = document.getElementById('admin-stats');
-    if (!el) return;
-    el.innerHTML = `
-        <div class="kpi-row" style="margin-bottom:24px">
-            <div class="kpi-card"><div class="kpi-val">${s.total_members||0}</div><div class="kpi-label">Membres total</div></div>
-            <div class="kpi-card"><div class="kpi-val">${s.active_members||0}</div><div class="kpi-label">Actifs</div></div>
-            <div class="kpi-card"><div class="kpi-val">${s.pending_members||0}</div><div class="kpi-label">En attente</div></div>
-            <div class="kpi-card"><div class="kpi-val">${s.unread_messages||0}</div><div class="kpi-label">Messages non lus</div></div>
-        </div>
-        <h3 style="margin-bottom:12px;color:var(--primary)">Repartition par secteur</h3>
-        ${(s.by_sector||[]).map(x => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(x.sector||'Non renseigne')}</span><strong>${x.n}</strong></div>`).join('')}
-    `;
 }
 
 // === INIT CHECK ===

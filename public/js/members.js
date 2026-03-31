@@ -57,7 +57,7 @@ function doLogout() {
     currentUser = null;
     document.getElementById('login-section').style.display = 'block';
     document.getElementById('member-area').style.display = 'none';
-    if (typeof updateNavbarState === 'function') updateNavbarState();
+    if (typeof onUserLoggedOut === 'function') onUserLoggedOut();
 }
 
 async function showMemberArea() {
@@ -73,9 +73,8 @@ async function showMemberArea() {
     const adminTab = document.getElementById('admin-tab');
     if (adminTab) adminTab.style.display = currentUser && currentUser.is_admin ? 'inline-block' : 'none';
 
-    // Debloquer les pages verrouillees maintenant qu'on est connecte
-    if (typeof restoreLockedPages === 'function') restoreLockedPages();
-    if (typeof updateNavbarState === 'function') updateNavbarState();
+    // Debloquer tout le site
+    if (typeof onUserLoggedIn === 'function') onUserLoggedIn();
 
     switchMemberTab('dashboard');
 }
@@ -459,11 +458,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (authToken) {
         const valid = await checkSession();
         if (valid) {
-            if (typeof updateNavbarState === 'function') updateNavbarState();
-            if (typeof restoreLockedPages === 'function') restoreLockedPages();
+            if (typeof onUserLoggedIn === 'function') onUserLoggedIn();
             if (location.hash === '#membres') showMemberArea();
         } else {
-            // Token invalide, nettoyer
             authToken = '';
             localStorage.removeItem('affi_token');
         }

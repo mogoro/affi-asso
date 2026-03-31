@@ -37,7 +37,7 @@ function navigate(page) {
 
     if (page === 'agenda') { loadAgenda(); if (typeof loadCourses === 'function') loadCourses(); }
     if (page === 'evenements') loadEvents();
-    if (page === 'annuaire') loadPublicAnnuaire();
+    if (page === 'annuaire') { isLoggedIn() ? loadPublicAnnuaireFull() : loadPublicAnnuaire(); }
     if (page === 'publications') loadPublications();
     if (page === 'ecoles') { loadStages(); }
     if (page === 'replays') loadReplays();
@@ -88,8 +88,30 @@ function updateNavbarState() {
     const loggedIn = isLoggedIn();
     const loginBtn = document.querySelector('.nav-member-btn');
     if (loginBtn) {
-        loginBtn.textContent = loggedIn ? 'Mon espace' : 'Connexion';
+        if (loggedIn && typeof currentUser !== 'undefined' && currentUser) {
+            loginBtn.innerHTML = `&#128100; ${currentUser.first_name} ${currentUser.last_name}`;
+        } else {
+            loginBtn.textContent = 'Connexion';
+        }
     }
+}
+
+// Fonction appelee par members.js apres login pour tout debloquer
+function onUserLoggedIn() {
+    restoreLockedPages();
+    updateNavbarState();
+    // Recharger la page courante pour afficher le contenu
+    const currentPage = location.hash.slice(1) || 'accueil';
+    if (LOCKED_PAGES.includes(currentPage) || currentPage === 'annuaire' || currentPage === 'accueil') {
+        navigate(currentPage);
+    }
+}
+
+function onUserLoggedOut() {
+    updateNavbarState();
+    // Re-naviguer pour reverrouiller si necessaire
+    const currentPage = location.hash.slice(1) || 'accueil';
+    navigate(currentPage);
 }
 
 // === SCROLL TO SECTION (Identite sub-pages) ===
@@ -304,18 +326,65 @@ function renderPublicAnnuaire(members) {
     }).join('');
 }
 
+// Version complete de l'annuaire (connecte)
+async function loadPublicAnnuaireFull(search, specialty, region, sector) {
+    const params = new URLSearchParams({action: 'public_annuaire'});
+    if (search) params.set('search', search);
+    if (specialty) params.set('specialty', specialty);
+    if (region) params.set('region', region);
+    if (sector) params.set('sector', sector);
+    try {
+        const res = await fetch(`${API}/api/members?${params}`);
+        const members = await res.json();
+        const el = document.getElementById('public-annuaire-grid');
+        if (!el) return;
+        if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);grid-column:1/-1;padding:40px">Aucun expert trouve</p>'; return; }
+        el.innerHTML = members.map(m => {
+            const initials = (m.first_name || '?')[0] + (m.last_name || '?')[0];
+            const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
+            const avatarHtml = hasPhoto
+                ? `<img src="${esc(m.photo_url)}" alt="${esc(m.first_name)}" class="ec-photo">`
+                : `<div class="ec-initials">${esc(initials.toUpperCase())}</div>`;
+            return `<div class="expert-card" onclick="toggleMemberDetail(this)">
+                <div class="ec-banner">
+                    ${m.is_mentor ? '<div class="ec-mentor-flag">&#127891; Mentor</div>' : ''}
+                    ${m.is_board ? '<div class="ec-board-flag">Bureau AFFI</div>' : ''}
+                </div>
+                <div class="ec-avatar-wrap">${avatarHtml}</div>
+                <div class="ec-body">
+                    <div class="ec-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
+                    <div class="ec-job">${esc(m.job_title || '')}</div>
+                    <div class="ec-company">${esc(m.company || '')}</div>
+                    ${m.region ? `<div class="ec-location">&#128205; ${esc(m.region)}</div>` : ''}
+                </div>
+                <div class="ec-expertise">
+                    ${m.specialty ? `<span class="ec-tag ec-tag-specialty">${esc(m.specialty)}</span>` : ''}
+                    ${m.sector ? `<span class="ec-tag">${esc(m.sector)}</span>` : ''}
+                </div>
+                <div class="ec-expand">
+                    ${m.bio ? `<div class="ec-bio">${esc((m.bio || '').substring(0, 200))}${(m.bio||'').length > 200 ? '...' : ''}</div>` : ''}
+                    ${m.linkedin_url ? `<div class="ec-actions"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="ec-btn ec-btn-li">in LinkedIn</a></div>` : ''}
+                </div>
+                <div class="ec-footer">
+                    <span class="ec-rgpd">&#128994; Publie avec consentement</span>
+                    <span class="ec-expand-hint">&#9660;</span>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (e) { console.warn('Annuaire:', e); }
+}
+
 let _pubSearch;
 function onPubSearch(v) {
     clearTimeout(_pubSearch);
     _pubSearch = setTimeout(() => onPubFilter(), 300);
 }
 function onPubFilter() {
-    loadPublicAnnuaire(
-        document.getElementById('pub-search')?.value || '',
-        document.getElementById('pub-specialty')?.value || '',
-        document.getElementById('pub-region')?.value || '',
-        document.getElementById('pub-sector')?.value || ''
-    );
+    const s = document.getElementById('pub-search')?.value || '';
+    const sp = document.getElementById('pub-specialty')?.value || '';
+    const r = document.getElementById('pub-region')?.value || '';
+    const sc = document.getElementById('pub-sector')?.value || '';
+    isLoggedIn() ? loadPublicAnnuaireFull(s, sp, r, sc) : loadPublicAnnuaire(s, sp, r, sc);
 }
 
 // === LOCK CARRIERE ===

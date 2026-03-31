@@ -136,9 +136,20 @@ class handler(BaseHTTPRequestHandler):
             for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url","specialty","is_mentor","region","consent_annuaire","consent_newsletter"):
                 if k in body:
                     fields[k] = body[k]
+            # MAJ consent_date si consentement change
+            if "consent_annuaire" in body or "consent_newsletter" in body:
+                fields["consent_date"] = "NOW()"
             if fields:
-                sets = ", ".join(f"{k} = %s" for k in fields)
-                vals = list(fields.values()) + [user["id"]]
+                sets_parts = []
+                vals = []
+                for k, v in fields.items():
+                    if v == "NOW()":
+                        sets_parts.append(f"{k} = NOW()")
+                    else:
+                        sets_parts.append(f"{k} = %s")
+                        vals.append(v)
+                sets = ", ".join(sets_parts)
+                vals.append(user["id"])
                 execute(f"UPDATE members SET {sets} WHERE id = %s", vals)
             return self._json(200, {"ok": True, "message": "Profil mis a jour"})
 

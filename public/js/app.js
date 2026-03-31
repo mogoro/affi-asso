@@ -33,6 +33,8 @@ window.addEventListener('hashchange', () => navigate(location.hash.slice(1) || '
 document.addEventListener('DOMContentLoaded', () => {
     navigate(location.hash.slice(1) || 'accueil');
     initSlider();
+    initCookieBanner();
+    setTimeout(initScrollAnimations, 500);
 });
 
 // === HERO SLIDER ===
@@ -622,6 +624,43 @@ async function submitContact(evt) {
         });
         if (res.ok) { document.getElementById('contact-success').style.display = 'block'; f.reset(); }
     } catch (e) { alert('Erreur: ' + e.message); }
+}
+
+// === COOKIE CONSENT ===
+function initCookieBanner() {
+    if (!localStorage.getItem('affi_cookies_accepted')) {
+        const el = document.getElementById('cookie-banner');
+        if (el) el.style.display = 'flex';
+    }
+}
+function acceptCookies() {
+    localStorage.setItem('affi_cookies_accepted', 'true');
+    const el = document.getElementById('cookie-banner');
+    if (el) { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }
+}
+
+// === TOAST NOTIFICATIONS ===
+function showToast(msg, type) {
+    type = type || 'info';
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.innerHTML = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('toast-visible'), 10);
+    setTimeout(() => { toast.classList.remove('toast-visible'); setTimeout(() => toast.remove(), 300); }, 4000);
+}
+
+// === SCROLL ANIMATIONS ===
+function initScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('fade-in-visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.card, .board-card, .kpi-card, .pu-card, .ecole-card, .replay-card').forEach(el => {
+        el.classList.add('fade-in');
+        observer.observe(el);
+    });
 }
 
 // === HELPERS ===

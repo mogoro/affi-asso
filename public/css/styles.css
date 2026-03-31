@@ -359,6 +359,31 @@ section{padding:72px 0;}
 .hidden{display:none!important;} .page{display:none;} .page.active{display:block;}
 .flex-gap{display:flex;gap:12px;flex-wrap:wrap;}
 
+/* ========== COOKIE BANNER ========== */
+.cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:1000;background:var(--primary-dark);color:var(--white);padding:20px 0;box-shadow:0 -4px 24px rgba(0,0,0,.2);transition:opacity .3s;}
+.cookie-inner{max-width:var(--max-w);margin:0 auto;padding:0 28px;display:flex;gap:24px;align-items:center;}
+.cookie-text{flex:1;font-size:13px;line-height:1.6;}
+.cookie-text strong{font-size:15px;display:block;margin-bottom:4px;}
+.cookie-text a{color:var(--gold);font-weight:600;}
+.cookie-actions{display:flex;gap:8px;flex-shrink:0;}
+@media(max-width:768px){.cookie-inner{flex-direction:column;text-align:center;}.cookie-actions{justify-content:center;}}
+
+/* ========== TOAST NOTIFICATIONS ========== */
+.toast-container{position:fixed;top:90px;right:20px;z-index:1001;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--white);border:1px solid var(--gray-200);border-radius:8px;padding:14px 20px;box-shadow:var(--shadow-lg);font-size:14px;font-weight:600;transform:translateX(120%);transition:transform .3s ease;max-width:360px;}
+.toast-visible{transform:translateX(0);}
+.toast-success{border-left:4px solid var(--green);color:var(--green);}
+.toast-error{border-left:4px solid var(--accent);color:var(--accent);}
+.toast-info{border-left:4px solid var(--primary);color:var(--primary);}
+
+/* ========== SCROLL ANIMATIONS ========== */
+.fade-in{opacity:0;transform:translateY(20px);transition:opacity .6s ease, transform .6s ease;}
+.fade-in-visible{opacity:1;transform:translateY(0);}
+
+/* ========== SMOOTH SCROLLBAR ========== */
+html{scroll-behavior:smooth;}
+::selection{background:var(--primary);color:var(--white);}
+
 /* ========== MEMBER CARD TAGS ========== */
 .member-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
 .card-tag-specialty{background:var(--teal);color:var(--white);}

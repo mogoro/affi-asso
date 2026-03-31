@@ -245,8 +245,13 @@ async function saveProfile(evt) {
             method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
             body: JSON.stringify({action: 'update_profile', ...data})
         });
-        document.getElementById('profile-success').style.display = 'block';
-        setTimeout(() => document.getElementById('profile-success').style.display = 'none', 3000);
+        const el = document.getElementById('profile-success');
+        const annuaire = document.getElementById('prof-consent_annuaire')?.checked;
+        el.innerHTML = annuaire
+            ? 'Profil mis a jour ! &#128994; Votre profil est visible dans l\'annuaire public.'
+            : 'Profil mis a jour ! &#128308; Votre profil n\'est PAS visible dans l\'annuaire public.';
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 5000);
     } catch (e) { alert('Erreur: ' + e.message); }
 }
 

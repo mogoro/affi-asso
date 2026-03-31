@@ -28,6 +28,7 @@ function navigate(page) {
 
     // Mettre a jour l'etat de la navbar
     updateNavbarState();
+    updateNavSub(page);
 
     // Pages bloquees : remplacer tout le contenu par le cadenas
     if (LOCKED_PAGES.includes(page) && !isLoggedIn()) {
@@ -86,13 +87,89 @@ function restoreLockedPages() {
 
 function updateNavbarState() {
     const loggedIn = isLoggedIn();
-    const loginBtn = document.querySelector('.nav-member-btn');
-    if (loginBtn) {
-        if (loggedIn && typeof currentUser !== 'undefined' && currentUser) {
-            loginBtn.innerHTML = `&#128100; ${currentUser.first_name} ${currentUser.last_name}`;
-        } else {
-            loginBtn.textContent = 'Connexion';
+    const userArea = document.getElementById('nav-user-area');
+    if (!userArea) return;
+
+    if (loggedIn && typeof currentUser !== 'undefined' && currentUser) {
+        const initials = ((currentUser.first_name||'?')[0] + (currentUser.last_name||'?')[0]).toUpperCase();
+        const hasPhoto = currentUser.photo_url && currentUser.photo_url.startsWith('http');
+        userArea.innerHTML = `
+            <a class="nav-user-logged" href="#membres" onclick="navigate('membres')">
+                <div class="nav-user-avatar">${hasPhoto ? `<img src="${esc(currentUser.photo_url)}" alt="">` : initials}</div>
+                <div>
+                    <div class="nav-user-name">${esc(currentUser.first_name)}</div>
+                    <div class="nav-user-role">${esc(currentUser.job_title || 'Membre')}</div>
+                </div>
+            </a>`;
+    } else {
+        userArea.innerHTML = `<a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>`;
+    }
+
+    // Cadenas dynamiques dans la nav
+    document.querySelectorAll('.nav-link-icon').forEach(icon => {
+        const link = icon.closest('.nav-link');
+        if (!link) return;
+        const page = link.dataset.page;
+        if (LOCKED_PAGES.includes(page)) {
+            if (loggedIn) { icon.dataset.originalIcon && (icon.textContent = icon.dataset.originalIcon); }
+            else { if (!icon.dataset.originalIcon) icon.dataset.originalIcon = icon.textContent; icon.textContent = '\u{1F512}'; }
         }
+    });
+}
+
+// === NAV SEARCH ===
+let _navSearchTimer;
+async function onNavSearch(q) {
+    clearTimeout(_navSearchTimer);
+    const el = document.getElementById('nav-search-results');
+    if (!el) return;
+    if (q.length < 2) { el.style.display = 'none'; return; }
+    _navSearchTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`${API}/api/members?action=public_annuaire&search=${encodeURIComponent(q)}`);
+            const members = await res.json();
+            if (!members.length) { el.innerHTML = '<div class="nsr-item" style="color:var(--gray-400)">Aucun resultat</div>'; el.style.display = 'block'; return; }
+            el.innerHTML = members.slice(0, 6).map(m => {
+                const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
+                const name = isLoggedIn() ? `${m.first_name} ${m.last_name}` : initials;
+                return `<div class="nsr-item" onclick="navigate('annuaire')">
+                    <div class="nsr-avatar">${initials}</div>
+                    <div><strong>${esc(name)}</strong><br><span style="font-size:12px;color:var(--gray-400)">${esc(m.company||'')} · ${esc(m.sector||'')}</span></div>
+                </div>`;
+            }).join('');
+            el.style.display = 'block';
+        } catch(e) { el.style.display = 'none'; }
+    }, 300);
+}
+
+// === NAV SUB (contextuel) ===
+function updateNavSub(page) {
+    const sub = document.getElementById('nav-sub');
+    const links = document.getElementById('nav-sub-links');
+    if (!sub || !links) return;
+    const subs = {
+        identite: [
+            {label:"L'association",action:"scrollToSection('ident-association')"},
+            {label:"Ses actions",action:"scrollToSection('ident-actions')"},
+            {label:"Historique",action:"scrollToSection('ident-historique')"},
+            {label:"Gouvernance",action:"scrollToSection('ident-gouvernance')"},
+            {label:"Organigramme",action:"scrollToSection('ident-organigramme')"},
+            {label:"Carte",action:"scrollToSection('ident-cartographie')"},
+        ],
+        agenda: [
+            {label:"Agenda",action:"navigate('agenda')"},
+            {label:"Evenements",action:"navigate('evenements')"},
+            {label:"Replays",action:"navigate('replays')"},
+            {label:"Quizz du Rail",action:"navigate('quizz')"},
+            {label:"Publications",action:"navigate('publications')"},
+        ]
+    };
+    const items = subs[page];
+    if (items) {
+        links.innerHTML = items.map(i => `<a class="nav-sub-link" onclick="${i.action}">${i.label}</a>`).join('');
+        sub.style.display = '';
+    } else {
+        sub.style.display = 'none';
     }
 }
 

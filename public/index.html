@@ -12,52 +12,57 @@
 </head>
 <body>
 
-<!-- TOPBAR -->
-<div class="topbar">
-    <div class="topbar-inner">
-        <span>60 rue Anatole France, 92300 Levallois-Perret &middot; contact@ingenieur-ferroviaire.net</span>
-        <div><a href="#contact" onclick="navigate('contact')">Contact</a><a href="#membres" onclick="navigate('membres')">Espace Membres</a></div>
-    </div>
-</div>
-
-<!-- NAVBAR -->
+<!-- NAVBAR PRO -->
 <nav class="navbar">
     <div class="nav-inner">
         <a class="nav-logo" href="#accueil" onclick="navigate('accueil')">
-            <img src="/images/logo-affi.png" alt="AFFI" style="height:40px">
+            <img src="/images/logo-affi.png" alt="AFFI" style="height:38px">
         </a>
+
+        <!-- Search bar -->
+        <div class="nav-search" id="nav-search">
+            <span class="nav-search-icon">&#128269;</span>
+            <input type="text" id="nav-search-input" placeholder="Rechercher un membre, un evenement..." autocomplete="off" onfocus="this.parentElement.classList.add('focused')" onblur="setTimeout(()=>{this.parentElement.classList.remove('focused');document.getElementById('nav-search-results').style.display='none'},200)" oninput="onNavSearch(this.value)">
+            <div class="nav-search-results" id="nav-search-results" style="display:none"></div>
+        </div>
+
         <div class="nav-links" id="nav-links">
-            <a class="nav-link active" data-page="accueil" onclick="navigate('accueil')">Accueil</a>
-            <div class="nav-dropdown">
-                <a class="nav-link" data-page="identite" onclick="navigate('identite')">L'AFFI</a>
-                <div class="nav-dropdown-menu">
-                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-association'),100)">L'association</a>
-                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-actions'),100)">Ses actions</a>
-                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-historique'),100)">Historique</a>
-                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-gouvernance'),100)">Gouvernance</a>
-                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-organigramme'),100)">Organigramme</a>
-                    <a onclick="navigate('identite');setTimeout(()=>scrollToSection('ident-cartographie'),300)">Carte des membres</a>
-                    <a onclick="navigate('annuaire')" style="border-top:1px solid var(--gray-200);margin-top:4px;padding-top:12px">Annuaire des experts</a>
-                </div>
-            </div>
-            <div class="nav-dropdown">
-                <a class="nav-link" data-page="agenda" onclick="navigate('agenda')">Activites</a>
-                <div class="nav-dropdown-menu">
-                    <a onclick="navigate('agenda')">Agenda</a>
-                    <a onclick="navigate('evenements')">&#128274; Evenements</a>
-                    <a onclick="navigate('replays')">&#128274; Replays & Webinaires</a>
-                    <a onclick="navigate('quizz')">&#128274; Quizz du Rail</a>
-                </div>
-            </div>
-            <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles')">Etudiants</a>
-            <a class="nav-link" data-page="adhesion" onclick="navigate('adhesion')">Adherer</a>
-            <a class="nav-link" data-page="membres" onclick="navigate('membres')">Espace Membres</a>
+            <a class="nav-link active" data-page="accueil" onclick="navigate('accueil')">
+                <span class="nav-link-icon">&#127968;</span><span class="nav-link-text">Accueil</span>
+            </a>
+            <a class="nav-link" data-page="identite" onclick="navigate('identite')">
+                <span class="nav-link-icon">&#127963;</span><span class="nav-link-text">L'AFFI</span>
+            </a>
+            <a class="nav-link" data-page="annuaire" onclick="navigate('annuaire')">
+                <span class="nav-link-icon">&#128101;</span><span class="nav-link-text">Reseau</span>
+            </a>
+            <a class="nav-link" data-page="agenda" onclick="navigate('agenda')">
+                <span class="nav-link-icon">&#128197;</span><span class="nav-link-text">Activites</span>
+            </a>
+            <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles')">
+                <span class="nav-link-icon">&#127891;</span><span class="nav-link-text">Etudiants</span>
+            </a>
+            <a class="nav-link" data-page="adhesion" onclick="navigate('adhesion')">
+                <span class="nav-link-icon">&#10133;</span><span class="nav-link-text">Adherer</span>
+            </a>
         </div>
+
         <div class="nav-actions">
-            <span id="notif-badge" class="notif-badge" style="display:none" onclick="navigate('membres');setTimeout(()=>switchMemberTab('notifications'),200)"></span>
-            <a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>
+            <!-- Notification bell -->
+            <div class="nav-notif" id="nav-notif" onclick="navigate('membres');setTimeout(()=>switchMemberTab('notifications'),200)" title="Notifications">
+                <span class="nav-notif-icon">&#128276;</span>
+                <span id="notif-badge" class="nav-notif-badge" style="display:none"></span>
+            </div>
+            <!-- User area -->
+            <div class="nav-user" id="nav-user-area">
+                <a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>
+            </div>
         </div>
-        <button class="nav-hamburger" onclick="document.getElementById('nav-links').classList.toggle('hidden')">&#9776;</button>
+        <button class="nav-hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
+    </div>
+    <!-- Sub-nav contextuel (s'affiche selon la page) -->
+    <div class="nav-sub" id="nav-sub" style="display:none">
+        <div class="nav-sub-inner" id="nav-sub-links"></div>
     </div>
 </nav>
 

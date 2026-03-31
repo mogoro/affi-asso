@@ -208,36 +208,36 @@ function renderPublicAnnuaire(members) {
     if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);grid-column:1/-1;padding:40px">Aucun expert trouve</p>'; return; }
     el.innerHTML = members.map(m => {
         const initials = (m.first_name || '?')[0] + (m.last_name || '?')[0];
-        return `<div class="member-card-v2" onclick="toggleMemberDetail(this)">
-            <div class="mc-header">
-                <div class="member-avatar">${esc(initials.toUpperCase())}${m.is_mentor ? '<span class="mentor-badge" title="Disponible pour conseiller">&#127891;</span>' : ''}</div>
-                <div class="mc-identity">
-                    <div class="member-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
-                    <div class="member-job">${esc(m.job_title || '')}</div>
-                    <div class="member-company">${esc(m.company || '')}</div>
-                </div>
+        const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
+        const avatarHtml = hasPhoto
+            ? `<img src="${esc(m.photo_url)}" alt="${esc(m.first_name)}" class="ec-photo">`
+            : `<div class="ec-initials">${esc(initials.toUpperCase())}</div>`;
+        return `<div class="expert-card" onclick="toggleMemberDetail(this)">
+            <div class="ec-banner">
+                ${m.is_mentor ? '<div class="ec-mentor-flag">&#127891; Mentor</div>' : ''}
+                ${m.is_board ? '<div class="ec-board-flag">Bureau AFFI</div>' : ''}
             </div>
-            <div class="mc-details">
-                ${m.region ? `<div class="mc-detail-row"><span class="mc-icon">&#128205;</span> ${esc(m.region)}</div>` : ''}
-                ${m.bio ? `<div class="mc-bio">${esc((m.bio || '').substring(0, 150))}${(m.bio||'').length > 150 ? '...' : ''}</div>` : ''}
-                ${m.linkedin_url ? `<div class="mc-detail-row"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="mc-linkedin">&#128279; Profil LinkedIn</a></div>` : ''}
+            <div class="ec-avatar-wrap">${avatarHtml}</div>
+            <div class="ec-body">
+                <div class="ec-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
+                <div class="ec-job">${esc(m.job_title || '')}</div>
+                <div class="ec-company">${esc(m.company || '')}</div>
+                ${m.region ? `<div class="ec-location">&#128205; ${esc(m.region)}</div>` : ''}
             </div>
-            <div class="mc-tags">
-                ${m.sector ? `<span class="card-tag">${esc(m.sector)}</span>` : ''}
-                ${m.specialty ? `<span class="card-tag card-tag-specialty">${esc(m.specialty)}</span>` : ''}
-                ${m.region ? `<span class="card-tag card-tag-region">${esc(m.region)}</span>` : ''}
-                ${m.is_board ? '<span class="card-tag card-tag-primary">Bureau</span>' : ''}
-                ${m.is_mentor ? '<span class="card-tag card-tag-mentor">Mentor disponible</span>' : ''}
+            <div class="ec-expertise">
+                ${m.specialty ? `<span class="ec-tag ec-tag-specialty">${esc(m.specialty)}</span>` : ''}
+                ${m.sector ? `<span class="ec-tag">${esc(m.sector)}</span>` : ''}
             </div>
-            <div class="mc-rgpd">
-                <span class="mc-rgpd-icon">&#128994; Publie avec consentement (RGPD)</span>
+            <div class="ec-expand">
+                ${m.bio ? `<div class="ec-bio">${esc((m.bio || '').substring(0, 200))}${(m.bio||'').length > 200 ? '...' : ''}</div>` : ''}
+                ${m.linkedin_url ? `<div class="ec-actions"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="ec-btn ec-btn-li">in LinkedIn</a></div>` : ''}
+            </div>
+            <div class="ec-footer">
+                <span class="ec-rgpd">&#128994; Publie avec consentement</span>
+                <span class="ec-expand-hint">&#9660;</span>
             </div>
         </div>`;
     }).join('');
-}
-
-function toggleMemberDetail(card) {
-    card.classList.toggle('mc-expanded');
 }
 
 let _pubSearch;

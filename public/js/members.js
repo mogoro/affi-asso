@@ -113,33 +113,41 @@ function renderDirectory(members) {
     if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);grid-column:1/-1;padding:40px">Aucun membre trouve</p>'; return; }
     el.innerHTML = members.map(m => {
         const initials = (m.first_name || '?')[0] + (m.last_name || '?')[0];
-        return `<div class="member-card-v2" onclick="toggleMemberDetail(this)">
-            <div class="mc-header">
-                <div class="member-avatar">${esc(initials.toUpperCase())}${m.is_mentor ? '<span class="mentor-badge" title="Disponible pour conseiller">&#127891;</span>' : ''}</div>
-                <div class="mc-identity">
-                    <div class="member-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
-                    <div class="member-job">${esc(m.job_title || '')}</div>
-                    <div class="member-company">${esc(m.company || '')}</div>
+        const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
+        const avatarHtml = hasPhoto
+            ? `<img src="${esc(m.photo_url)}" alt="${esc(m.first_name)}" class="ec-photo">`
+            : `<div class="ec-initials">${esc(initials.toUpperCase())}</div>`;
+        return `<div class="expert-card" onclick="toggleMemberDetail(this)">
+            <div class="ec-banner">
+                ${m.is_mentor ? '<div class="ec-mentor-flag">&#127891; Mentor</div>' : ''}
+                ${m.is_board ? '<div class="ec-board-flag">Bureau AFFI</div>' : ''}
+            </div>
+            <div class="ec-avatar-wrap">
+                ${avatarHtml}
+            </div>
+            <div class="ec-body">
+                <div class="ec-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
+                <div class="ec-job">${esc(m.job_title || '')}</div>
+                <div class="ec-company">${esc(m.company || '')}</div>
+                ${m.region ? `<div class="ec-location">&#128205; ${esc(m.region)}</div>` : ''}
+            </div>
+            <div class="ec-expertise">
+                ${m.specialty ? `<span class="ec-tag ec-tag-specialty">${esc(m.specialty)}</span>` : ''}
+                ${m.sector ? `<span class="ec-tag">${esc(m.sector)}</span>` : ''}
+            </div>
+            <div class="ec-expand">
+                ${m.bio ? `<div class="ec-bio">${esc((m.bio || '').substring(0, 200))}${(m.bio||'').length > 200 ? '...' : ''}</div>` : '<div class="ec-bio" style="color:var(--gray-400);font-style:italic">Pas de bio renseignee</div>'}
+                <div class="ec-meta">
+                    ${m.joined_at ? `<span>&#128197; Membre depuis ${formatDate(m.joined_at)}</span>` : ''}
+                </div>
+                <div class="ec-actions">
+                    <button onclick="event.stopPropagation();startConversation(${m.id},'${esc(m.first_name)} ${esc(m.last_name)}')" class="ec-btn ec-btn-msg">&#128172; Message</button>
+                    ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="ec-btn ec-btn-li">in LinkedIn</a>` : ''}
                 </div>
             </div>
-            <div class="mc-details">
-                ${m.region ? `<div class="mc-detail-row"><span class="mc-icon">&#128205;</span> ${esc(m.region)}</div>` : ''}
-                ${m.bio ? `<div class="mc-bio">${esc((m.bio || '').substring(0, 150))}${(m.bio||'').length > 150 ? '...' : ''}</div>` : ''}
-                ${m.joined_at ? `<div class="mc-detail-row"><span class="mc-icon">&#128197;</span> Membre depuis ${formatDate(m.joined_at)}</div>` : ''}
-                ${m.linkedin_url ? `<div class="mc-detail-row"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="mc-linkedin">&#128279; Profil LinkedIn</a></div>` : ''}
-                <div class="mc-detail-row" style="margin-top:6px">
-                    <button onclick="event.stopPropagation();startConversation(${m.id},'${esc(m.first_name)} ${esc(m.last_name)}')" class="btn btn-primary" style="font-size:12px;padding:6px 14px">&#128172; Envoyer un message</button>
-                </div>
-            </div>
-            <div class="mc-tags">
-                ${m.sector ? `<span class="card-tag">${esc(m.sector)}</span>` : ''}
-                ${m.specialty ? `<span class="card-tag card-tag-specialty">${esc(m.specialty)}</span>` : ''}
-                ${m.region ? `<span class="card-tag card-tag-region">${esc(m.region)}</span>` : ''}
-                ${m.is_board ? '<span class="card-tag card-tag-primary">Bureau</span>' : ''}
-                ${m.is_mentor ? '<span class="card-tag card-tag-mentor">Mentor disponible</span>' : ''}
-            </div>
-            <div class="mc-rgpd">
-                <span class="mc-rgpd-icon" title="${m.consent_annuaire ? 'Ce membre a consenti a la publication de son profil' : 'Profil visible uniquement dans l espace membres'}">${m.consent_annuaire ? '&#128994; Profil public (RGPD)' : '&#128308; Profil prive'}</span>
+            <div class="ec-footer">
+                <span class="ec-rgpd">${m.consent_annuaire ? '&#128994; Public' : '&#128308; Prive'}</span>
+                <span class="ec-expand-hint">&#9660;</span>
             </div>
         </div>`;
     }).join('');
@@ -209,7 +217,7 @@ async function loadProfile() {
         const p = await res.json();
         if (p.error) return;
         // Fill form
-        for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region']) {
+        for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region','photo_url']) {
             const inp = document.getElementById('prof-' + k);
             if (inp) inp.value = p[k] || '';
         }
@@ -219,6 +227,12 @@ async function loadProfile() {
         if (consentAnn) consentAnn.checked = !!p.consent_annuaire;
         const consentNl = document.getElementById('prof-consent_newsletter');
         if (consentNl) consentNl.checked = !!p.consent_newsletter;
+        // Photo preview
+        updatePhotoPreview(p.photo_url, p.first_name, p.last_name);
+        const photoInput = document.getElementById('prof-photo_url');
+        if (photoInput) photoInput.addEventListener('input', function() {
+            updatePhotoPreview(this.value, document.getElementById('prof-first_name')?.value, document.getElementById('prof-last_name')?.value);
+        });
         const cvEl = document.getElementById('prof-cv');
         if (cvEl) cvEl.value = p.cv_text || '';
         const cvDate = document.getElementById('cv-date');
@@ -230,7 +244,7 @@ async function saveProfile(evt) {
     evt.preventDefault();
     const f = evt.target;
     const data = {};
-    for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region']) {
+    for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region','photo_url']) {
         const inp = document.getElementById('prof-' + k);
         if (inp) data[k] = inp.value;
     }
@@ -356,6 +370,19 @@ async function loadMyProposals() {
             </div>
         `).join('');
     } catch (e) { console.warn('Proposals:', e); }
+}
+
+// === PHOTO PREVIEW ===
+function updatePhotoPreview(url, firstName, lastName) {
+    const preview = document.getElementById('prof-photo-preview');
+    const initialsEl = document.getElementById('prof-photo-initials');
+    if (!preview) return;
+    if (url && url.startsWith('http')) {
+        preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<span style=\\'color:#fff;font-weight:800;font-size:18px\\'>${((firstName||'?')[0]+(lastName||'?')[0]).toUpperCase()}</span>'">`;
+    } else {
+        const initials = ((firstName||'?')[0] + (lastName||'?')[0]).toUpperCase();
+        preview.innerHTML = `<span style="color:#fff;font-weight:800;font-size:18px">${initials}</span>`;
+    }
 }
 
 // === PASSWORD RESET ===

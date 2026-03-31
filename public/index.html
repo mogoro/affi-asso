@@ -942,6 +942,16 @@
                                     <button class="btn btn-primary" onclick="importLinkedIn()" style="font-size:12px;padding:8px 16px;background:#0077b5">&#128279; Importer LinkedIn</button>
                                 </div>
                                 <form onsubmit="saveProfile(event)">
+                                    <div class="form-group">
+                                        <label>Photo de profil (URL)</label>
+                                        <div style="display:flex;gap:12px;align-items:center">
+                                            <div id="prof-photo-preview" style="width:56px;height:56px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                                                <span style="color:#fff;font-weight:800;font-size:18px" id="prof-photo-initials"></span>
+                                            </div>
+                                            <input type="url" id="prof-photo_url" placeholder="https://... (URL de votre photo)" style="flex:1">
+                                        </div>
+                                        <p style="font-size:11px;color:var(--gray-400);margin-top:4px">Collez l'URL de votre photo LinkedIn ou autre. Format recommande : carre, 200x200px min.</p>
+                                    </div>
                                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                                         <div class="form-group"><label>Prenom</label><input type="text" id="prof-first_name"></div>
                                         <div class="form-group"><label>Nom</label><input type="text" id="prof-last_name"></div>

@@ -1,4 +1,4 @@
-"""POST /api/auth — Login / Logout / Session check."""
+"""POST /api/auth — Login / Logout / Session check / Password reset."""
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 import json, hashlib, secrets, os
@@ -58,6 +58,48 @@ class handler(BaseHTTPRequestHandler):
             if token:
                 execute("DELETE FROM sessions WHERE token = %s", [token])
             return self._json(200, {"ok": True})
+
+        elif action == "request_reset":
+            email = (body.get("email") or "").strip().lower()
+            if not email:
+                return self._json(400, {"error": "Email requis"})
+            member = fetchone("SELECT id, email, first_name FROM members WHERE email = %s", [email])
+            if not member:
+                # On ne revele pas si l'email existe ou non (securite)
+                return self._json(200, {"ok": True, "message": "Si ce compte existe, un code de reinitialisation a ete genere."})
+            # Generer un code de reset (6 chiffres)
+            reset_code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+            reset_token = secrets.token_urlsafe(32)
+            # Stocker dans la session avec un prefixe special
+            execute("DELETE FROM sessions WHERE member_id = %s AND token LIKE 'reset_%%'", [member["id"]])
+            execute("INSERT INTO sessions (token, member_id, expires_at) VALUES (%s, %s, NOW() + INTERVAL '1 hour')",
+                    [f"reset_{reset_token}_{reset_code}", member["id"]])
+            return self._json(200, {
+                "ok": True,
+                "message": "Code de reinitialisation genere.",
+                "reset_token": reset_token,
+                "reset_code": reset_code,
+                "email": email,
+                "hint": f"Communiquez ce code a {member['first_name']}: {reset_code}"
+            })
+
+        elif action == "reset_password":
+            reset_token = body.get("reset_token", "")
+            reset_code = body.get("reset_code", "")
+            new_password = body.get("new_password", "")
+            if not reset_token or not reset_code or not new_password:
+                return self._json(400, {"error": "Token, code et nouveau mot de passe requis"})
+            if len(new_password) < 6:
+                return self._json(400, {"error": "Le mot de passe doit faire au moins 6 caracteres"})
+            session = fetchone("""SELECT member_id FROM sessions
+                WHERE token = %s AND expires_at > NOW()""",
+                [f"reset_{reset_token}_{reset_code}"])
+            if not session:
+                return self._json(400, {"error": "Code invalide ou expire"})
+            execute("UPDATE members SET password_hash = %s WHERE id = %s",
+                    [hash_pw(new_password), session["member_id"]])
+            execute("DELETE FROM sessions WHERE token LIKE 'reset_%%' AND member_id = %s", [session["member_id"]])
+            return self._json(200, {"ok": True, "message": "Mot de passe modifie avec succes"})
 
         return self._json(400, {"error": "Action inconnue"})
 

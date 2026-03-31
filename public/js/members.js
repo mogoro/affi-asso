@@ -358,6 +358,69 @@ async function loadMyProposals() {
     } catch (e) { console.warn('Proposals:', e); }
 }
 
+// === PASSWORD RESET ===
+let resetToken = '';
+
+function showResetForm() {
+    document.getElementById('reset-section').style.display = 'block';
+    document.getElementById('reset-step1').style.display = 'block';
+    document.getElementById('reset-step2').style.display = 'none';
+    document.getElementById('reset-success').style.display = 'none';
+    document.getElementById('reset-error').style.display = 'none';
+}
+
+async function requestReset(evt) {
+    evt.preventDefault();
+    const email = document.getElementById('reset-email').value.trim();
+    try {
+        const res = await fetch(`${API}/api/auth`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'request_reset', email})
+        });
+        const data = await res.json();
+        if (data.ok && data.reset_code) {
+            resetToken = data.reset_token;
+            document.getElementById('reset-step1').style.display = 'none';
+            document.getElementById('reset-step2').style.display = 'block';
+            document.getElementById('reset-code-display').innerHTML =
+                `<strong>Code de reinitialisation :</strong><br>` +
+                `<span style="font-size:32px;font-weight:900;color:var(--primary);letter-spacing:8px">${data.reset_code}</span><br>` +
+                `<span style="font-size:12px;color:var(--gray-500)">Valable 1 heure — pour ${email}</span>`;
+        } else {
+            showResetError(data.message || 'Erreur');
+        }
+    } catch (e) { showResetError('Erreur reseau'); }
+}
+
+async function resetPassword(evt) {
+    evt.preventDefault();
+    const code = document.getElementById('reset-code').value.trim();
+    const pw1 = document.getElementById('reset-newpw').value;
+    const pw2 = document.getElementById('reset-newpw2').value;
+    if (pw1 !== pw2) return showResetError('Les mots de passe ne correspondent pas');
+    if (pw1.length < 6) return showResetError('Le mot de passe doit faire au moins 6 caracteres');
+    try {
+        const res = await fetch(`${API}/api/auth`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'reset_password', reset_token: resetToken, reset_code: code, new_password: pw1})
+        });
+        const data = await res.json();
+        if (data.ok) {
+            document.getElementById('reset-step2').style.display = 'none';
+            document.getElementById('reset-success').style.display = 'block';
+            document.getElementById('reset-error').style.display = 'none';
+        } else {
+            showResetError(data.error || 'Code invalide ou expire');
+        }
+    } catch (e) { showResetError('Erreur reseau'); }
+}
+
+function showResetError(msg) {
+    const el = document.getElementById('reset-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
 // === INIT CHECK ===
 document.addEventListener('DOMContentLoaded', async () => {
     if (authToken) {

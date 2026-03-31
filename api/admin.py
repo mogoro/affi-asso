@@ -77,6 +77,15 @@ class handler(BaseHTTPRequestHandler):
                 "total": len(pending_events) + len(pending_news) + len(pending_announcements)
             })
 
+        elif action == "event_registrations":
+            event_id = qs.get("event_id", ["0"])[0]
+            rows = fetchall("""SELECT r.id, r.status, r.registered_at,
+                m.first_name, m.last_name, m.email, m.company, m.phone
+                FROM event_registrations r
+                JOIN members m ON r.member_id = m.id
+                WHERE r.event_id = %s ORDER BY r.registered_at DESC""", [int(event_id)])
+            return self._json(200, rows)
+
         elif action == "messages":
             rows = fetchall("SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 100")
             return self._json(200, rows)

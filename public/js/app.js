@@ -5,6 +5,12 @@ const API = window.location.origin;
 const PAGES = ['accueil','identite','annuaire','agenda','evenements','publications','replays','quizz','ecoles','adhesion','contact','membres'];
 
 // === ROUTER ===
+const LOCKED_PAGES = ['evenements', 'replays', 'quizz', 'publications'];
+
+function isLoggedIn() {
+    return !!(typeof authToken !== 'undefined' && authToken);
+}
+
 function navigate(page) {
     if (!PAGES.includes(page)) page = 'accueil';
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -13,6 +19,15 @@ function navigate(page) {
     document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
     window.scrollTo({top: 0, behavior: 'smooth'});
     history.pushState(null, '', '#' + page);
+
+    // Gestion des pages bloquees si non connecte
+    if (LOCKED_PAGES.includes(page) && !isLoggedIn()) {
+        showLockedOverlay(page);
+        return;
+    }
+    // Retirer l'overlay si on est connecte
+    hideLockedOverlay(page);
+
     if (page === 'agenda') { loadAgenda(); if (typeof loadCourses === 'function') loadCourses(); }
     if (page === 'evenements') loadEvents();
     if (page === 'annuaire') loadPublicAnnuaire();
@@ -20,8 +35,41 @@ function navigate(page) {
     if (page === 'ecoles') { loadEcoles(); loadStages(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
-    if (page === 'accueil') { loadHome(); loadPartenaires(); }
+    if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); }
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
+}
+
+function showLockedOverlay(page) {
+    const el = document.getElementById('page-' + page);
+    if (!el) return;
+    // Ne pas ajouter deux fois
+    if (el.querySelector('.locked-overlay')) return;
+    const titles = {
+        evenements: 'Evenements',
+        replays: 'Replays & Webinaires',
+        quizz: 'Quizz du Rail',
+        publications: 'Publications'
+    };
+    el.insertAdjacentHTML('afterbegin', `
+        <div class="locked-overlay">
+            <div class="locked-content">
+                <div class="locked-icon">&#128274;</div>
+                <h2>Contenu reserve aux adherents</h2>
+                <p>Connectez-vous ou adherez a l'AFFI pour acceder aux <strong>${titles[page] || page}</strong>.</p>
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:20px">
+                    <a class="btn btn-accent" href="#membres" onclick="navigate('membres')">Se connecter</a>
+                    <a class="btn btn-primary" href="#adhesion" onclick="navigate('adhesion')">Adherer</a>
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function hideLockedOverlay(page) {
+    const el = document.getElementById('page-' + page);
+    if (!el) return;
+    const overlay = el.querySelector('.locked-overlay');
+    if (overlay) overlay.remove();
 }
 
 // === SCROLL TO SECTION (Identite sub-pages) ===
@@ -208,18 +256,16 @@ function renderPublicAnnuaire(members) {
     if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);grid-column:1/-1;padding:40px">Aucun expert trouve</p>'; return; }
     el.innerHTML = members.map(m => {
         const initials = (m.first_name || '?')[0] + (m.last_name || '?')[0];
-        const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
-        const avatarHtml = hasPhoto
-            ? `<img src="${esc(m.photo_url)}" alt="${esc(m.first_name)}" class="ec-photo">`
-            : `<div class="ec-initials">${esc(initials.toUpperCase())}</div>`;
-        return `<div class="expert-card" onclick="toggleMemberDetail(this)">
+        return `<div class="expert-card expert-card-anon">
             <div class="ec-banner">
                 ${m.is_mentor ? '<div class="ec-mentor-flag">&#127891; Mentor</div>' : ''}
                 ${m.is_board ? '<div class="ec-board-flag">Bureau AFFI</div>' : ''}
             </div>
-            <div class="ec-avatar-wrap">${avatarHtml}</div>
+            <div class="ec-avatar-wrap">
+                <div class="ec-initials">${esc(initials.toUpperCase())}</div>
+            </div>
             <div class="ec-body">
-                <div class="ec-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
+                <div class="ec-name">${esc(initials.toUpperCase())}</div>
                 <div class="ec-job">${esc(m.job_title || '')}</div>
                 <div class="ec-company">${esc(m.company || '')}</div>
                 ${m.region ? `<div class="ec-location">&#128205; ${esc(m.region)}</div>` : ''}
@@ -228,13 +274,11 @@ function renderPublicAnnuaire(members) {
                 ${m.specialty ? `<span class="ec-tag ec-tag-specialty">${esc(m.specialty)}</span>` : ''}
                 ${m.sector ? `<span class="ec-tag">${esc(m.sector)}</span>` : ''}
             </div>
-            <div class="ec-expand">
-                ${m.bio ? `<div class="ec-bio">${esc((m.bio || '').substring(0, 200))}${(m.bio||'').length > 200 ? '...' : ''}</div>` : ''}
-                ${m.linkedin_url ? `<div class="ec-actions"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="ec-btn ec-btn-li">in LinkedIn</a></div>` : ''}
+            <div class="ec-anon-lock">
+                <span class="locked-badge">&#128274; Connectez-vous pour voir le profil complet</span>
             </div>
             <div class="ec-footer">
-                <span class="ec-rgpd">&#128994; Publie avec consentement</span>
-                <span class="ec-expand-hint">&#9660;</span>
+                <span class="ec-rgpd">&#128994; Expert verifie</span>
             </div>
         </div>`;
     }).join('');
@@ -252,6 +296,33 @@ function onPubFilter() {
         document.getElementById('pub-region')?.value || '',
         document.getElementById('pub-sector')?.value || ''
     );
+}
+
+// === LOCK CARRIERE ===
+function lockCarriereIfNeeded() {
+    const jobsSection = document.getElementById('home-jobs');
+    if (!jobsSection) return;
+    const parent = jobsSection.closest('section');
+    if (!parent) return;
+    if (!isLoggedIn()) {
+        if (!parent.querySelector('.locked-banner')) {
+            jobsSection.style.display = 'none';
+            parent.insertAdjacentHTML('beforeend', `
+                <div class="locked-banner">
+                    <span class="locked-banner-icon">&#128274;</span>
+                    <div>
+                        <strong>Espace Carriere reserve aux adherents</strong>
+                        <p>Connectez-vous pour voir les offres d'emploi, stages et apprentissage.</p>
+                    </div>
+                    <a class="btn btn-accent" href="#membres" onclick="navigate('membres')" style="font-size:13px;padding:8px 20px;flex-shrink:0">Se connecter</a>
+                </div>
+            `);
+        }
+    } else {
+        jobsSection.style.display = '';
+        const banner = parent.querySelector('.locked-banner');
+        if (banner) banner.remove();
+    }
 }
 
 // === PARTENAIRES ===

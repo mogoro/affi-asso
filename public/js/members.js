@@ -57,11 +57,13 @@ function doLogout() {
     currentUser = null;
     document.getElementById('login-section').style.display = 'block';
     document.getElementById('member-area').style.display = 'none';
+    if (typeof updateNavbarState === 'function') updateNavbarState();
 }
 
 async function showMemberArea() {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('member-area').style.display = 'block';
+    document.getElementById('reset-section') && (document.getElementById('reset-section').style.display = 'none');
 
     // Update welcome
     const w = document.getElementById('welcome-name');
@@ -70,6 +72,10 @@ async function showMemberArea() {
     // Show admin tab if admin
     const adminTab = document.getElementById('admin-tab');
     if (adminTab) adminTab.style.display = currentUser && currentUser.is_admin ? 'inline-block' : 'none';
+
+    // Debloquer les pages verrouillees maintenant qu'on est connecte
+    if (typeof restoreLockedPages === 'function') restoreLockedPages();
+    if (typeof updateNavbarState === 'function') updateNavbarState();
 
     switchMemberTab('dashboard');
 }
@@ -452,6 +458,15 @@ function showResetError(msg) {
 document.addEventListener('DOMContentLoaded', async () => {
     if (authToken) {
         const valid = await checkSession();
-        if (valid && location.hash === '#membres') showMemberArea();
+        if (valid) {
+            if (typeof updateNavbarState === 'function') updateNavbarState();
+            if (typeof restoreLockedPages === 'function') restoreLockedPages();
+            if (location.hash === '#membres') showMemberArea();
+        } else {
+            // Token invalide, nettoyer
+            authToken = '';
+            localStorage.removeItem('affi_token');
+        }
     }
+    if (typeof updateNavbarState === 'function') updateNavbarState();
 });

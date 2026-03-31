@@ -6,9 +6,15 @@ const PAGES = ['accueil','identite','annuaire','agenda','evenements','publicatio
 
 // === ROUTER ===
 const LOCKED_PAGES = ['evenements', 'replays', 'quizz', 'publications'];
+const LOCKED_TITLES = {
+    evenements: 'Evenements',
+    replays: 'Replays & Webinaires',
+    quizz: 'Quizz du Rail',
+    publications: 'Publications'
+};
 
 function isLoggedIn() {
-    return !!(typeof authToken !== 'undefined' && authToken);
+    return !!(typeof authToken !== 'undefined' && authToken && authToken.length > 5);
 }
 
 function navigate(page) {
@@ -20,13 +26,14 @@ function navigate(page) {
     window.scrollTo({top: 0, behavior: 'smooth'});
     history.pushState(null, '', '#' + page);
 
-    // Gestion des pages bloquees si non connecte
+    // Mettre a jour l'etat de la navbar
+    updateNavbarState();
+
+    // Pages bloquees : remplacer tout le contenu par le cadenas
     if (LOCKED_PAGES.includes(page) && !isLoggedIn()) {
-        showLockedOverlay(page);
+        renderLockedPage(page);
         return;
     }
-    // Retirer l'overlay si on est connecte
-    hideLockedOverlay(page);
 
     if (page === 'agenda') { loadAgenda(); if (typeof loadCourses === 'function') loadCourses(); }
     if (page === 'evenements') loadEvents();
@@ -39,37 +46,50 @@ function navigate(page) {
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
 }
 
-function showLockedOverlay(page) {
+function renderLockedPage(page) {
     const el = document.getElementById('page-' + page);
     if (!el) return;
-    // Ne pas ajouter deux fois
-    if (el.querySelector('.locked-overlay')) return;
-    const titles = {
-        evenements: 'Evenements',
-        replays: 'Replays & Webinaires',
-        quizz: 'Quizz du Rail',
-        publications: 'Publications'
-    };
-    el.insertAdjacentHTML('afterbegin', `
-        <div class="locked-overlay">
-            <div class="locked-content">
-                <div class="locked-icon">&#128274;</div>
+    // Sauvegarder le contenu original pour le restaurer apres connexion
+    if (!el.dataset.originalSaved) {
+        el.dataset.originalHtml = el.innerHTML;
+        el.dataset.originalSaved = 'true';
+    }
+    el.innerHTML = `
+        <section>
+            <div class="container">
+                <div class="section-line section-line-center"></div>
+                <h2 class="section-title section-title-center">${LOCKED_TITLES[page] || page}</h2>
+            </div>
+        </section>
+        <div class="locked-page">
+            <div class="locked-page-content">
+                <div class="locked-page-icon">&#128274;</div>
                 <h2>Contenu reserve aux adherents</h2>
-                <p>Connectez-vous ou adherez a l'AFFI pour acceder aux <strong>${titles[page] || page}</strong>.</p>
-                <div style="display:flex;gap:12px;justify-content:center;margin-top:20px">
+                <p>Connectez-vous ou adherez a l'AFFI pour acceder a cette rubrique.</p>
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
                     <a class="btn btn-accent" href="#membres" onclick="navigate('membres')">Se connecter</a>
-                    <a class="btn btn-primary" href="#adhesion" onclick="navigate('adhesion')">Adherer</a>
+                    <a class="btn btn-primary" href="#adhesion" onclick="navigate('adhesion')">Adherer a l'AFFI</a>
                 </div>
             </div>
-        </div>
-    `);
+        </div>`;
 }
 
-function hideLockedOverlay(page) {
-    const el = document.getElementById('page-' + page);
-    if (!el) return;
-    const overlay = el.querySelector('.locked-overlay');
-    if (overlay) overlay.remove();
+function restoreLockedPages() {
+    LOCKED_PAGES.forEach(page => {
+        const el = document.getElementById('page-' + page);
+        if (el && el.dataset.originalSaved === 'true') {
+            el.innerHTML = el.dataset.originalHtml;
+            el.dataset.originalSaved = '';
+        }
+    });
+}
+
+function updateNavbarState() {
+    const loggedIn = isLoggedIn();
+    const loginBtn = document.querySelector('.nav-member-btn');
+    if (loginBtn) {
+        loginBtn.textContent = loggedIn ? 'Mon espace' : 'Connexion';
+    }
 }
 
 // === SCROLL TO SECTION (Identite sub-pages) ===

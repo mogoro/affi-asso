@@ -154,6 +154,16 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(output.getvalue().encode("utf-8"))
             return
 
+        elif action == "connexions":
+            rows = fetchall("""SELECT m.id, m.first_name, m.last_name, m.email, m.company,
+                    m.last_login, m.role, m.is_admin,
+                    s.created_at as session_start, s.expires_at as session_expires
+                FROM members m
+                LEFT JOIN sessions s ON m.id = s.member_id AND s.expires_at > NOW()
+                WHERE m.status = 'active' AND m.last_login IS NOT NULL
+                ORDER BY m.last_login DESC LIMIT 100""")
+            return self._json(200, rows)
+
         elif action == "logs":
             rows = fetchall("""SELECT l.*, m.first_name, m.last_name
                 FROM logs l LEFT JOIN members m ON l.user_id = m.id

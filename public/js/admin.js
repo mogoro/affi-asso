@@ -24,6 +24,7 @@ function switchAdminSection(id) {
     if (id === 'adm-announcements') loadAdminAnnouncements();
     if (id === 'adm-messages') loadAdminMessages();
     if (id === 'adm-pending') loadPendingContent();
+    if (id === 'adm-connexions') loadAdminConnexions();
     if (id === 'adm-logs') loadAdminLogs();
 }
 
@@ -565,6 +566,38 @@ async function loadPendingContent() {
             </div>`).join('');
     }
     el.innerHTML = html;
+}
+
+// === CONNEXIONS ===
+async function loadAdminConnexions() {
+    const items = await adminFetch('connexions', {});
+    const el = document.getElementById('adm-connexions-list');
+    if (!el) return;
+    if (!items.length) { el.innerHTML = '<p class="empty-msg">Aucune connexion enregistree</p>'; return; }
+
+    const now = new Date();
+    el.innerHTML = `<table class="adm-table"><thead><tr>
+        <th>Membre</th><th>Email</th><th>Entreprise</th><th>Role</th><th>Derniere connexion</th><th>Session active</th>
+    </tr></thead><tbody>${items.map(c => {
+        const lastLogin = c.last_login ? new Date(c.last_login) : null;
+        const diffMin = lastLogin ? Math.round((now - lastLogin) / 60000) : null;
+        let ago = '';
+        if (diffMin !== null) {
+            if (diffMin < 1) ago = 'A l\'instant';
+            else if (diffMin < 60) ago = `Il y a ${diffMin} min`;
+            else if (diffMin < 1440) ago = `Il y a ${Math.round(diffMin/60)}h`;
+            else ago = `Il y a ${Math.round(diffMin/1440)}j`;
+        }
+        const hasActiveSession = c.session_start && new Date(c.session_expires) > now;
+        return `<tr>
+            <td><strong>${esc(c.first_name)} ${esc(c.last_name)}</strong>${c.is_admin ? ' <span class="adm-badge adm-badge-active" style="font-size:10px">Admin</span>' : ''}</td>
+            <td style="font-size:13px">${esc(c.email)}</td>
+            <td style="font-size:13px">${esc(c.company||'')}</td>
+            <td><span class="card-tag">${esc(c.role||'member')}</span></td>
+            <td style="font-size:13px">${formatDate(c.last_login)}<br><span style="font-size:11px;color:var(--gray-400)">${ago}</span></td>
+            <td>${hasActiveSession ? '<span style="color:var(--green);font-weight:700">&#128994; Active</span>' : '<span style="color:var(--gray-400)">&#9898; Inactive</span>'}</td>
+        </tr>`;
+    }).join('')}</tbody></table>`;
 }
 
 // === MESSAGES ===

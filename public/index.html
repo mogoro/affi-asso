@@ -1076,6 +1076,7 @@
                         <button class="adm-nav-btn" data-section="adm-announcements" onclick="switchAdminSection('adm-announcements')">Annonces membres</button>
                         <button class="adm-nav-btn" data-section="adm-pending" onclick="switchAdminSection('adm-pending')">A valider <span id="pending-count-badge" style="background:var(--accent);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:4px"></span></button>
                         <button class="adm-nav-btn" data-section="adm-messages" onclick="switchAdminSection('adm-messages')">Messages</button>
+                        <button class="adm-nav-btn" data-section="adm-connexions" onclick="switchAdminSection('adm-connexions')">Connexions</button>
                         <button class="adm-nav-btn" data-section="adm-logs" onclick="switchAdminSection('adm-logs')">Journal RGPD</button>
                     </div>
 
@@ -1134,6 +1135,15 @@
                         <h3 style="margin-bottom:16px;color:var(--primary)">Contenus en attente de validation</h3>
                         <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Les membres peuvent proposer des evenements, actualites et annonces. En tant qu'administrateur, vous devez valider leur publication.</p>
                         <div id="adm-pending-list"><p class="empty-msg">Chargement...</p></div>
+                    </div>
+
+                    <!-- Admin Connexions -->
+                    <div id="adm-connexions" class="adm-section">
+                        <h3 style="margin-bottom:8px;color:var(--primary)">Historique des connexions</h3>
+                        <div class="rgpd-notice" style="margin-bottom:16px">
+                            &#128274; <strong>Base legale RGPD :</strong> Interet legitime (Art. 6.1.f) — Securite des systemes de l'association. Donnees conservees 30 jours (duree de session). Aucune adresse IP n'est enregistree dans cette vue.
+                        </div>
+                        <div id="adm-connexions-list"><p class="empty-msg">Chargement...</p></div>
                     </div>
 
                     <!-- Admin Logs RGPD -->

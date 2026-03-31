@@ -48,17 +48,15 @@
         </div>
 
         <div class="nav-actions">
-            <!-- Notification bell -->
             <div class="nav-notif" id="nav-notif" onclick="navigate('membres');setTimeout(()=>switchMemberTab('notifications'),200)" title="Notifications">
                 <span class="nav-notif-icon">&#128276;</span>
                 <span id="notif-badge" class="nav-notif-badge" style="display:none"></span>
             </div>
-            <!-- User area -->
             <div class="nav-user" id="nav-user-area">
                 <a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>
             </div>
+            <button class="nav-hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
         </div>
-        <button class="nav-hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
     </div>
     <!-- Sub-nav contextuel (s'affiche selon la page) -->
     <div class="nav-sub" id="nav-sub" style="display:none">

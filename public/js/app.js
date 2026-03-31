@@ -42,7 +42,7 @@ function navigate(page) {
     if (page === 'ecoles') { loadStages(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
-    if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); }
+    if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
 }
 
@@ -385,6 +385,161 @@ function onPubFilter() {
     const r = document.getElementById('pub-region')?.value || '';
     const sc = document.getElementById('pub-sector')?.value || '';
     isLoggedIn() ? loadPublicAnnuaireFull(s, sp, r, sc) : loadPublicAnnuaire(s, sp, r, sc);
+}
+
+// === WELCOME DASHBOARD ===
+async function showWelcomeDashboard() {
+    const slider = document.querySelector('.hero-slider');
+    if (!slider || !currentUser) return;
+
+    // Cacher le slider
+    slider.style.display = 'none';
+
+    // Creer ou mettre a jour le dashboard
+    let dash = document.getElementById('welcome-dashboard');
+    if (!dash) {
+        dash = document.createElement('div');
+        dash.id = 'welcome-dashboard';
+        slider.parentElement.insertBefore(dash, slider);
+    }
+
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon apres-midi' : 'Bonsoir';
+    const initials = (currentUser.first_name||'?')[0] + (currentUser.last_name||'?')[0];
+
+    // Charger les stats en parallele
+    let stats = { events: 0, messages: 0, members: 0, mentors: 0 };
+    try {
+        const [evRes, memRes] = await Promise.all([
+            fetch(`${API}/api/events?upcoming=1&limit=20`).then(r => r.json()).catch(() => []),
+            fetch(`${API}/api/members?action=directory`, {headers:{'Authorization':'Bearer '+authToken}}).then(r => r.json()).catch(() => [])
+        ]);
+        stats.events = evRes.length || 0;
+        stats.members = memRes.length || 0;
+        stats.mentors = (memRes.filter && memRes.filter(m => m.is_mentor)) ? memRes.filter(m => m.is_mentor).length : 0;
+    } catch(e) {}
+
+    dash.innerHTML = `
+        <div class="wd-container">
+            <canvas id="wd-particles" class="wd-particles"></canvas>
+            <div class="wd-content">
+                <div class="wd-avatar-ring">
+                    <div class="wd-avatar">${esc(initials.toUpperCase())}</div>
+                </div>
+                <h1 class="wd-greeting">${greeting},</h1>
+                <h2 class="wd-name">${esc(currentUser.first_name)} ${esc(currentUser.last_name)}</h2>
+                <p class="wd-subtitle">${esc(currentUser.job_title || '')}${currentUser.company ? ' — ' + esc(currentUser.company) : ''}</p>
+
+                <div class="wd-stats">
+                    <div class="wd-stat" style="--delay:0.1s">
+                        <div class="wd-stat-val" data-target="${stats.events}">0</div>
+                        <div class="wd-stat-label">Evenements a venir</div>
+                    </div>
+                    <div class="wd-stat" style="--delay:0.3s">
+                        <div class="wd-stat-val" data-target="${stats.members}">0</div>
+                        <div class="wd-stat-label">Membres actifs</div>
+                    </div>
+                    <div class="wd-stat" style="--delay:0.5s">
+                        <div class="wd-stat-val" data-target="${stats.mentors}">0</div>
+                        <div class="wd-stat-label">Mentors disponibles</div>
+                    </div>
+                </div>
+
+                <div class="wd-actions">
+                    <a class="wd-action" href="#membres" onclick="navigate('membres')">
+                        <span class="wd-action-icon">&#128101;</span>
+                        <span>Mon espace</span>
+                    </a>
+                    <a class="wd-action" href="#annuaire" onclick="navigate('annuaire')">
+                        <span class="wd-action-icon">&#128269;</span>
+                        <span>Annuaire</span>
+                    </a>
+                    <a class="wd-action" href="#evenements" onclick="navigate('evenements')">
+                        <span class="wd-action-icon">&#128197;</span>
+                        <span>Evenements</span>
+                    </a>
+                    <a class="wd-action" href="#quizz" onclick="navigate('quizz')">
+                        <span class="wd-action-icon">&#127942;</span>
+                        <span>Quizz</span>
+                    </a>
+                </div>
+            </div>
+        </div>`;
+
+    // Animer les compteurs
+    setTimeout(() => animateCounters(), 400);
+    // Particules
+    setTimeout(() => initParticles(), 100);
+}
+
+function hideWelcomeDashboard() {
+    const dash = document.getElementById('welcome-dashboard');
+    if (dash) dash.remove();
+    const slider = document.querySelector('.hero-slider');
+    if (slider) slider.style.display = '';
+}
+
+function animateCounters() {
+    document.querySelectorAll('.wd-stat-val').forEach(el => {
+        const target = parseInt(el.dataset.target) || 0;
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 40));
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            el.textContent = current;
+        }, 30);
+    });
+}
+
+function initParticles() {
+    const canvas = document.getElementById('wd-particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    const particles = [];
+    for (let i = 0; i < 50; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 2 + 1,
+            dx: (Math.random() - 0.5) * 0.5,
+            dy: (Math.random() - 0.5) * 0.5,
+            o: Math.random() * 0.3 + 0.1
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${p.o})`;
+            ctx.fill();
+            p.x += p.dx; p.y += p.dy;
+            if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+        });
+        // Lignes entre particules proches
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 100) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(255,255,255,${0.08 * (1 - dist/100)})`;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
 }
 
 // === LOCK CARRIERE ===

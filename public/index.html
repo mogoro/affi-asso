@@ -49,7 +49,7 @@
                     <a onclick="navigate('quizz')">&#128274; Quizz du Rail</a>
                 </div>
             </div>
-            <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles')">Ecoles & Etudiants</a>
+            <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles')">Etudiants</a>
             <a class="nav-link" data-page="adhesion" onclick="navigate('adhesion')">Adherer</a>
             <a class="nav-link" data-page="membres" onclick="navigate('membres')">Espace Membres</a>
         </div>
@@ -582,25 +582,6 @@
 <!-- ECOLES & ETUDIANTS                                                -->
 <!-- ================================================================ -->
 <div id="page-ecoles" class="page">
-    <!-- Ecoles partenaires -->
-    <section>
-        <div class="container">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Ecoles & Partenaires Academiques</h2>
-            <p class="section-sub section-sub-center">Les ecoles d'ingenieurs et formations liees au secteur ferroviaire</p>
-            <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;justify-content:center">
-                <button class="replay-filter active" onclick="filterEcoles(this,'')">Toutes</button>
-                <button class="replay-filter" onclick="filterEcoles(this,'Ecole d\'ingenieurs')">Ecoles d'ingenieurs</button>
-                <button class="replay-filter" onclick="filterEcoles(this,'Universite')">Universites</button>
-                <button class="replay-filter" onclick="filterEcoles(this,'Formation continue')">Formation continue</button>
-                <button class="replay-filter" onclick="filterEcoles(this,'Campus des metiers ferroviaires')">Campus ferroviaire</button>
-            </div>
-            <div class="ecoles-grid" id="ecoles-grid">
-                <p class="empty-msg">Chargement...</p>
-            </div>
-        </div>
-    </section>
-
     <!-- Espace Etudiants -->
     <section class="bg-light">
         <div class="container">
@@ -1193,7 +1174,7 @@
                     <li><a href="#evenements" onclick="navigate('evenements')">Evenements</a></li>
                     <li><a href="#replays" onclick="navigate('replays')">Replays</a></li>
                     <li><a href="#quizz" onclick="navigate('quizz')">Quizz du Rail</a></li>
-                    <li><a href="#ecoles" onclick="navigate('ecoles')">Ecoles & Etudiants</a></li>
+                    <li><a href="#ecoles" onclick="navigate('ecoles')">Etudiants</a></li>
                     <li><a href="#adhesion" onclick="navigate('adhesion')">Adherer</a></li>
                     <li><a href="#membres" onclick="navigate('membres')">Espace Membres</a></li>
                 </ul>

@@ -32,7 +32,7 @@ function navigate(page) {
     if (page === 'evenements') loadEvents();
     if (page === 'annuaire') loadPublicAnnuaire();
     if (page === 'publications') loadPublications();
-    if (page === 'ecoles') { loadEcoles(); loadStages(); }
+    if (page === 'ecoles') { loadStages(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
     if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); }

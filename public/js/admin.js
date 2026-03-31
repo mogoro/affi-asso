@@ -24,6 +24,8 @@ function switchAdminSection(id) {
     if (id === 'adm-announcements') loadAdminAnnouncements();
     if (id === 'adm-messages') loadAdminMessages();
     if (id === 'adm-pending') loadPendingContent();
+    if (id === 'adm-stats') { if (typeof loadStatsDashboard === 'function') loadStatsDashboard(); }
+    if (id === 'adm-polls') { if (typeof loadPolls === 'function') loadPolls(); }
     if (id === 'adm-connexions') loadAdminConnexions();
     if (id === 'adm-logs') loadAdminLogs();
 }
@@ -191,6 +193,7 @@ async function loadAdminEvents() {
             <td style="font-size:13px">${esc(e.location||'')}</td>
             <td>${e.is_published ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>'}</td>
             <td class="adm-actions">
+                <button onclick="showEventCommForm(${e.id},'${esc(e.title)}')" class="adm-btn" title="Communiquer">&#128231;</button>
                 <button onclick="showEventRegistrations(${e.id},'${esc(e.title)}')" class="adm-btn" title="Inscrits">&#128101;</button>
                 ${!e.is_published ? `<button onclick="adminAction('publish_event',${e.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_event',${e.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
                 <button onclick="adminAction('delete_event',${e.id})" class="adm-btn adm-btn-danger">&#128465;</button>
@@ -487,13 +490,14 @@ async function showEventRegistrations(eventId, title) {
         <h3 style="margin-bottom:16px;color:var(--primary)">Inscrits — ${esc(title)}</h3>
         ${regs.length ? `
             <p style="margin-bottom:12px;font-size:13px;color:var(--gray-500)">${regs.length} inscrit(s)</p>
-            <table class="adm-table"><thead><tr><th>Nom</th><th>Email</th><th>Entreprise</th><th>Telephone</th><th>Date inscription</th></tr></thead><tbody>
+            <table class="adm-table"><thead><tr><th>Nom</th><th>Email</th><th>Entreprise</th><th>Telephone</th><th>Inscription</th><th>Presence</th></tr></thead><tbody>
             ${regs.map(r => `<tr>
                 <td><strong>${esc(r.first_name)} ${esc(r.last_name)}</strong></td>
                 <td style="font-size:13px">${esc(r.email)}</td>
                 <td>${esc(r.company||'')}</td>
                 <td style="font-size:13px">${esc(r.phone||'')}</td>
                 <td style="font-size:12px">${formatDate(r.registered_at)}</td>
+                <td>${r.attended ? '<span style="color:var(--green);font-weight:700">&#10004; Present</span>' : `<button onclick="markAttended(${r.id});this.outerHTML='<span style=\\'color:var(--green);font-weight:700\\'>&#10004;</span>'" class="adm-btn adm-btn-ok" style="font-size:11px;padding:4px 10px">Pointer</button>`}</td>
             </tr>`).join('')}
             </tbody></table>
         ` : '<p class="empty-msg">Aucun inscrit pour cet evenement</p>'}

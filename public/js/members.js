@@ -131,7 +131,7 @@ function renderDirectory(members) {
                 ${avatarHtml}
             </div>
             <div class="ec-body">
-                <div class="ec-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
+                <div class="ec-name">${esc(m.first_name)} ${esc(m.last_name)}${typeof verifiedBadge==='function' ? verifiedBadge(m.is_verified) : ''}</div>
                 <div class="ec-job">${esc(m.job_title || '')}</div>
                 <div class="ec-company">${esc(m.company || '')}</div>
                 ${m.region ? `<div class="ec-location">&#128205; ${esc(m.region)}</div>` : ''}
@@ -147,6 +147,7 @@ function renderDirectory(members) {
                 </div>
                 <div class="ec-actions">
                     <button onclick="event.stopPropagation();startConversation(${m.id},'${esc(m.first_name)} ${esc(m.last_name)}')" class="ec-btn ec-btn-msg">&#128172; Message</button>
+                    ${typeof renderEndorseButton==='function' ? renderEndorseButton(m.id, m.first_name+' '+m.last_name) : ''}
                     ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="ec-btn ec-btn-li">in LinkedIn</a>` : ''}
                 </div>
             </div>

@@ -154,6 +154,41 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(output.getvalue().encode("utf-8"))
             return
 
+        elif action == "stats_dashboard":
+            total = fetchone("SELECT COUNT(*) as n FROM members WHERE status='active'")
+            verified = fetchone("SELECT COUNT(*) as n FROM members WHERE is_verified=TRUE")
+            board = fetchone("SELECT COUNT(*) as n FROM members WHERE is_board=TRUE")
+            mentors = fetchone("SELECT COUNT(*) as n FROM members WHERE is_mentor=TRUE")
+            by_sector = fetchall("SELECT sector, COUNT(*) as n FROM members WHERE status='active' AND sector IS NOT NULL GROUP BY sector ORDER BY n DESC")
+            by_region = fetchall("SELECT region, COUNT(*) as n FROM members WHERE status='active' AND region IS NOT NULL GROUP BY region ORDER BY n DESC")
+            by_month = fetchall("""SELECT TO_CHAR(joined_at, 'YYYY-MM') as month, COUNT(*) as n
+                FROM members WHERE joined_at IS NOT NULL GROUP BY month ORDER BY month DESC LIMIT 12""")
+            events_count = fetchone("SELECT COUNT(*) as n FROM events WHERE is_published=TRUE")
+            upcoming = fetchone("SELECT COUNT(*) as n FROM events WHERE event_date >= NOW()")
+            return self._json(200, {
+                "total": total["n"], "verified": verified["n"], "board": board["n"], "mentors": mentors["n"],
+                "by_sector": by_sector, "by_region": by_region, "by_month": by_month,
+                "events_total": events_count["n"], "events_upcoming": upcoming["n"]
+            })
+
+        elif action == "toggle_verified":
+            mid = body.get("id")
+            cur = fetchone("SELECT is_verified FROM members WHERE id=%s", [mid])
+            if cur:
+                execute("UPDATE members SET is_verified = NOT is_verified WHERE id=%s", [mid])
+            return self._json(200, {"ok": True})
+
+        elif action == "event_attend":
+            reg_id = body.get("registration_id")
+            execute("UPDATE event_registrations SET attended=TRUE, attended_at=NOW() WHERE id=%s", [reg_id])
+            return self._json(200, {"ok": True})
+
+        elif action == "send_event_comm":
+            execute("""INSERT INTO event_communications (event_id, subject, body, sent_by, recipient_type)
+                VALUES (%s,%s,%s,%s,%s)""",
+                [body["event_id"], body["subject"], body["body"], user["id"], body.get("recipient_type","registered")])
+            return self._json(200, {"ok": True, "message": "Communication enregistree"})
+
         elif action == "connexions":
             rows = fetchall("""SELECT m.id, m.first_name, m.last_name, m.email, m.company,
                     m.last_login, m.role, m.is_admin,

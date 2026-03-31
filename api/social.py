@@ -94,6 +94,21 @@ class handler(BaseHTTPRequestHandler):
             """, [mid])
             return self._json(200, rows)
 
+        # --- POLLS ---
+        elif action == "polls":
+            polls = fetchall("""SELECT p.*, m.first_name, m.last_name,
+                (SELECT COUNT(*) FROM poll_votes pv WHERE pv.poll_id=p.id) as total_votes
+                FROM polls p LEFT JOIN members m ON m.id=p.created_by
+                WHERE p.is_active=TRUE ORDER BY p.created_at DESC""")
+            for p in polls:
+                p["options"] = fetchall("""SELECT po.id, po.label,
+                    (SELECT COUNT(*) FROM poll_votes pv WHERE pv.option_id=po.id) as votes
+                    FROM poll_options po WHERE po.poll_id=%s ORDER BY po.sort_order""", [p["id"]])
+                if user:
+                    p["my_votes"] = [v["option_id"] for v in fetchall(
+                        "SELECT option_id FROM poll_votes WHERE poll_id=%s AND member_id=%s", [p["id"], user["id"]])]
+            return self._json(200, polls)
+
         # --- NOTIFICATIONS ---
         elif action == "notifications":
             if not user: return self._json(401, {"error": "Auth requise"})
@@ -189,6 +204,30 @@ class handler(BaseHTTPRequestHandler):
 
         elif action == "read_notifications":
             execute("UPDATE notifications SET is_read=TRUE WHERE member_id=%s", [user["id"]])
+            return self._json(200, {"ok": True})
+
+        # --- POLLS ---
+        elif action == "create_poll":
+            if not user.get("is_admin"): return self._json(403, {"error": "Admin requis"})
+            execute("""INSERT INTO polls (title, description, is_anonymous, multiple_choice, ends_at, created_by)
+                VALUES (%s,%s,%s,%s,%s,%s)""",
+                [body["title"], body.get("description",""), body.get("is_anonymous",False),
+                 body.get("multiple_choice",False), body.get("ends_at"), user["id"]])
+            poll = fetchone("SELECT id FROM polls ORDER BY id DESC LIMIT 1")
+            for i, opt in enumerate(body.get("options",[])):
+                execute("INSERT INTO poll_options (poll_id, label, sort_order) VALUES (%s,%s,%s)",
+                    [poll["id"], opt, i])
+            return self._json(200, {"ok": True, "poll_id": poll["id"]})
+
+        elif action == "vote_poll":
+            poll_id = body["poll_id"]
+            option_id = body["option_id"]
+            poll = fetchone("SELECT * FROM polls WHERE id=%s AND is_active=TRUE", [poll_id])
+            if not poll: return self._json(400, {"error": "Sondage ferme"})
+            if not poll.get("multiple_choice"):
+                execute("DELETE FROM poll_votes WHERE poll_id=%s AND member_id=%s", [poll_id, user["id"]])
+            execute("INSERT INTO poll_votes (poll_id, option_id, member_id) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
+                [poll_id, option_id, user["id"]])
             return self._json(200, {"ok": True})
 
         return self._json(400, {"error": "Action inconnue"})

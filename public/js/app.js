@@ -43,7 +43,7 @@ function navigate(page) {
     if (page === 'ecoles') { loadStages(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
-    if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
+    if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
 }
 
@@ -330,6 +330,10 @@ function renderEventCards(events) {
                 </div>
                 <div class="card-title">${esc(e.title)}</div>
                 <div class="card-text">${esc(e.description || '')}</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap">
+                    <button onclick="downloadICS('${esc(e.title)}','${esc(e.description||'')}','${esc(e.location||'')}','${e.start_date}','${e.end_date||''}')" class="btn btn-primary" style="font-size:11px;padding:6px 12px">&#128197; Ajouter au calendrier</button>
+                    ${typeof renderShareButtons==='function' ? renderShareButtons(e.title, e.id) : ''}
+                </div>
             </div>
         </div>`).join('');
 }

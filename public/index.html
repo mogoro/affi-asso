@@ -212,6 +212,16 @@
             <div id="partenaires-unified"></div>
         </div>
     </section>
+
+    <!-- Sondages -->
+    <section class="bg-light">
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Sondages en cours</h2>
+            <p class="section-sub section-sub-center">Participez et donnez votre avis</p>
+            <div id="polls-container"><p class="empty-msg">Chargement...</p></div>
+        </div>
+    </section>
 </div>
 
 <!-- ================================================================ -->
@@ -1081,6 +1091,8 @@
                         <button class="adm-nav-btn" data-section="adm-announcements" onclick="switchAdminSection('adm-announcements')">Annonces membres</button>
                         <button class="adm-nav-btn" data-section="adm-pending" onclick="switchAdminSection('adm-pending')">A valider <span id="pending-count-badge" style="background:var(--accent);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:4px"></span></button>
                         <button class="adm-nav-btn" data-section="adm-messages" onclick="switchAdminSection('adm-messages')">Messages</button>
+                        <button class="adm-nav-btn" data-section="adm-stats" onclick="switchAdminSection('adm-stats')">Statistiques</button>
+                        <button class="adm-nav-btn" data-section="adm-polls" onclick="switchAdminSection('adm-polls')">Sondages</button>
                         <button class="adm-nav-btn" data-section="adm-connexions" onclick="switchAdminSection('adm-connexions')">Connexions</button>
                         <button class="adm-nav-btn" data-section="adm-logs" onclick="switchAdminSection('adm-logs')">Journal RGPD</button>
                     </div>
@@ -1140,6 +1152,21 @@
                         <h3 style="margin-bottom:16px;color:var(--primary)">Contenus en attente de validation</h3>
                         <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Les membres peuvent proposer des evenements, actualites et annonces. En tant qu'administrateur, vous devez valider leur publication.</p>
                         <div id="adm-pending-list"><p class="empty-msg">Chargement...</p></div>
+                    </div>
+
+                    <!-- Admin Stats -->
+                    <div id="adm-stats" class="adm-section">
+                        <h3 style="margin-bottom:16px;color:var(--primary)">Tableau de bord statistiques</h3>
+                        <div id="adm-stats-content"><p class="empty-msg">Chargement...</p></div>
+                    </div>
+
+                    <!-- Admin Sondages -->
+                    <div id="adm-polls" class="adm-section">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                            <h3 style="color:var(--primary)">Gestion des sondages</h3>
+                            <button onclick="showCreatePollForm()" class="adm-btn adm-btn-ok" style="padding:8px 16px;font-size:13px">+ Nouveau sondage</button>
+                        </div>
+                        <div id="adm-polls-content"></div>
                     </div>
 
                     <!-- Admin Connexions -->
@@ -1228,6 +1255,7 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
+<script src="/js/features.js"></script>
 <script src="/js/app.js"></script>
 <script src="/js/members.js"></script>
 <script src="/js/admin.js"></script>

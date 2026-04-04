@@ -306,8 +306,9 @@ function showEventForm(editEvt) {
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
                 <div class="form-group"><label>Places max</label><input type="number" id="ne-max" value="${e.max_attendees||''}"></div>
                 <div class="form-group"><label>Prix (EUR)</label><input type="number" id="ne-price" step="0.01" value="${e.price||0}"></div>
-                <div class="form-group"><label>Image URL</label><input id="ne-image" value="${esc(e.image_url||'')}" placeholder="https://..."></div>
+                <div class="form-group"><label>Image URL</label><input id="ne-image" value="${esc(e.image_url||'')}" placeholder="https://..." oninput="previewAdminImage('ne-image','ne-image-preview')"></div>
             </div>
+            <div id="ne-image-preview" style="margin-top:8px"></div>
             <div class="form-group"><label>Description</label><textarea id="ne-desc" style="min-height:150px">${esc(e.description||'')}</textarea></div>
             <div class="form-group"><label>Mots-cles (separes par des virgules)</label><input id="ne-tags" value="${esc(e.tags||'')}" placeholder="Ex : ERTMS, signalisation, conference"></div>
             <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">
@@ -318,6 +319,7 @@ function showEventForm(editEvt) {
         </form>
     </div></div>`;
     openModal(html);
+    setTimeout(() => previewAdminImage('ne-image', 'ne-image-preview'), 50);
 }
 
 async function createEvent(evt) {
@@ -978,7 +980,8 @@ function showPartnerForm(partner) {
             </div>
             <div class="form-group"><label>Adresse</label><input id="pt-address" value="${esc(p.address||'')}"></div>
             <div class="form-group"><label>Site web</label><input id="pt-website" value="${esc(p.website_url||'')}" placeholder="https://..."></div>
-            <div class="form-group"><label>URL du logo</label><input id="pt-logo" value="${esc(p.logo_url||'')}" placeholder="https://..."></div>
+            <div class="form-group"><label>URL du logo</label><input id="pt-logo" value="${esc(p.logo_url||'')}" placeholder="https://..." oninput="previewAdminImage('pt-logo','pt-logo-preview')"></div>
+            <div id="pt-logo-preview" style="margin-top:8px"></div>
             <div class="form-group"><label>Contact (email ou telephone)</label><input id="pt-contact" value="${esc(p.contact||'')}"></div>
             <div class="form-group"><label>Ordre d'affichage</label><input type="number" id="pt-sort" value="${p.sort_order||0}"></div>
             <div style="display:flex;gap:12px">
@@ -988,6 +991,7 @@ function showPartnerForm(partner) {
         </form>
     </div></div>`;
     openModal(html);
+    setTimeout(() => previewAdminImage('pt-logo', 'pt-logo-preview'), 50);
 }
 
 function editPartner(id) {
@@ -1150,4 +1154,19 @@ async function deleteBoardMember(id) {
     await adminPost({action: 'delete_board_member', id});
     loadAdminBoard();
     showToast('Poste supprime', 'success');
+}
+
+// === IMAGE PREVIEW IN ADMIN FORMS ===
+function previewAdminImage(inputId, previewId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    if (!input || !preview) return;
+    const url = input.value;
+    if (url && url.startsWith('http')) {
+        preview.innerHTML = `<img src="${esc(url)}" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid var(--gray-200)" onerror="this.parentElement.innerHTML='<span style=color:var(--gray-400)>Image introuvable</span>'">`;
+    } else if (url && url.startsWith('data:')) {
+        preview.innerHTML = `<img src="${url}" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid var(--gray-200)">`;
+    } else {
+        preview.innerHTML = '';
+    }
 }

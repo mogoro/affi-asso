@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Sophie Martin",
+    "title": "Sophie integre Alstom",
+    "description": "Jeune diplomee de l'ENPC, Sophie Martin a pris la fonction d'Ingenieure Signalisation chez Alstom Transport.",
+    "company": "Alstom",
+    "photo_placeholder": "SM"
+  },
+  {
+    "name": "Thomas Leblanc",
+    "title": "Thomas rejoint SNCF Reseau",
+    "description": "Apres 5 ans chez Systra, Thomas Leblanc prend la direction du departement Infrastructure a SNCF Reseau.",
+    "company": "SNCF Reseau",
+    "photo_placeholder": "TL"
+  },
+  {
+    "name": "Amina Benali",
+    "title": "Amina nommee chez Certifer",
+    "description": "Ingenieure ERTMS diplomee de Centrale Supelec, Amina Benali rejoint Certifer en tant que Senior Assessor.",
+    "company": "Certifer",
+    "photo_placeholder": "AB"
+  },
+  {
+    "name": "Pierre Durand",
+    "title": "Pierre fonde RailTech Solutions",
+    "description": "Ancien responsable Maintenance chez RATP, Pierre Durand lance sa startup RailTech Solutions, specialisee en maintenance predictive ferroviaire.",
+    "company": "RailTech Solutions",
+    "photo_placeholder": "PD"
+  }
+]

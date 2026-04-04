@@ -140,3 +140,35 @@ function filterCourses(btn, cat) {
     btn.classList.add('active');
     loadCourses(cat);
 }
+
+// === FULL-SCREEN MAP ===
+function openFullMap() {
+    const html = `<div class="adm-modal-bg" id="fullmap-modal">
+        <div style="width:95vw;height:90vh;background:var(--white);border-radius:12px;overflow:hidden;position:relative">
+            <button onclick="closeModal('fullmap-modal');setTimeout(()=>{if(mapInstance)mapInstance.invalidateSize()},200)" style="position:absolute;top:12px;right:12px;z-index:1000;background:var(--white);border:1px solid var(--gray-300);border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)">&times;</button>
+            <div id="fullmap-container" style="width:100%;height:100%"></div>
+        </div>
+    </div>`;
+    openModal(html);
+    // Copy map to fullscreen
+    setTimeout(() => {
+        const container = document.getElementById('fullmap-container');
+        if (!container || !window.L) return;
+        const fullMap = L.map('fullmap-container').setView([47.0, 2.5], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap', maxZoom: 18
+        }).addTo(fullMap);
+        // Copy markers from existing map
+        if (mapInstance) {
+            mapInstance.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    const ll = layer.getLatLng();
+                    const popup = layer.getPopup();
+                    const marker = L.marker(ll, {icon: layer.options.icon}).addTo(fullMap);
+                    if (popup) marker.bindPopup(popup.getContent());
+                }
+            });
+        }
+        setTimeout(() => fullMap.invalidateSize(), 100);
+    }, 200);
+}

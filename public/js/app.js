@@ -64,8 +64,8 @@ function navigate(page) {
     if (page === 'ecoles') { loadStages(); if (typeof loadEcoles === 'function') loadEcoles(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
-    if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); loadReseauBouge(); loadPartnerBanner(); _homeLoaded = true; } lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
-    if (page === 'identite') { loadOrganigramme(); setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
+    if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); loadReseauBouge(); loadPartnerBanner(); _homeLoaded = true; } lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); initScrollSpy(); }
+    if (page === 'identite') { loadOrganigramme(); setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); initScrollSpy(); }
     // Si connecte et on va sur membres, afficher directement l'espace membre
     if (page === 'membres' && isLoggedIn() && typeof showMemberArea === 'function') {
         showMemberArea();
@@ -257,6 +257,36 @@ function updateNavSub(page) {
         sub.style.display = 'none';
     }
 }
+
+// === SCROLL SPY for sub-nav highlight ===
+let _scrollSpySections = [];
+function initScrollSpy() {
+    const page = location.hash.slice(1) || 'accueil';
+    if (page === 'identite') {
+        _scrollSpySections = ['ident-association','ident-actions','ident-historique','ident-gouvernance','ident-organigramme'];
+    } else if (page === 'accueil') {
+        _scrollSpySections = [];
+        setTimeout(() => {
+            const ids = ['news-carousel-wrapper','home-events','anciens-grid','partenaires-unified'];
+            _scrollSpySections = ids.filter(id => document.getElementById(id));
+        }, 500);
+    } else {
+        _scrollSpySections = [];
+    }
+}
+window.addEventListener('scroll', () => {
+    if (!_scrollSpySections.length) return;
+    const subLinks = document.querySelectorAll('.nav-sub-link');
+    if (!subLinks.length) return;
+    let activeIdx = 0;
+    const offset = 140;
+    for (let i = _scrollSpySections.length - 1; i >= 0; i--) {
+        const el = document.getElementById(_scrollSpySections[i]);
+        const target = el?.closest ? (el.closest('section') || el) : el;
+        if (target && target.getBoundingClientRect().top <= offset) { activeIdx = i; break; }
+    }
+    subLinks.forEach((l, i) => l.classList.toggle('active', i === activeIdx));
+});
 
 // Fonction appelee par members.js apres login pour tout debloquer
 function onUserLoggedIn() {
@@ -753,6 +783,32 @@ async function loadAdBanner() {
 // === AGENDA (upcoming events) ===
 let _agendaEvents = [];
 let _calYear, _calMonth;
+let _agendaSearchQuery = '';
+let _agendaTypeFilter = '';
+
+function filterAgendaSearch(query) {
+    _agendaSearchQuery = (query || '').toLowerCase();
+    _applyAgendaFilters();
+}
+
+function filterAgendaType(type) {
+    _agendaTypeFilter = type || '';
+    _applyAgendaFilters();
+}
+
+function _applyAgendaFilters() {
+    let filtered = _agendaEvents;
+    if (_agendaSearchQuery) {
+        filtered = filtered.filter(e =>
+            (e.title || '').toLowerCase().includes(_agendaSearchQuery) ||
+            (e.description || '').toLowerCase().includes(_agendaSearchQuery)
+        );
+    }
+    if (_agendaTypeFilter) {
+        filtered = filtered.filter(e => (e.event_type || '').toLowerCase() === _agendaTypeFilter);
+    }
+    renderAgendaEvents(filtered);
+}
 
 async function loadAgenda() {
     try {
@@ -1850,9 +1906,39 @@ async function submitContact(evt) {
     } catch (e) { alert('Erreur: ' + e.message); }
 }
 
+// === PHONE VALIDATION ===
+function validatePhone(phone) {
+    if (!phone) return true; // optional
+    const cleaned = phone.replace(/[\s.\-]/g, '');
+    return /^(\+33|0)[1-9]\d{8}$/.test(cleaned);
+}
+
 // === ADHESION WORKFLOW ===
 const ADH_PRICES = { actif: 48, jeune: 32, etudiant: 24, retraite: 32, honneur: 0, partenaire: 0 };
 const ADH_LABELS = { actif: 'Membre actif (+30 ans)', jeune: 'Jeune ingenieur (-30 ans)', etudiant: 'Etudiant', retraite: 'Retraite', honneur: "Membre d'honneur", partenaire: 'Membre partenaire' };
+
+function sendAdhesionEmail(formData) {
+    const body = {
+        name: formData.first_name + ' ' + formData.last_name,
+        email: formData.email,
+        subject: '[AFFI] Nouvelle demande d\'adhesion - ' + formData.membership_type,
+        message: `Nouvelle demande d'adhesion AFFI\n\n` +
+            `Prenom: ${formData.first_name}\n` +
+            `Nom: ${formData.last_name}\n` +
+            `Email: ${formData.email}\n` +
+            `Telephone: ${formData.phone || 'Non renseigne'}\n` +
+            `Entreprise: ${formData.company || 'Non renseignee'}\n` +
+            `Fonction: ${formData.job_title || 'Non renseignee'}\n` +
+            `Secteur: ${formData.sector || 'Non renseigne'}\n` +
+            `Type d'adhesion: ${formData.membership_type}\n` +
+            `Montant: ${ADH_PRICES[formData.membership_type] || '?'} EUR`
+    };
+    fetch(`${API}/api/contact`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+    }).catch(() => {});
+}
 
 async function submitAdhesion(evt) {
     evt.preventDefault();
@@ -1861,6 +1947,10 @@ async function submitAdhesion(evt) {
     const nom = f.last_name.value;
     const email = f.email.value;
     const phone = f.phone.value;
+    if (phone && !validatePhone(phone)) {
+        alert('Numero de telephone invalide. Format attendu : 06 12 34 56 78 ou +33 6 12 34 56 78');
+        return;
+    }
     const entreprise = f.company.value;
     const fonction = f.job_title.value;
     const secteur = f.sector.value;
@@ -1906,6 +1996,7 @@ async function submitAdhesion(evt) {
     document.getElementById('adhesion-success').style.display = 'block';
     f.reset();
     showToast("Demande d'adhesion envoyee !", 'success');
+    sendAdhesionEmail({ first_name: prenom, last_name: nom, email, phone, company: entreprise, job_title: fonction, sector: secteur, membership_type: type });
 }
 
 function showAdhCheque(prenom, nom, email, phone, entreprise, fonction, label, prix) {
@@ -2048,6 +2139,25 @@ function initScrollAnimations() {
         el.classList.add('fade-in');
         observer.observe(el);
     });
+}
+
+// === RESIZE IMAGE UTILITY ===
+function resizeImage(file, maxWidth, maxHeight, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > maxWidth) { h = h * maxWidth / w; w = maxWidth; }
+            if (h > maxHeight) { w = w * maxHeight / h; h = maxHeight; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            callback(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 // === HELPERS ===

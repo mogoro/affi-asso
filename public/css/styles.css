@@ -858,3 +858,8 @@ body.dark-mode .mmtab{color:#8b949e;}
 body.dark-mode .mmtab.active{color:#58a6ff;border-bottom-color:#58a6ff;}
 body.dark-mode .member-sub-tabs{background:#21262d;}
 body.dark-mode .mstab.active{background:#388bfd;}
+
+/* Sector chips */
+.sector-chip{display:inline-block;padding:4px 12px;border:1px solid var(--gray-300);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;color:var(--gray-600);user-select:none;}
+.sector-chip:hover{border-color:var(--primary-light);color:var(--primary);}
+.sector-chip-active{background:var(--primary);color:#fff;border-color:var(--primary);}

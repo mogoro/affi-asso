@@ -322,6 +322,8 @@ async function loadProfile() {
         if (consentNl) consentNl.checked = !!p.consent_newsletter;
         // Photo preview
         updatePhotoPreview(p.photo_url, p.first_name, p.last_name);
+        // Sector chips
+        initProfSectorChips();
         const photoInput = document.getElementById('prof-photo_url');
         if (photoInput) photoInput.addEventListener('input', function() {
             updatePhotoPreview(this.value, document.getElementById('prof-first_name')?.value, document.getElementById('prof-last_name')?.value);
@@ -592,12 +594,41 @@ async function loadContributions() {
     } catch (e) { console.warn('Contributions:', e); }
 }
 
+// === PROFILE SECTOR CHIPS ===
+const PROFILE_SECTORS = ['Signalisation & ERTMS','Matériel roulant','Infrastructure','Maintenance','Numérique & IA','Ingénierie & Conseil','Génie civil','Télécoms','Énergie','Management','Exploitation','Recherche & Formation'];
+
+function initProfSectorChips() {
+    const container = document.getElementById('prof-sector-chips');
+    if (!container) return;
+    const currentVal = document.getElementById('prof-sector')?.value || '';
+    const selected = currentVal.split(',').map(s => s.trim()).filter(Boolean);
+    container.innerHTML = PROFILE_SECTORS.map(s => {
+        const active = selected.includes(s);
+        return `<span class="sector-chip ${active ? 'sector-chip-active' : ''}" onclick="toggleProfSector(this,'${s}')">${s}</span>`;
+    }).join('');
+}
+
+function toggleProfSector(el, sector) {
+    el.classList.toggle('sector-chip-active');
+    const chips = document.querySelectorAll('#prof-sector-chips .sector-chip-active');
+    const values = Array.from(chips).map(c => c.textContent);
+    document.getElementById('prof-sector').value = values.join(', ');
+}
+
 // === PHOTO PREVIEW ===
+function previewProfilePhoto(input) {
+    if (!input.files || !input.files[0]) return;
+    resizeImage(input.files[0], 300, 300, function(dataUrl) {
+        document.getElementById('prof-photo_url').value = dataUrl;
+        updatePhotoPreview(dataUrl, document.getElementById('prof-first_name')?.value, document.getElementById('prof-last_name')?.value);
+    });
+}
+
 function updatePhotoPreview(url, firstName, lastName) {
     const preview = document.getElementById('prof-photo-preview');
     const initialsEl = document.getElementById('prof-photo-initials');
     if (!preview) return;
-    if (url && url.startsWith('http')) {
+    if (url && (url.startsWith('http') || url.startsWith('data:'))) {
         preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<span style=\\'color:#fff;font-weight:800;font-size:18px\\'>${((firstName||'?')[0]+(lastName||'?')[0]).toUpperCase()}</span>'">`;
     } else {
         const initials = ((firstName||'?')[0] + (lastName||'?')[0]).toUpperCase();

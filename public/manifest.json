@@ -3,8 +3,8 @@
   "short_name": "AFFI",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a3c6e",
-  "theme_color": "#1a3c6e",
+  "background_color": "#006b3f",
+  "theme_color": "#006b3f",
   "description": "Première association française rassemblant les ingénieurs et cadres du secteur ferroviaire depuis 1996. Conférences, événements, annuaire, publications.",
   "lang": "fr",
   "icons": [

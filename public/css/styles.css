@@ -49,7 +49,7 @@ img{max-width:100%;height:auto;}
 .nav-links{display:flex;gap:0;margin:0 4px;flex-shrink:1;overflow:hidden;}
 .nav-link{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px;color:var(--gray-500);font-size:11px;font-weight:600;text-decoration:none;transition:all var(--transition);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;}
 .nav-link-icon{font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;width:24px;height:24px;}
-.nav-link-icon svg{flex-shrink:0;}
+.nav-link-icon svg{flex-shrink:0;stroke:url(#affi-icon-grad);}
 .nav-link-text{line-height:1;}
 .nav-link:hover{color:var(--gray-900);text-decoration:none;}
 .nav-link.active{color:var(--gray-900);border-bottom-color:var(--gray-900);}
@@ -977,7 +977,8 @@ body.dark-mode .dt-btn{background:#21262d;border-color:#30363d;color:#c9d1d9;}
 /* ========== MEMBER TABS (flat) ========== */
 .member-tabs-unified{display:flex;gap:0;border-bottom:2px solid var(--gray-200);margin-bottom:20px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .member-tabs-unified::-webkit-scrollbar{display:none;}
-.mtab-u{padding:10px 16px;font-size:13px;font-weight:700;color:var(--gray-500);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;margin-bottom:-2px;}
+.mtab-u{padding:10px 16px;font-size:13px;font-weight:700;color:var(--gray-500);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;margin-bottom:-2px;display:inline-flex;align-items:center;gap:6px;}
+.mtab-u svg{stroke:url(#affi-icon-grad);flex-shrink:0;}
 .mtab-u:hover{color:var(--gray-800);background:var(--gray-50);}
 .mtab-u.active{color:var(--primary);border-bottom-color:var(--primary);}
 body.dark-mode .mtab-u{color:#8b949e;}

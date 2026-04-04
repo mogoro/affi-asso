@@ -24,9 +24,6 @@ function switchAdminSection(id) {
     if (id === 'adm-moderation') loadAdminModeration();
     if (id === 'adm-stats') { if (typeof loadStatsDashboard === 'function') loadStatsDashboard(); }
     if (id === 'adm-polls') { if (typeof loadPolls === 'function') loadPolls(); }
-    if (id === 'adm-adhesions') loadAdminAdhesions();
-    if (id === 'adm-connexions') loadAdminConnexions();
-    if (id === 'adm-logs') loadAdminLogs();
     if (id === 'adm-pubs') loadAdminPubs();
     if (id === 'adm-partners') loadAdminPartners();
     if (id === 'adm-board') loadAdminBoard();
@@ -86,22 +83,75 @@ async function loadAdminDashboard() {
         </div>`;
 }
 
-// === MEMBERS MANAGEMENT ===
+// === MEMBERS MANAGEMENT (unified: members + adhesions + RGPD + connexions) ===
 async function loadAdminMembers(status, search) {
     const params = {};
     if (status) params.status = status;
     if (search) params.search = search;
     const members = await adminFetch('members', params);
     if (!document.getElementById('adm-members-list')) return;
+
+    // Compute KPI counts
+    const activeCount = members.filter(m => m.status === 'active').length;
+    const pendingCount = members.filter(m => m.status === 'pending').length;
+    const blockedCount = members.filter(m => m.status === 'blocked').length;
+    const total = members.length;
+
+    // Render summary bar
+    const summaryEl = document.getElementById('adm-members-summary');
+    if (summaryEl) {
+        summaryEl.innerHTML = `
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+                    <span style="color:var(--green);font-size:16px">&#9679;</span>
+                    <strong>${activeCount}</strong> a jour
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+                    <span style="color:var(--orange);font-size:16px">&#9679;</span>
+                    <strong>${pendingCount}</strong> pre-radiation
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+                    <span style="color:var(--accent);font-size:16px">&#9679;</span>
+                    <strong>${blockedCount}</strong> radies
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+                    <strong>${total}</strong> total
+                </div>
+                <div style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray-500)">
+                    <span style="color:var(--green)">&#9679;</span> RGPD OK
+                    <span style="color:var(--orange)">&#9679;</span> Partiel
+                    <span style="color:var(--accent)">&#9679;</span> Non
+                </div>
+            </div>
+        `;
+    }
+
     new DataTable('adm-members-list', {
         columns: [
-            { key: 'name', label: 'Nom', render: (v, r) => `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong>` },
-            { key: 'email', label: 'Email' },
-            { key: 'company', label: 'Entreprise' },
-            { key: 'sector', label: 'Secteur', render: v => v ? `<span class="card-tag">${esc(v)}</span>` : '-' },
-            { key: 'membership_type', label: 'Type' },
-            { key: 'status', label: 'Statut', render: v => `<span class="adm-badge adm-badge-${v}">${v}</span>` },
-            { key: 'joined_at', label: 'Inscrit le', type: 'date', render: v => `<span style="font-size:12px">${formatDate(v)}</span>` },
+            { key: 'name', label: 'Membre', render: (v, r) => `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong><br><span style="font-size:11px;color:var(--gray-500)">${esc(r.email)}</span>` },
+            { key: 'company', label: 'Entreprise', render: v => esc(v || '-') },
+            { key: 'membership_type', label: 'Type', render: v => `<span class="card-tag">${esc(v||'standard')}</span>` },
+            { key: 'rgpd_status', label: 'RGPD', sortable: false, filterable: false, width: '60px',
+              render: (v, r) => {
+                  const ann = r.consent_annuaire;
+                  const nl = r.consent_newsletter;
+                  if (ann && nl) return '<span title="Consentements OK" style="color:var(--green);font-size:18px">&#9679;</span>';
+                  if (ann || nl) return '<span title="Consentement partiel" style="color:var(--orange);font-size:18px">&#9679;</span>';
+                  return '<span title="Aucun consentement" style="color:var(--accent);font-size:18px">&#9679;</span>';
+              }
+            },
+            { key: 'cotisation_status', label: 'Cotisation', width: '80px',
+              render: (v, r) => {
+                  if (r.status === 'active') return '<span title="A jour" style="color:var(--green);font-size:16px">&#10004;</span>';
+                  if (r.status === 'pending') return '<span title="En attente" style="color:var(--orange);font-size:16px">&#9888;</span>';
+                  return '<span title="Radie/Bloque" style="color:var(--accent);font-size:16px">&#10008;</span>';
+              }
+            },
+            { key: 'status', label: 'Statut', render: v => {
+                const labels = { active: 'Actif', pending: 'En attente', blocked: 'Radie' };
+                return `<span class="adm-badge adm-badge-${v}">${labels[v]||v}</span>`;
+            }},
+            { key: 'last_login', label: 'Derniere co.', type: 'date', render: v => v ? `<span style="font-size:11px">${formatDate(v)}</span>` : '<span style="color:var(--gray-300)">&mdash;</span>' },
         ],
         data: members.map(m => ({ ...m, name: (m.first_name||'') + ' ' + (m.last_name||'') })),
         actions: (m) => `
@@ -127,8 +177,25 @@ async function adminAction(action, id) {
 async function editMember(id) {
     const m = await adminFetch('member_detail', {id: String(id)});
     if (!m || m.error) return alert('Membre introuvable');
+
+    // RGPD status display
+    const rgpdAnn = m.consent_annuaire ? '<span style="color:var(--green)">&#10004;</span> Oui' : '<span style="color:var(--accent)">&#10008;</span> Non';
+    const rgpdNl = m.consent_newsletter ? '<span style="color:var(--green)">&#10004;</span> Oui' : '<span style="color:var(--accent)">&#10008;</span> Non';
+
+    // Cotisation status
+    const cotisationLabels = { active: 'A jour', pending: 'En attente', blocked: 'Radie' };
+    const cotisationColors = { active: 'var(--green)', pending: 'var(--orange)', blocked: 'var(--accent)' };
+    const cotisationStatus = cotisationLabels[m.status] || m.status;
+    const cotisationColor = cotisationColors[m.status] || 'var(--gray-500)';
+
+    // Subscriptions history (if available)
+    const subs = m.subscriptions || [];
+    const subsHtml = subs.length
+        ? subs.map(s => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--gray-100);font-size:12px"><span>${s.year || formatDate(s.created_at)}</span><span class="adm-badge adm-badge-${s.status||'active'}">${s.status||'paye'}</span></div>`).join('')
+        : '<span style="font-size:12px;color:var(--gray-400)">Aucun historique</span>';
+
     const html = `<div class="adm-modal-bg" id="member-modal" >
-        <div class="adm-modal">
+        <div class="adm-modal" style="max-width:700px">
             <h3 style="margin-bottom:20px;color:var(--primary)">Modifier le membre #${m.id}</h3>
             <form onsubmit="saveMemberEdit(event,${m.id})">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -155,6 +222,28 @@ async function editMember(id) {
                     <option ${m.status==='pending'?'selected':''}>pending</option>
                     <option ${m.status==='blocked'?'selected':''}>blocked</option>
                 </select></div>
+
+                <!-- Cotisation section -->
+                <div style="background:var(--gray-50);border-radius:var(--radius);padding:16px;margin:16px 0">
+                    <h4 style="color:var(--primary);margin-bottom:12px;font-size:14px">Cotisation</h4>
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                        <span style="font-size:13px">Statut actuel :</span>
+                        <strong style="color:${cotisationColor}">${cotisationStatus}</strong>
+                        <button type="button" class="btn btn-primary" style="font-size:11px;padding:4px 12px;margin-left:auto" onclick="markCotisationAJour(${m.id})">Marquer a jour ${new Date().getFullYear()}</button>
+                    </div>
+                    <div style="max-height:120px;overflow-y:auto">${subsHtml}</div>
+                </div>
+
+                <!-- RGPD section -->
+                <div style="background:var(--gray-50);border-radius:var(--radius);padding:16px;margin-bottom:16px">
+                    <h4 style="color:var(--primary);margin-bottom:8px;font-size:14px">Consentements RGPD</h4>
+                    <div style="display:flex;gap:24px;font-size:13px">
+                        <span>Annuaire : ${rgpdAnn}</span>
+                        <span>Newsletter : ${rgpdNl}</span>
+                    </div>
+                    ${m.last_login ? `<div style="font-size:12px;color:var(--gray-500);margin-top:8px">Derniere connexion : ${formatDate(m.last_login)}</div>` : ''}
+                </div>
+
                 <div style="display:flex;gap:12px;margin-top:16px">
                     <button type="submit" class="btn btn-accent" style="flex:1">Enregistrer</button>
                     <button type="button" class="btn btn-primary" style="flex:1" onclick="closeModal('member-modal')">Annuler</button>
@@ -163,6 +252,18 @@ async function editMember(id) {
         </div>
     </div>`;
     openModal(html);
+}
+
+async function markCotisationAJour(memberId) {
+    const year = new Date().getFullYear();
+    const res = await adminPost({ action: 'update_member', id: memberId, status: 'active' });
+    if (res.ok || !res.error) {
+        showToast('Cotisation ' + year + ' marquee a jour', 'success');
+        closeModal('member-modal');
+        loadAdminMembers();
+    } else {
+        showToast(res.error || 'Erreur', 'error');
+    }
 }
 
 async function saveMemberEdit(evt, id) {
@@ -183,74 +284,7 @@ async function saveMemberEdit(evt, id) {
     loadAdminMembers();
 }
 
-// === ADHESIONS ===
-async function loadAdminAdhesions() {
-    const members = await adminFetch('members', {});
-    const el = document.getElementById('adm-adhesions-content');
-    if (!el) return;
-
-    // Calculate adhesion stats
-    const stats = { aJour: 0, rappel: 0, radiation: 0, preRadiation: 0, total: 0 };
-    members.forEach(m => {
-        if (m.status === 'active') stats.aJour++;
-        else if (m.status === 'pending') stats.preRadiation++;
-        else if (m.status === 'blocked') stats.radiation++;
-        stats.total++;
-    });
-
-    // Group by company
-    const byCompany = {};
-    members.filter(m => m.status !== 'deleted').forEach(m => {
-        const co = m.company || 'Non renseigne';
-        byCompany[co] = (byCompany[co] || 0) + 1;
-    });
-    const topCompanies = Object.entries(byCompany).sort((a,b) => b[1]-a[1]).slice(0, 15);
-
-    // Group by membership type
-    const byType = {};
-    members.filter(m => m.status !== 'deleted').forEach(m => {
-        const t = m.membership_type || 'standard';
-        byType[t] = (byType[t] || 0) + 1;
-    });
-
-    // Summary cards
-    el.innerHTML = `
-        <div class="kpi-row" style="margin-bottom:24px">
-            <div class="kpi-card" style="border-top-color:var(--green)"><div class="kpi-val">${stats.aJour}</div><div class="kpi-label">A jour</div></div>
-            <div class="kpi-card" style="border-top-color:var(--orange)"><div class="kpi-val">${stats.preRadiation}</div><div class="kpi-label">Pre-radiation</div></div>
-            <div class="kpi-card" style="border-top-color:var(--accent)"><div class="kpi-val">${stats.radiation}</div><div class="kpi-label">Radies</div></div>
-            <div class="kpi-card" style="border-top-color:var(--primary)"><div class="kpi-val">${stats.total}</div><div class="kpi-label">Total</div></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
-            <div class="card"><div class="card-body">
-                <h4 style="color:var(--primary);margin-bottom:12px">Par entreprise (top 15)</h4>
-                ${topCompanies.map(([co, n]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(co)}</span><strong>${n}</strong></div>`).join('')}
-            </div></div>
-            <div class="card"><div class="card-body">
-                <h4 style="color:var(--primary);margin-bottom:12px">Par type d'adhesion</h4>
-                ${Object.entries(byType).map(([t, n]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--gray-100)"><span class="card-tag">${esc(t)}</span><strong>${n}</strong></div>`).join('')}
-            </div></div>
-        </div>
-        <div id="adm-adhesions-table"></div>
-    `;
-
-    new DataTable('adm-adhesions-table', {
-        columns: [
-            { key: 'name', label: 'Membre', render: (v, r) => `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong>` },
-            { key: 'email', label: 'Email' },
-            { key: 'company', label: 'Entreprise' },
-            { key: 'membership_type', label: 'Type', render: v => `<span class="card-tag">${esc(v||'standard')}</span>` },
-            { key: 'status', label: 'Etat adhesion', render: v => {
-                const colors = { active: 'adm-badge-active', pending: 'adm-badge-pending', blocked: 'adm-badge-blocked' };
-                const labels = { active: 'A jour', pending: 'Pre-radiation', blocked: 'Radie' };
-                return `<span class="adm-badge ${colors[v]||''}">${labels[v]||v}</span>`;
-            }},
-            { key: 'joined_at', label: 'Depuis', type: 'date', render: v => formatDate(v) },
-        ],
-        data: members.filter(m => m.status !== 'deleted').map(m => ({ ...m, name: (m.first_name||'')+' '+(m.last_name||'') })),
-        pageSize: 50,
-    });
-}
+// === ADHESIONS (removed - now integrated in loadAdminMembers) ===
 
 // === EVENTS ===
 async function loadAdminEvents() {
@@ -686,23 +720,7 @@ function exportMembers() {
         .catch(e => alert('Erreur export: ' + e.message));
 }
 
-// === LOGS ===
-async function loadAdminLogs() {
-    const items = await adminFetch('logs', {});
-    if (!document.getElementById('adm-logs-list')) return;
-    if (!items.length) { document.getElementById('adm-logs-list').innerHTML = '<p class="empty-msg">Aucun log</p>'; return; }
-    new DataTable('adm-logs-list', {
-        columns: [
-            { key: 'created_at', label: 'Date', type: 'date', render: v => `<span style="font-size:12px;white-space:nowrap">${formatDate(v)}</span>` },
-            { key: 'user_name', label: 'Utilisateur', render: (v, r) => r.first_name ? esc(r.first_name) + ' ' + esc(r.last_name) : '#' + (r.user_id||'?') },
-            { key: 'action', label: 'Action', render: v => `<span class="card-tag">${esc(v)}</span>` },
-            { key: 'details', label: 'Détails' },
-            { key: 'ip_address', label: 'IP', render: v => `<span style="font-size:12px;color:var(--gray-400)">${esc(v||'')}</span>` },
-        ],
-        data: items.map(l => ({ ...l, user_name: l.first_name ? l.first_name + ' ' + l.last_name : '#' + (l.user_id||'?') })),
-        pageSize: 50,
-    });
-}
+// === LOGS (removed - integrated in unified members view) ===
 
 // === EVENT REGISTRATIONS (full attendance tracking) ===
 async function showEventRegistrations(eventId, title) {
@@ -898,39 +916,7 @@ async function loadAdminModeration() {
     }
 }
 
-// === CONNEXIONS ===
-async function loadAdminConnexions() {
-    const items = await adminFetch('connexions', {});
-    if (!document.getElementById('adm-connexions-list')) return;
-    if (!items.length) { document.getElementById('adm-connexions-list').innerHTML = '<p class="empty-msg">Aucune connexion enregistree</p>'; return; }
-
-    const now = new Date();
-    const enriched = items.map(c => {
-        const lastLogin = c.last_login ? new Date(c.last_login) : null;
-        const diffMin = lastLogin ? Math.round((now - lastLogin) / 60000) : null;
-        let ago = '';
-        if (diffMin !== null) {
-            if (diffMin < 1) ago = 'A l\'instant';
-            else if (diffMin < 60) ago = `Il y a ${diffMin} min`;
-            else if (diffMin < 1440) ago = `Il y a ${Math.round(diffMin/60)}h`;
-            else ago = `Il y a ${Math.round(diffMin/1440)}j`;
-        }
-        const hasActiveSession = c.session_start && new Date(c.session_expires) > now;
-        return { ...c, name: (c.first_name||'') + ' ' + (c.last_name||''), ago, hasActiveSession };
-    });
-    new DataTable('adm-connexions-list', {
-        columns: [
-            { key: 'name', label: 'Membre', render: (v, r) => `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong>${r.is_admin ? ' <span class="adm-badge adm-badge-active" style="font-size:10px">Admin</span>' : ''}` },
-            { key: 'email', label: 'Email' },
-            { key: 'company', label: 'Entreprise' },
-            { key: 'role', label: 'Rôle', render: v => `<span class="card-tag">${esc(v||'member')}</span>` },
-            { key: 'last_login', label: 'Dernière connexion', type: 'date', render: (v, r) => `<span style="font-size:13px">${formatDate(v)}</span><br><span style="font-size:11px;color:var(--gray-400)">${r.ago}</span>` },
-            { key: 'hasActiveSession', label: 'Session', render: v => v ? '<span style="color:var(--green);font-weight:700">&#128994; Active</span>' : '<span style="color:var(--gray-400)">&#9898; Inactive</span>' },
-        ],
-        data: enriched,
-        pageSize: 50,
-    });
-}
+// === CONNEXIONS (removed - last_login now shown in unified members view) ===
 
 // === MESSAGES (legacy, now part of unified moderation) ===
 async function loadAdminMessages() {

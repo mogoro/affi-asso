@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775336134" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775336134">
+<link rel="preload" href="/css/styles.css?v=1775337102" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775337102">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -1047,7 +1047,6 @@
                     <div class="adm-nav">
                         <button class="adm-nav-btn active" data-section="adm-dashboard" onclick="switchAdminSection('adm-dashboard')">Tableau de bord</button>
                         <button class="adm-nav-btn" data-section="adm-members" onclick="switchAdminSection('adm-members')">Membres</button>
-                        <button class="adm-nav-btn" data-section="adm-adhesions" onclick="switchAdminSection('adm-adhesions')">Adhesions</button>
                         <button class="adm-nav-btn" data-section="adm-events" onclick="switchAdminSection('adm-events')">Evenements</button>
                         <button class="adm-nav-btn" data-section="adm-news" onclick="switchAdminSection('adm-news')">Actualites</button>
                         <button class="adm-nav-btn" data-section="adm-partners" onclick="switchAdminSection('adm-partners')">Partenaires</button>
@@ -1055,8 +1054,6 @@
                         <button class="adm-nav-btn" data-section="adm-moderation" onclick="switchAdminSection('adm-moderation')">Moderation <span id="pending-count-badge" style="background:var(--accent);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:4px"></span></button>
                         <button class="adm-nav-btn" data-section="adm-stats" onclick="switchAdminSection('adm-stats')">Statistiques</button>
                         <button class="adm-nav-btn" data-section="adm-polls" onclick="switchAdminSection('adm-polls')">Sondages</button>
-                        <button class="adm-nav-btn" data-section="adm-connexions" onclick="switchAdminSection('adm-connexions')">Connexions</button>
-                        <button class="adm-nav-btn" data-section="adm-logs" onclick="switchAdminSection('adm-logs')">Journal RGPD</button>
                     </div>
 
                     <!-- Admin Dashboard -->
@@ -1064,7 +1061,7 @@
                         <div id="adm-dashboard-content"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
                     </div>
 
-                    <!-- Admin Members -->
+                    <!-- Admin Members (unified: members + adhesions + RGPD + connexions) -->
                     <div id="adm-members" class="adm-section">
                         <div class="adm-toolbar">
                             <input type="text" placeholder="Rechercher un membre..." oninput="loadAdminMembers(document.getElementById('adm-status-filter').value, this.value)" style="flex:1;min-width:200px">
@@ -1078,13 +1075,8 @@
                             <button class="btn btn-primary" onclick="showImportForm()" style="font-size:13px;padding:8px 20px">Import CSV</button>
                             <button class="btn btn-primary" onclick="exportMembers()" style="font-size:13px;padding:8px 20px;background:var(--teal)">Export CSV</button>
                         </div>
+                        <div id="adm-members-summary" style="margin-bottom:16px"></div>
                         <div id="adm-members-list"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
-                    </div>
-
-                    <!-- Admin Adhesions -->
-                    <div id="adm-adhesions" class="adm-section">
-                        <h3 style="margin-bottom:16px;color:var(--primary)">Etat des adhesions et cotisations</h3>
-                        <div id="adm-adhesions-content"><p class="empty-msg">Chargement...</p></div>
                     </div>
 
                     <!-- Admin Events -->
@@ -1141,20 +1133,6 @@
                         <div id="adm-polls-content"></div>
                     </div>
 
-                    <!-- Admin Connexions -->
-                    <div id="adm-connexions" class="adm-section">
-                        <h3 style="margin-bottom:8px;color:var(--primary)">Historique des connexions</h3>
-                        <div class="rgpd-notice" style="margin-bottom:16px">
-                            &#128274; <strong>Base legale RGPD :</strong> Interet legitime (Art. 6.1.f) — Securite des systemes de l'association. Donnees conservees 30 jours (duree de session). Aucune adresse IP n'est enregistree dans cette vue.
-                        </div>
-                        <div id="adm-connexions-list"><p class="empty-msg">Chargement...</p></div>
-                    </div>
-
-                    <!-- Admin Logs RGPD -->
-                    <div id="adm-logs" class="adm-section">
-                        <h3 style="margin-bottom:16px;color:var(--primary)">Journal d'activite (RGPD)</h3>
-                        <div id="adm-logs-list"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
-                    </div>
                 </div>
 
             </div><!-- /member-area -->
@@ -1236,12 +1214,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/members.js?v=1775336134" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775336134" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775336134" defer></script>
+<script src="/js/members.js?v=1775337102" defer fetchpriority="high"></script>
+<script src="/js/app.js?v=1775337102" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775337102" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/social.js?v=1775336134','/js/datatable.js?v=1775336134','/js/admin.js?v=1775336134','/js/map.js?v=1775336134'];
+    var scripts = ['/js/social.js?v=1775337102','/js/datatable.js?v=1775337102','/js/admin.js?v=1775337102','/js/map.js?v=1775337102'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

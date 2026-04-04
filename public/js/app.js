@@ -322,34 +322,166 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // === LOGIN POPUP ===
 function showLoginPopup() {
-    // Remove existing popup if any
-    document.querySelector('.login-popup-overlay')?.remove();
-    const overlay = document.createElement('div');
-    overlay.className = 'event-detail-overlay login-popup-overlay';
-    overlay.onclick = function(e) { if (e.target === this) this.remove(); };
-    overlay.innerHTML = `
-        <div class="event-detail-modal" style="max-width:420px">
-            <div style="padding:36px">
-                <div style="text-align:center;margin-bottom:24px">
-                    <img src="/images/logo-affi.png" alt="AFFI" style="height:40px;margin-bottom:12px">
-                    <h2 style="font-size:22px;font-weight:900;color:var(--primary);margin-bottom:4px">Connexion</h2>
-                    <p style="color:var(--gray-500);font-size:14px">Accedez a votre espace membre AFFI</p>
+    document.querySelector('.auth-overlay')?.remove();
+    const html = `<div class="auth-overlay" id="auth-overlay">
+        <div class="auth-card">
+            <button class="auth-close" onclick="document.getElementById('auth-overlay').remove();document.body.style.overflow=''">&times;</button>
+
+            <!-- ÉTAPE 1: Connexion -->
+            <div id="auth-step-login">
+                <div class="auth-header">
+                    <img src="/images/logo-affi.png" alt="AFFI" class="auth-logo">
+                    <h2 class="auth-title">Connexion</h2>
+                    <p class="auth-subtitle">Accédez à votre espace membre</p>
                 </div>
-                <form onsubmit="doPopupLogin(event)">
-                    <div class="form-group"><label>Email</label><input type="email" id="popup-login-email" required placeholder="votre@email.com" style="width:100%;padding:12px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:15px"></div>
-                    <div class="form-group"><label>Mot de passe</label><input type="password" id="popup-login-password" required placeholder="Votre mot de passe" style="width:100%;padding:12px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:15px"></div>
-                    <div id="popup-login-error" style="display:none;margin-bottom:12px;padding:10px;background:#fef2f2;color:#b91c1c;border-radius:6px;text-align:center;font-weight:600;font-size:13px"></div>
-                    <button type="submit" class="btn btn-accent" id="popup-login-btn" style="width:100%;font-size:16px;padding:14px;margin-bottom:12px">Se connecter</button>
+                <form onsubmit="doPopupLogin(event)" class="auth-form">
+                    <div class="auth-field">
+                        <label class="auth-label" for="auth-email">Email</label>
+                        <input type="email" id="auth-email" class="auth-input" required placeholder="votre@email.com" autocomplete="email">
+                    </div>
+                    <div class="auth-field">
+                        <label class="auth-label" for="auth-password">Mot de passe</label>
+                        <div class="auth-password-wrap">
+                            <input type="password" id="auth-password" class="auth-input" required placeholder="Votre mot de passe" autocomplete="current-password">
+                            <button type="button" class="auth-toggle-pw" onclick="toggleAuthPw()">Afficher</button>
+                        </div>
+                    </div>
+                    <div id="auth-error" class="auth-error" style="display:none"></div>
+                    <button type="submit" class="auth-submit" id="auth-submit-btn">Se connecter</button>
                 </form>
-                <div style="text-align:center;font-size:13px;color:var(--gray-500)">
-                    <a href="#" onclick="event.preventDefault();this.closest('.login-popup-overlay').remove();navigate('membres');setTimeout(()=>showResetForm&&showResetForm(),300)" style="color:var(--accent);font-weight:700">Mot de passe oublie ?</a>
-                    &middot; <a href="#adhesion" onclick="this.closest('.login-popup-overlay').remove();navigate('adhesion')" style="font-weight:700">Adherer</a>
+                <div class="auth-divider"><span>ou</span></div>
+                <div class="auth-footer-links">
+                    <a href="#" onclick="event.preventDefault();showAuthStep('reset')">Mot de passe oublié ?</a>
                 </div>
-                <button onclick="this.closest('.login-popup-overlay').remove()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;color:var(--gray-400);cursor:pointer">&times;</button>
+                <div class="auth-signup">
+                    Pas encore membre ? <a href="#adhesion" onclick="document.getElementById('auth-overlay').remove();document.body.style.overflow='';navigate('adhesion')">Adhérer à l'AFFI</a>
+                </div>
             </div>
-        </div>`;
-    document.body.appendChild(overlay);
-    setTimeout(() => document.getElementById('popup-login-email')?.focus(), 100);
+
+            <!-- ÉTAPE 2: Reset - Demande email -->
+            <div id="auth-step-reset" style="display:none">
+                <div class="auth-header">
+                    <h2 class="auth-title">Mot de passe oublié</h2>
+                    <p class="auth-subtitle">Entrez votre email pour recevoir un code de réinitialisation</p>
+                </div>
+                <form onsubmit="doPopupRequestReset(event)" class="auth-form">
+                    <div class="auth-field">
+                        <label class="auth-label" for="auth-reset-email">Email</label>
+                        <input type="email" id="auth-reset-email" class="auth-input" required placeholder="votre@email.com">
+                    </div>
+                    <div id="auth-reset-error" class="auth-error" style="display:none"></div>
+                    <button type="submit" class="auth-submit" id="auth-reset-btn">Envoyer le code</button>
+                </form>
+                <div class="auth-footer-links">
+                    <a href="#" onclick="event.preventDefault();showAuthStep('login')">&#8592; Retour à la connexion</a>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 3: Reset - Saisie code + nouveau MDP -->
+            <div id="auth-step-code" style="display:none">
+                <div class="auth-header">
+                    <h2 class="auth-title">Saisissez le code</h2>
+                    <p class="auth-subtitle">Un code à 6 chiffres a été envoyé à votre adresse email</p>
+                </div>
+                <form onsubmit="doPopupResetPassword(event)" class="auth-form">
+                    <div class="auth-field">
+                        <label class="auth-label" for="auth-code">Code de réinitialisation</label>
+                        <input type="text" id="auth-code" class="auth-input auth-input-code" required maxlength="6" pattern="[0-9]{6}" placeholder="000000" inputmode="numeric" autocomplete="one-time-code">
+                    </div>
+                    <div class="auth-field">
+                        <label class="auth-label" for="auth-new-pw">Nouveau mot de passe</label>
+                        <input type="password" id="auth-new-pw" class="auth-input" required minlength="8" placeholder="Min. 8 caractères">
+                    </div>
+                    <div class="auth-field">
+                        <label class="auth-label" for="auth-new-pw2">Confirmer le mot de passe</label>
+                        <input type="password" id="auth-new-pw2" class="auth-input" required minlength="8" placeholder="Retapez le mot de passe">
+                    </div>
+                    <div id="auth-code-error" class="auth-error" style="display:none"></div>
+                    <button type="submit" class="auth-submit" id="auth-code-btn">Modifier le mot de passe</button>
+                </form>
+                <div class="auth-footer-links">
+                    <a href="#" onclick="event.preventDefault();showAuthStep('reset')">&#8592; Renvoyer un code</a>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 4: Succès -->
+            <div id="auth-step-success" style="display:none">
+                <div class="auth-header">
+                    <div class="auth-success-icon">&#10003;</div>
+                    <h2 class="auth-title">Mot de passe modifié !</h2>
+                    <p class="auth-subtitle">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+                </div>
+                <button class="auth-submit" onclick="showAuthStep('login')">Se connecter</button>
+            </div>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('auth-email')?.focus(), 100);
+}
+
+let _authResetToken = '';
+
+function showAuthStep(step) {
+    ['login','reset','code','success'].forEach(s => {
+        const el = document.getElementById('auth-step-' + s);
+        if (el) el.style.display = s === step ? 'block' : 'none';
+    });
+    // Focus first input
+    setTimeout(() => {
+        if (step === 'login') document.getElementById('auth-email')?.focus();
+        if (step === 'reset') document.getElementById('auth-reset-email')?.focus();
+        if (step === 'code') document.getElementById('auth-code')?.focus();
+    }, 100);
+}
+
+function toggleAuthPw() {
+    const inp = document.getElementById('auth-password');
+    const btn = inp?.nextElementSibling;
+    if (!inp) return;
+    if (inp.type === 'password') { inp.type = 'text'; if (btn) btn.textContent = 'Masquer'; }
+    else { inp.type = 'password'; if (btn) btn.textContent = 'Afficher'; }
+}
+
+async function doPopupRequestReset(evt) {
+    evt.preventDefault();
+    const email = document.getElementById('auth-reset-email').value;
+    const errEl = document.getElementById('auth-reset-error');
+    const btn = document.getElementById('auth-reset-btn');
+    btn.textContent = 'Envoi en cours...'; btn.disabled = true;
+    try {
+        const res = await fetch(API + '/api/auth', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'request_reset', email})
+        });
+        const data = await res.json();
+        _authResetToken = data.reset_token || '';
+        showAuthStep('code');
+    } catch(e) {
+        errEl.textContent = 'Erreur réseau'; errEl.style.display = 'block';
+    } finally { btn.textContent = 'Envoyer le code'; btn.disabled = false; }
+}
+
+async function doPopupResetPassword(evt) {
+    evt.preventDefault();
+    const code = document.getElementById('auth-code').value;
+    const pw1 = document.getElementById('auth-new-pw').value;
+    const pw2 = document.getElementById('auth-new-pw2').value;
+    const errEl = document.getElementById('auth-code-error');
+    const btn = document.getElementById('auth-code-btn');
+    if (pw1 !== pw2) { errEl.textContent = 'Les mots de passe ne correspondent pas'; errEl.style.display = 'block'; return; }
+    btn.textContent = 'Modification...'; btn.disabled = true;
+    try {
+        const res = await fetch(API + '/api/auth', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'reset_password', reset_token: _authResetToken, reset_code: code, new_password: pw1})
+        });
+        const data = await res.json();
+        if (data.ok) { showAuthStep('success'); }
+        else { errEl.textContent = data.error || 'Code invalide'; errEl.style.display = 'block'; }
+    } catch(e) {
+        errEl.textContent = 'Erreur réseau'; errEl.style.display = 'block';
+    } finally { btn.textContent = 'Modifier le mot de passe'; btn.disabled = false; }
 }
 
 async function doPopupLogin(evt) {

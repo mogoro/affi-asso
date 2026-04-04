@@ -602,8 +602,13 @@ body.dark-mode .board-card{background:#161b22;border-color:#30363d;}
 .agenda-layout{display:grid;grid-template-columns:340px 1fr;gap:32px;align-items:start;}
 @media(max-width:1024px){.agenda-layout{grid-template-columns:1fr;}}
 .agenda-calendar{background:var(--white);border:1px solid var(--gray-200);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;position:sticky;top:72px;}
-.cal-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--primary);color:var(--white);}
-.cal-header h3{font-size:16px;font-weight:800;margin:0;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--primary);color:var(--white);transition:border-radius .3s;}
+.cal-header h3{font-size:16px;font-weight:800;margin:0;display:flex;align-items:center;gap:8px;}
+.cal-toggle-icon{font-size:10px;opacity:.6;transition:transform .3s;}
+.cal-body{overflow:hidden;max-height:400px;transition:max-height .35s ease, opacity .25s ease;opacity:1;}
+.cal-collapsed .cal-body{max-height:0;opacity:0;}
+.cal-collapsed .cal-header{border-radius:12px;}
+.cal-collapsed .cal-toggle-icon{transform:rotate(0deg);}
 .cal-nav{background:none;border:none;color:var(--white);font-size:20px;cursor:pointer;padding:4px 10px;border-radius:6px;transition:background .15s;}
 .cal-nav:hover{background:rgba(255,255,255,.15);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:8px;}

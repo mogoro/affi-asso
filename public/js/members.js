@@ -365,19 +365,85 @@ async function saveCv(evt) {
 }
 
 // === LINKEDIN IMPORT ===
-async function importLinkedIn() {
-    // LinkedIn API requires OAuth - we provide a manual paste approach
-    const url = prompt('Collez votre URL de profil LinkedIn :');
-    if (!url) return;
-    // We store the URL and let user fill details
-    try {
-        await fetch(`${API}/api/members`, {
-            method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
-            body: JSON.stringify({action: 'import_linkedin', linkedin_data: {profileUrl: url}})
-        });
-        document.getElementById('prof-linkedin_url').value = url;
-        alert('URL LinkedIn enregistree. Completez votre profil avec vos informations LinkedIn.');
-    } catch (e) { alert('Erreur: ' + e.message); }
+function importLinkedIn() {
+    const html = `<div class="adm-modal-bg" id="linkedin-modal">
+        <div class="adm-modal" style="max-width:560px">
+            <button class="auth-close" onclick="closeModal('linkedin-modal')">&times;</button>
+            <div style="padding:28px">
+                <div style="text-align:center;margin-bottom:20px">
+                    <div style="font-size:36px;margin-bottom:8px;color:#0077b5">in</div>
+                    <h2 style="font-size:20px;font-weight:900;color:var(--primary);margin:0">Importer depuis LinkedIn</h2>
+                    <p style="font-size:13px;color:var(--gray-500);margin-top:4px">Copiez-collez les informations de votre profil LinkedIn</p>
+                </div>
+                <div class="form-group"><label>URL du profil LinkedIn</label><input type="url" id="li-url" placeholder="https://www.linkedin.com/in/votre-profil"></div>
+                <div class="form-group"><label>Titre / Headline</label><input type="text" id="li-headline" placeholder="Ex: Ingénieur Signalisation chez SNCF Réseau"></div>
+                <div class="form-group"><label>Entreprise actuelle</label><input type="text" id="li-company" placeholder="Ex: SNCF Réseau"></div>
+                <div class="form-group"><label>Résumé / À propos</label><textarea id="li-summary" style="min-height:80px" placeholder="Copiez votre section 'À propos' de LinkedIn"></textarea></div>
+                <div class="form-group"><label>Expériences (copiez-collez)</label><textarea id="li-experience" style="min-height:100px" placeholder="Copiez vos expériences professionnelles depuis LinkedIn. Chaque ligne sera ajoutée à votre CV."></textarea></div>
+                <div class="form-group"><label>Formation</label><textarea id="li-education" style="min-height:60px" placeholder="Ex: ENPC - Ingénieur Civil, 2015"></textarea></div>
+                <div class="form-group"><label>Compétences (séparées par des virgules)</label><input type="text" id="li-skills" placeholder="ERTMS, Signalisation, Gestion de projet..."></div>
+                <button onclick="applyLinkedInImport()" class="btn btn-accent" style="width:100%;font-size:15px;padding:12px">Importer dans mon profil</button>
+            </div>
+        </div>
+    </div>`;
+    openModal(html);
+}
+
+async function applyLinkedInImport() {
+    const url = document.getElementById('li-url').value.trim();
+    const headline = document.getElementById('li-headline').value.trim();
+    const company = document.getElementById('li-company').value.trim();
+    const summary = document.getElementById('li-summary').value.trim();
+    const experience = document.getElementById('li-experience').value.trim();
+    const education = document.getElementById('li-education').value.trim();
+    const skills = document.getElementById('li-skills').value.trim();
+
+    // Remplir le profil
+    if (url) document.getElementById('prof-linkedin_url').value = url;
+    if (headline) document.getElementById('prof-job_title').value = headline;
+    if (company) document.getElementById('prof-company').value = company;
+    if (summary) document.getElementById('prof-bio').value = summary;
+
+    // Construire le CV à partir des données LinkedIn
+    let cvParts = [];
+    if (summary) cvParts.push('RÉSUMÉ\n' + summary);
+    if (experience) cvParts.push('\nEXPÉRIENCES PROFESSIONNELLES\n' + experience);
+    if (education) cvParts.push('\nFORMATION\n' + education);
+    if (skills) cvParts.push('\nCOMPÉTENCES\n' + skills);
+
+    if (cvParts.length > 0) {
+        const cvEl = document.getElementById('prof-cv');
+        if (cvEl) {
+            const existing = cvEl.value.trim();
+            if (existing) {
+                cvEl.value = cvParts.join('\n') + '\n\n--- Contenu précédent ---\n' + existing;
+            } else {
+                cvEl.value = cvParts.join('\n');
+            }
+        }
+    }
+
+    // Enregistrer le lien LinkedIn via l'API
+    if (url) {
+        try {
+            await fetch(`${API}/api/members`, {
+                method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
+                body: JSON.stringify({action: 'import_linkedin', linkedin_data: {profileUrl: url, headline, company, summary}})
+            });
+        } catch(e) {}
+    }
+
+    // Mettre à jour les chips secteur si compétences fournies
+    if (skills && typeof initProfSectorChips === 'function') {
+        const sectorInput = document.getElementById('prof-sector');
+        if (sectorInput && !sectorInput.value) {
+            sectorInput.value = skills;
+            initProfSectorChips();
+        }
+    }
+
+    closeModal('linkedin-modal');
+    if (typeof showToast === 'function') showToast('Profil et CV mis à jour depuis LinkedIn !', 'success');
 }
 
 // === PROPOSITIONS ===

@@ -51,13 +51,13 @@ async function loadMap(mode) {
                 });
                 const members = (c.members || []).map(m => `<li>${m}</li>`).join('');
                 L.marker([c.lat, c.lng], {icon}).addTo(mapInstance)
-                    .bindPopup(`<div style="font-family:Inter,sans-serif"><strong style="font-size:16px;color:#004d2e">${c.company}</strong><br><span style="color:#6b7280">${c.member_count} membre(s)</span><ul style="margin:8px 0 0 16px;font-size:13px">${members}</ul></div>`);
+                    .bindPopup(`<div style="font-family:Inter,sans-serif"><strong style="font-size:16px;color:#0e2444">${c.company}</strong><br><span style="color:#6b7280">${c.member_count} membre(s)</span><ul style="margin:8px 0 0 16px;font-size:13px">${members}</ul></div>`);
             });
             document.getElementById('map-legend').innerHTML = `<p style="color:var(--gray-500);font-size:13px;text-align:center">${data.length} entreprises representees &middot; La taille du cercle indique le nombre de membres</p>`;
         } else {
             data.forEach(m => {
                 if (!m.lat || !m.lng) return;
-                const color = colors[m.sector] || '#004d2e';
+                const color = colors[m.sector] || '#0e2444';
                 const icon = L.divIcon({
                     className: 'map-marker-member',
                     html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
@@ -67,11 +67,11 @@ async function loadMap(mode) {
                 const skills = (m.skills || []).slice(0, 4).map(s => `<span style="background:#f1f3f5;padding:1px 6px;border-radius:4px;font-size:11px;margin:1px">${s}</span>`).join(' ');
                 L.marker([m.lat, m.lng], {icon}).addTo(mapInstance)
                     .bindPopup(`<div style="font-family:Inter,sans-serif;min-width:200px">
-                        <strong style="font-size:15px;color:#004d2e">${m.first_name} ${m.last_name}</strong> ${badges}<br>
+                        <strong style="font-size:15px;color:#0e2444">${m.first_name} ${m.last_name}</strong> ${badges}<br>
                         <span style="color:#2563eb;font-weight:600">${m.job_title || ''}</span><br>
                         <span style="color:#6b7280">${m.company || ''} &middot; ${m.location || ''}</span><br>
                         <div style="margin-top:6px">${skills}</div>
-                        ${authToken ? `<button onclick="startConversation(${m.id},'${m.first_name} ${m.last_name}')" style="margin-top:8px;background:#004d2e;color:#fff;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px">Contacter</button>` : ''}
+                        ${authToken ? `<button onclick="startConversation(${m.id},'${m.first_name} ${m.last_name}')" style="margin-top:8px;background:#0e2444;color:#fff;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px">Contacter</button>` : ''}
                     </div>`);
             });
             const legendHtml = Object.entries(colors).map(([k,v]) => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px"><span style="width:10px;height:10px;border-radius:50%;background:${v};display:inline-block"></span><span style="font-size:12px">${k}</span></span>`).join('');

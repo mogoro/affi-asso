@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;700;900&display=swap');
 :root {
-    --primary: #006b3f;
-    --primary-light: #009859;
-    --primary-dark: #004d2e;
-    --accent: #00b264;
-    --accent-light: #33c484;
+    --primary: #1a3c6e;
+    --primary-light: #2d5a9e;
+    --primary-dark: #0e2444;
+    --accent: #c8102e;
+    --accent-light: #e8354f;
     --green: #2e8b57;
     --teal: #0a8f8f;
     --orange: #e67e22;
@@ -162,8 +162,8 @@ img{max-width:100%;height:auto;}
 .hero-slider{position:relative;height:520px;overflow:hidden;}
 .slide{position:absolute;inset:0;opacity:0;transition:opacity 1s ease;display:flex;align-items:center;justify-content:center;}
 .slide.active{opacity:1;}
-.slide-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.45);background-color:#006b3f;}
-.slide-bg-1{background:linear-gradient(135deg,#0a1628 0%,#006b3f 40%,#2d5a9e 100%);}
+.slide-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.45);background-color:#1a3c6e;}
+.slide-bg-1{background:linear-gradient(135deg,#0a1628 0%,#1a3c6e 40%,#2d5a9e 100%);}
 .slide-bg-2{background:linear-gradient(135deg,#0e2444 0%,#1a5276 40%,#148f77 100%);}
 .slide-bg-3{background:linear-gradient(135deg,#1a1a2e 0%,#6c3fa0 40%,#c8102e 100%);}
 .slide-content{position:relative;z-index:2;text-align:center;color:var(--white);max-width:750px;padding:0 28px;}
@@ -543,7 +543,7 @@ body.dark-mode .nc-arrow{background:#21262d;border-color:#30363d;color:#c9d1d9;}
 .toast-info{border-left:4px solid var(--primary);color:var(--primary);}
 
 /* ========== WELCOME DASHBOARD ========== */
-.wd-container{position:relative;min-height:520px;background:linear-gradient(135deg,#0a1628 0%,#006b3f 40%,#2d5a9e 80%,#0a8f8f 100%);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.wd-container{position:relative;min-height:520px;background:linear-gradient(135deg,#0a1628 0%,#1a3c6e 40%,#2d5a9e 80%,#0a8f8f 100%);overflow:hidden;display:flex;align-items:center;justify-content:center;}
 .wd-particles{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
 .wd-content{position:relative;z-index:2;text-align:center;color:var(--white);padding:40px 28px;max-width:700px;}
 .wd-avatar-ring{width:96px;height:96px;border-radius:50%;border:3px solid rgba(255,255,255,.3);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;animation:wd-pulse 2s ease-in-out infinite;}

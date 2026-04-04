@@ -1117,11 +1117,11 @@ function renderAgendaEvents(events) {
     if (!events.length) { el.innerHTML = '<p style="color:var(--gray-400);text-align:center;padding:40px">Aucun événement à venir</p>'; return; }
     const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
     const gradients = [
-        'linear-gradient(135deg,#006b3f,#009859)',
+        'linear-gradient(135deg,#1a3c6e,#2d5a9e)',
         'linear-gradient(135deg,#0a8f8f,#0abfbf)',
         'linear-gradient(135deg,#e67e22,#f0a050)',
         'linear-gradient(135deg,#6c3fa0,#9b6fd0)',
-        'linear-gradient(135deg,#00b264,#e8354f)',
+        'linear-gradient(135deg,#c8102e,#e8354f)',
     ];
     el.innerHTML = events.map((e, i) => {
         const d = new Date(e.start_date);
@@ -2191,7 +2191,7 @@ function printAdhesionBulletin() {
     const content = document.getElementById('adh-bulletin-content');
     if (!content) return;
     const w = window.open('', '_blank');
-    w.document.write('<html><head><title>Bulletin adhesion AFFI 2026</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#333}h2{color:#006b3f}strong{color:#006b3f}hr{border:none;border-top:1px solid #ddd;margin:12px 0}</style></head><body>' + content.innerHTML + '</body></html>');
+    w.document.write('<html><head><title>Bulletin adhesion AFFI 2026</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#333}h2{color:#1a3c6e}strong{color:#1a3c6e}hr{border:none;border-top:1px solid #ddd;margin:12px 0}</style></head><body>' + content.innerHTML + '</body></html>');
     w.document.close();
     w.print();
 }

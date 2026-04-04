@@ -55,7 +55,11 @@ class handler(BaseHTTPRequestHandler):
 
         elif action == "job_detail":
             jid = qs.get("id", ["0"])[0]
-            job = fetchone("SELECT * FROM jobs WHERE id = %s", [int(jid)])
+            try:
+                jid = int(jid)
+            except (ValueError, TypeError):
+                return self._json(400, {"error": "ID invalide"})
+            job = fetchone("SELECT * FROM jobs WHERE id = %s", [jid])
             return self._json(200, job or {"error": "Offre introuvable"})
 
         # --- MESSAGES (auth required) ---
@@ -78,7 +82,10 @@ class handler(BaseHTTPRequestHandler):
 
         elif action == "thread":
             if not user: return self._json(401, {"error": "Auth requise"})
-            other = int(qs.get("with", ["0"])[0])
+            try:
+                other = int(qs.get("with", ["0"])[0])
+            except (ValueError, TypeError):
+                return self._json(400, {"error": "ID invalide"})
             uid = user["id"]
             # Mark as read
             execute("UPDATE messages SET is_read=TRUE WHERE to_member_id=%s AND from_member_id=%s AND is_read=FALSE", [uid, other])
@@ -92,7 +99,10 @@ class handler(BaseHTTPRequestHandler):
 
         # --- ENDORSEMENTS ---
         elif action == "endorsements":
-            mid = int(qs.get("member_id", ["0"])[0])
+            try:
+                mid = int(qs.get("member_id", ["0"])[0])
+            except (ValueError, TypeError):
+                return self._json(400, {"error": "ID invalide"})
             rows = fetchall("""
                 SELECT e.skill, e.comment, e.created_at, m.first_name, m.last_name, m.company
                 FROM endorsements e JOIN members m ON m.id = e.from_member_id
@@ -124,7 +134,10 @@ class handler(BaseHTTPRequestHandler):
 
         # --- MEMBER PROFILE (public) ---
         elif action == "profile":
-            mid = int(qs.get("id", ["0"])[0])
+            try:
+                mid = int(qs.get("id", ["0"])[0])
+            except (ValueError, TypeError):
+                return self._json(400, {"error": "ID invalide"})
             m = fetchone("""SELECT id, first_name, last_name, company, job_title, sector, bio, photo_url,
                 skills, badges, certifications, experience_years, education, location, website_url,
                 linkedin_url, is_freelance, daily_rate, availability, membership_type, is_board, joined_at

@@ -11,7 +11,16 @@ class handler(BaseHTTPRequestHandler):
         # Single news by ID
         id_param = qs.get("id", [""])[0]
         if id_param:
-            row = fetchone("SELECT * FROM news WHERE id = %s", [int(id_param)])
+            try:
+                nid = int(id_param)
+            except (ValueError, TypeError):
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "ID invalide"}).encode())
+                return
+            row = fetchone("SELECT * FROM news WHERE id = %s", [nid])
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Access-Control-Allow-Origin", "*")

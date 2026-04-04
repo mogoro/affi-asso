@@ -1,7 +1,7 @@
 """API /api/admin — Administration complete (membres, evenements, news, publications, annonces, messages, import/export, RGPD)."""
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
-import json, csv, io, traceback
+import json, csv, io, traceback, secrets
 from api._shared.db import fetchall, fetchone, execute, get_conn
 from api.auth import get_member_from_token, hash_pw
 
@@ -218,7 +218,7 @@ class handler(BaseHTTPRequestHandler):
 
         return self._json(400, {"error": "Action inconnue"})
       except Exception as e:
-        return self._json(500, {"error": "Erreur interne", "detail": str(e)})
+        return self._json(500, {"error": "Erreur interne"})
 
     def do_POST(self):
       try:
@@ -278,7 +278,7 @@ class handler(BaseHTTPRequestHandler):
             existing = fetchone("SELECT id FROM members WHERE email = %s", [email])
             if existing:
                 return self._json(400, {"error": "Email deja utilise"})
-            password = body.get("password", "affi2026")
+            password = body.get("password") or secrets.token_urlsafe(12)
             pw_hash = hash_pw(password)
             execute("""INSERT INTO members (email, password_hash, first_name, last_name, phone, company,
                 job_title, sector, specialty, region, membership_type, status, is_admin, is_board,
@@ -308,7 +308,7 @@ class handler(BaseHTTPRequestHandler):
                 if existing:
                     errors.append(f"Ligne {i+1}: {email} existe deja")
                     continue
-                pw_hash = hash_pw("affi2026")
+                pw_hash = hash_pw(secrets.token_urlsafe(12))
                 try:
                     execute("""INSERT INTO members (email, password_hash, first_name, last_name, company,
                         job_title, sector, specialty, region, membership_type, status,
@@ -506,7 +506,7 @@ class handler(BaseHTTPRequestHandler):
 
         return self._json(400, {"error": "Action inconnue"})
       except Exception as e:
-        return self._json(500, {"error": "Erreur interne", "detail": str(e)})
+        return self._json(500, {"error": "Erreur interne"})
 
     def do_OPTIONS(self):
         self.send_response(200)

@@ -1520,18 +1520,35 @@ function _renderOrgLevel1(items) {
 
 function _renderOrgLevel2(items) {
     if (!items.length) return '';
-    const colorMap = {'vice':'var(--primary)','secr':'var(--teal)','tres':'var(--gold)'};
-    function getColor(role) {
-        const r = (role||'').toLowerCase();
-        if (r.includes('vice') || r.includes('vp')) return colorMap['vice'];
-        if (r.includes('secr')) return colorMap['secr'];
-        if (r.includes('tres') || r.includes('trésor')) return colorMap['tres'];
-        return 'var(--primary)';
+    const vps = items.filter(b => { const r = (b.role||'').toLowerCase(); return r.includes('vice') || r.includes('vp'); });
+    const sgs = items.filter(b => { const r = (b.role||'').toLowerCase(); return r.includes('secr'); });
+    const tres = items.filter(b => { const r = (b.role||'').toLowerCase(); return r.includes('tres') || r.includes('trésor'); });
+    const others = items.filter(b => !vps.includes(b) && !sgs.includes(b) && !tres.includes(b));
+    let html = '';
+    if (vps.length) {
+        html += `<div class="org-section">
+            <div class="org-section-label">Vice-Présidents</div>
+            <div class="org-tiles">${vps.map(b => _orgTile(b, '', 'var(--primary)')).join('')}</div>
+        </div><div class="org-connector"></div>`;
     }
-    return `<div class="org-section">
-        <div class="org-section-label">Bureau</div>
-        <div class="org-tiles">${items.map(b => _orgTile(b, '', getColor(b.role))).join('')}</div>
-    </div><div class="org-connector"></div>`;
+    if (sgs.length) {
+        html += `<div class="org-section">
+            <div class="org-section-label">Secrétariat Général</div>
+            <div class="org-tiles">${sgs.map(b => _orgTile(b, '', 'var(--teal)')).join('')}</div>
+        </div><div class="org-connector"></div>`;
+    }
+    if (tres.length) {
+        html += `<div class="org-section">
+            <div class="org-section-label">Trésorerie</div>
+            <div class="org-tiles">${tres.map(b => _orgTile(b, '', 'var(--gold)')).join('')}</div>
+        </div><div class="org-connector"></div>`;
+    }
+    if (others.length) {
+        html += `<div class="org-section">
+            <div class="org-tiles">${others.map(b => _orgTile(b, '', 'var(--primary-light)')).join('')}</div>
+        </div><div class="org-connector"></div>`;
+    }
+    return html;
 }
 
 function _renderOrgLevel3(items) {

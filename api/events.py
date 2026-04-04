@@ -17,7 +17,12 @@ class handler(BaseHTTPRequestHandler):
             if not user:
                 self._json(200, [])
                 return
-            rows = fetchall("SELECT event_id, status, registered_at FROM event_registrations WHERE member_id = %s", [user["id"]])
+            rows = fetchall("""SELECT r.event_id, r.status, r.registered_at,
+                e.title, e.start_date, e.end_date, e.location, e.event_type, e.description, e.max_attendees
+                FROM event_registrations r
+                JOIN events e ON r.event_id = e.id
+                WHERE r.member_id = %s
+                ORDER BY e.start_date DESC""", [user["id"]])
             self._json(200, rows)
             return
 

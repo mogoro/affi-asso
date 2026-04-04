@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775337395" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775337395">
+<link rel="preload" href="/css/styles.css?v=1775337770" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775337770">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -765,39 +765,23 @@
                 </div>
 
                 <!-- MAIN MENU -->
-                <div class="member-main-tabs">
-                    <button class="mmtab active" data-main="dashboard" onclick="switchMainTab('dashboard')">
-                        <span class="mmtab-icon">&#128202;</span> Tableau de bord
-                    </button>
-                    <button class="mmtab" data-main="tools" onclick="switchMainTab('tools')">
-                        <span class="mmtab-icon">&#128736;</span> Outils membre
-                    </button>
-                    <button class="mmtab" data-main="admin" onclick="switchMainTab('admin')" id="admin-main-tab" style="display:none">
-                        <span class="mmtab-icon">&#9881;</span> Administration
-                    </button>
+                <div class="member-tabs-unified" id="member-tabs-unified">
+                    <button class="mtab-u active" data-tab="my-events" onclick="switchTab('my-events')">&#128197; Mes événements</button>
+                    <button class="mtab-u" data-tab="directory" onclick="switchTab('directory')">&#128101; Annuaire</button>
+                    <button class="mtab-u" data-tab="profile" onclick="switchTab('profile')">&#128196; Profil & CV</button>
+                    <button class="mtab-u" data-tab="announcements" onclick="switchTab('announcements')">&#128227; Annonces</button>
+                    <button class="mtab-u" data-tab="messages" onclick="switchTab('messages')">&#128172; Messages</button>
+                    <button class="mtab-u" data-tab="proposer" onclick="switchTab('proposer')">&#9998; Proposer</button>
+                    <button class="mtab-u" data-tab="notifications" onclick="switchTab('notifications')">&#128276; Notifications</button>
+                    <button class="mtab-u" data-tab="admin" onclick="switchTab('admin')" id="admin-main-tab" style="display:none">&#9881; Administration</button>
                 </div>
-
-                <!-- SUB MENU (changes based on main tab) -->
-                <div class="member-sub-tabs" id="member-sub-tabs"></div>
 
                 <!-- MAIN PANEL: DASHBOARD -->
-                <div id="main-dashboard" class="main-panel">
-                    <div id="mtab-my-events" class="mtab-content">
-                        <h3 style="color:var(--primary);margin-bottom:16px">Mes inscriptions</h3>
-                        <div id="my-events-list"><p class="empty-msg">Chargement...</p></div>
-                    </div>
-                    <div id="mtab-news-dashboard" class="mtab-content" style="display:none">
-                        <h3 style="color:var(--primary);margin-bottom:16px">Nouveautes</h3>
-                        <div id="news-dashboard-list"><p class="empty-msg">Chargement...</p></div>
-                    </div>
-                    <div id="mtab-activity" class="mtab-content" style="display:none">
-                        <h3 style="color:var(--primary);margin-bottom:16px">Activite recente</h3>
-                        <div id="activity-list"><p class="empty-msg">Chargement...</p></div>
-                    </div>
+                <!-- CONTENT PANELS (flat, one level) -->
+                <div id="mtab-my-events" class="mtab-content">
+                    <h3 style="color:var(--primary);margin-bottom:16px">Mes inscriptions</h3>
+                    <div id="my-events-list"><p class="empty-msg">Chargement...</p></div>
                 </div>
-
-                <!-- MAIN PANEL: TOOLS -->
-                <div id="main-tools" class="main-panel" style="display:none">
 
                 <!-- TAB: DIRECTORY -->
                 <div id="mtab-directory" class="mtab-content" style="display:none">
@@ -1040,10 +1024,8 @@
                     <div id="notif-list"><p class="empty-msg">Chargement...</p></div>
                 </div>
 
-                </div><!-- /main-tools -->
-
-                <!-- MAIN PANEL: ADMIN -->
-                <div id="main-admin" class="main-panel" style="display:none">
+                <!-- ADMIN -->
+                <div id="mtab-admin" class="mtab-content" style="display:none">
                     <div class="adm-nav">
                         <button class="adm-nav-btn active" data-section="adm-dashboard" onclick="switchAdminSection('adm-dashboard')">Tableau de bord</button>
                         <button class="adm-nav-btn" data-section="adm-members" onclick="switchAdminSection('adm-members')">Membres</button>
@@ -1214,12 +1196,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/members.js?v=1775337395" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775337395" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775337395" defer></script>
+<script src="/js/members.js?v=1775337770" defer fetchpriority="high"></script>
+<script src="/js/app.js?v=1775337770" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775337770" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/social.js?v=1775337395','/js/datatable.js?v=1775337395','/js/admin.js?v=1775337395','/js/map.js?v=1775337395'];
+    var scripts = ['/js/social.js?v=1775337770','/js/datatable.js?v=1775337770','/js/admin.js?v=1775337770','/js/map.js?v=1775337770'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

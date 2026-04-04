@@ -439,10 +439,6 @@ function renderAgendaEvents(events) {
                 <div class="evt-date-year">${year}</div>
             </div>
             <div class="evt-body">
-                <div class="evt-tags">
-                    ${e.event_type ? `<span class="card-tag card-tag-primary">${esc(e.event_type)}</span>` : ''}
-                    ${e.is_members_only ? '<span class="card-tag" style="background:var(--accent);color:#fff">Membres</span>' : ''}
-                </div>
                 <div class="evt-title">${esc(e.title)}</div>
                 <div class="evt-desc">${esc(e.description || '')}</div>
                 <div class="evt-meta">

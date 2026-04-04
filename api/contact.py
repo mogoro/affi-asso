@@ -1,6 +1,6 @@
 """POST /api/contact — Formulaire de contact."""
 from http.server import BaseHTTPRequestHandler
-import json
+import json, os
 from api._shared.db import execute
 
 class handler(BaseHTTPRequestHandler):
@@ -21,6 +21,18 @@ class handler(BaseHTTPRequestHandler):
                 return
             execute("INSERT INTO contact_messages (name, email, subject, message) VALUES (%s,%s,%s,%s)",
                     [name, email, subject, message])
+            # Notify admin by email
+            try:
+                from api.email import send_email, make_html_email
+                admin_email = os.environ.get("ADMIN_EMAIL", "contact@ingenieur-ferroviaire.net")
+                notify_html = make_html_email("Nouveau message de contact", f"""
+                    <p><strong>De :</strong> {name} ({email})</p>
+                    <p><strong>Sujet :</strong> {subject}</p>
+                    <div style="background:#f8f9fa;padding:16px;border-radius:6px;margin-top:12px;white-space:pre-line">{message}</div>
+                """)
+                send_email(admin_email, f"[AFFI Contact] {subject}", notify_html)
+            except Exception:
+                pass
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Access-Control-Allow-Origin", "*")

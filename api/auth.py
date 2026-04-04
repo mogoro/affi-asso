@@ -137,7 +137,20 @@ class handler(BaseHTTPRequestHandler):
             execute("DELETE FROM sessions WHERE member_id = %s AND token LIKE 'reset_%%'", [member["id"]])
             execute("INSERT INTO sessions (token, member_id, expires_at) VALUES (%s, %s, NOW() + INTERVAL '1 hour')",
                     [f"reset_{reset_token}_{reset_code}", member["id"]])
-            # TODO: send reset_code via email to member["email"]
+            # Send reset email
+            try:
+                from api.email import send_email, make_html_email
+                reset_html = make_html_email("Réinitialisation de mot de passe", f"""
+                    <p>Bonjour {member['first_name']},</p>
+                    <p>Voici votre code de réinitialisation :</p>
+                    <div style="text-align:center;padding:20px;background:#f0f4f8;border-radius:8px;margin:20px 0">
+                        <span style="font-size:36px;font-weight:900;color:#1a3c6e;letter-spacing:8px">{reset_code}</span>
+                    </div>
+                    <p style="color:#6c757d;font-size:13px">Ce code est valable 1 heure.</p>
+                """)
+                send_email(member['email'], "[AFFI] Code de réinitialisation", reset_html)
+            except Exception:
+                pass  # Email sending is best-effort
             # Le reset_token est renvoye (identifiant de session, pas secret)
             # Le reset_code reste secret (envoye par email/admin uniquement)
             return self._json(200, {"ok": True, "message": generic_msg, "reset_token": reset_token})

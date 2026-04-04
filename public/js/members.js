@@ -182,55 +182,59 @@ async function loadDirectory(search, sector, specialty, mentor) {
 function renderDirectory(members) {
     const el = document.getElementById('directory-grid');
     if (!el) return;
-    if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);grid-column:1/-1;padding:40px">Aucun membre trouve</p>'; return; }
-    el.innerHTML = members.map(m => {
-        const initials = (m.first_name || '?')[0] + (m.last_name || '?')[0];
-        const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
-        const avatarHtml = hasPhoto
-            ? `<img src="${esc(m.photo_url)}" alt="${esc(m.first_name)}" class="ec-photo">`
-            : `<div class="ec-initials">${esc(initials.toUpperCase())}</div>`;
-        return `<div class="expert-card" onclick="toggleMemberDetail(this)">
-            <div class="ec-banner">
-                ${m.is_mentor ? '<div class="ec-mentor-flag">&#127891; Mentor</div>' : ''}
-                ${m.is_board ? '<div class="ec-board-flag">Bureau AFFI</div>' : ''}
-            </div>
-            <div class="ec-avatar-wrap">
-                ${avatarHtml}
-            </div>
-            <div class="ec-body">
-                <div class="ec-name">${esc(m.first_name)} ${esc(m.last_name)}${typeof verifiedBadge==='function' ? verifiedBadge(m.is_verified) : ''}</div>
-                <div class="ec-job">${esc(m.job_title || '')}</div>
-                <div class="ec-company">${esc(m.company || '')}</div>
-                ${m.region ? `<div class="ec-location">&#128205; ${esc(m.region)}</div>` : ''}
-            </div>
-            <div class="ec-expertise">
-                ${m.specialty ? `<span class="ec-tag ec-tag-specialty">${esc(m.specialty)}</span>` : ''}
-                ${m.sector ? `<span class="ec-tag">${esc(m.sector)}</span>` : ''}
-            </div>
-            <div class="ec-expand">
-                ${m.bio ? `<div class="ec-bio">${esc((m.bio || '').substring(0, 200))}${(m.bio||'').length > 200 ? '...' : ''}</div>` : '<div class="ec-bio" style="color:var(--gray-400);font-style:italic">Pas de bio renseignee</div>'}
-                ${m.linkedin_url ? `<div style="margin:8px 0"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:600;font-size:13px">&#128279; Profil LinkedIn</a></div>` : ''}
-                ${m.phone && m.phone_visible ? `<div style="font-size:13px;color:var(--gray-600);margin:4px 0">&#128222; ${esc(m.phone)}</div>` : ''}
-                ${m.interests ? `<div style="margin:8px 0;font-size:12px"><strong>Centres d'intérêt :</strong> ${esc(m.interests)}</div>` : ''}
-                <div class="ec-meta">
-                    ${m.joined_at ? `<span>&#128197; Membre depuis ${formatDate(m.joined_at)}</span>` : ''}
-                </div>
-                <div class="ec-actions">
-                    <button onclick="event.stopPropagation();startConversation(${m.id},'${esc(m.first_name).replace(/'/g,"&#39;")} ${esc(m.last_name).replace(/'/g,"&#39;")}')" class="ec-btn ec-btn-msg">&#128172; Message</button>
-                    ${typeof renderEndorseButton==='function' ? renderEndorseButton(m.id, m.first_name+' '+m.last_name) : ''}
-                    ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="ec-btn ec-btn-li">in LinkedIn</a>` : ''}
-                </div>
-            </div>
-            <div class="ec-footer">
-                <span class="ec-rgpd">${m.consent_annuaire ? '&#128994; Public' : '&#128308; Prive'}</span>
-                <span class="ec-expand-hint">&#9660;</span>
+    if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:40px">Aucun membre trouvé</p>'; return; }
+
+    // Group by first letter
+    const grouped = {};
+    members.forEach(m => {
+        const letter = (m.last_name || '?')[0].toUpperCase();
+        if (!grouped[letter]) grouped[letter] = [];
+        grouped[letter].push(m);
+    });
+
+    let html = `<div class="dir-count">${members.length} membres</div>`;
+
+    Object.keys(grouped).sort().forEach(letter => {
+        html += `<div class="dir-letter-group">
+            <div class="dir-letter">${letter}</div>
+            <div class="dir-list">
+                ${grouped[letter].map(m => {
+                    const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
+                    const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
+                    const tags = [m.sector, m.specialty].filter(Boolean);
+                    return `<div class="dir-row" onclick="toggleDirExpand(this)">
+                        <div class="dir-row-main">
+                            <div class="dir-avatar">${hasPhoto ? `<img src="${esc(m.photo_url)}" alt="">` : initials}</div>
+                            <div class="dir-info">
+                                <div class="dir-name">${esc(m.first_name)} <strong>${esc(m.last_name)}</strong>${m.is_board ? ' <span class="dir-badge dir-badge-board">Bureau</span>' : ''}${m.is_mentor ? ' <span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}</div>
+                                <div class="dir-meta">${esc(m.job_title || '')}${m.company ? ' · ' + esc(m.company) : ''}${m.region ? ' · ' + esc(m.region) : ''}</div>
+                            </div>
+                            ${tags.length ? `<div class="dir-tags">${tags.map(t => `<span class="dir-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+                            <div class="dir-actions-mini">
+                                ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dir-action-btn" title="LinkedIn">in</a>` : ''}
+                            </div>
+                        </div>
+                        <div class="dir-expand">
+                            ${m.bio ? `<p class="dir-bio">${esc((m.bio||'').substring(0,300))}${(m.bio||'').length>300?'...':''}</p>` : ''}
+                            ${m.interests ? `<p class="dir-interests"><strong>Intérêts :</strong> ${esc(m.interests)}</p>` : ''}
+                            ${m.phone && m.phone_visible ? `<p class="dir-phone">Tél : ${esc(m.phone)}</p>` : ''}
+                            <div class="dir-expand-meta">
+                                ${m.joined_at ? `<span>Membre depuis ${formatDate(m.joined_at)}</span>` : ''}
+                                <span>${m.consent_annuaire ? 'Profil public' : 'Profil privé'}</span>
+                                ${m.membership_type ? `<span>${esc(m.membership_type)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('')}
             </div>
         </div>`;
-    }).join('');
+    });
+
+    el.innerHTML = html;
 }
 
-function toggleMemberDetail(card) {
-    card.classList.toggle('mc-expanded');
+function toggleDirExpand(row) {
+    row.classList.toggle('dir-row-open');
 }
 
 let _dirSearch;

@@ -646,13 +646,13 @@ function renderNewsCarousel(items) {
 }
 
 function slideNewsCarousel(dir) {
-    const wrapper = document.getElementById('news-carousel-wrapper');
+    const wrap = document.querySelector('.news-carousel-wrap');
     const carousel = document.getElementById('news-carousel');
-    if (!wrapper || !carousel) return;
+    if (!wrap || !carousel) return;
     const cards = carousel.querySelectorAll('.news-carousel-card');
     if (!cards.length) return;
-    const cardWidth = cards[0].offsetWidth + 24;
-    const visibleWidth = wrapper.offsetWidth - 80;
+    const cardWidth = cards[0].offsetWidth + 20; // card width + gap
+    const visibleWidth = wrap.offsetWidth - 96; // minus arrows
     const maxScroll = Math.max(0, carousel.scrollWidth - visibleWidth);
     newsCarouselPos = Math.max(0, Math.min(newsCarouselPos + dir * cardWidth, maxScroll));
     updateCarouselTransform();

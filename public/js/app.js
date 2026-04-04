@@ -206,7 +206,34 @@ async function onNavSearch(q) {
 }
 
 // === NAV SUB (contextuel) ===
-function updateNavSub() { /* Sous-nav supprimee — une seule ligne de navigation */ }
+function updateNavSub(page) {
+    const sub = document.getElementById('nav-sub');
+    const links = document.getElementById('nav-sub-links');
+    if (!sub || !links) return;
+    const subs = {
+        identite: [
+            {label:"L'association",action:"scrollToSection('ident-association')"},
+            {label:"Ses actions",action:"scrollToSection('ident-actions')"},
+            {label:"Historique",action:"scrollToSection('ident-historique')"},
+            {label:"Gouvernance",action:"scrollToSection('ident-gouvernance')"},
+            {label:"Organigramme",action:"scrollToSection('ident-organigramme')"},
+            {label:"Carte",action:"scrollToSection('ident-cartographie')"},
+        ],
+        agenda: [
+            {label:"Calendrier",action:"navigate('agenda')"},
+            {label:"Formations",action:"navigate('agenda');setTimeout(()=>document.getElementById('courses-list')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'}),300)"},
+            {label:"Publications",action:"navigate('publications')"},
+            {label:"Quizz",action:"navigate('quizz')"},
+        ],
+    };
+    const items = subs[page] || (['publications','quizz','replays','evenements'].includes(page) ? subs.agenda : null);
+    if (items) {
+        links.innerHTML = items.map(i => `<a class="nav-sub-link" onclick="${i.action}">${i.label}</a>`).join('');
+        sub.style.display = '';
+    } else {
+        sub.style.display = 'none';
+    }
+}
 
 // === SCROLL SPY for sub-nav highlight ===
 let _scrollSpySections = [];

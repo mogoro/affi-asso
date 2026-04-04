@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775333327" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775333327">
+<link rel="preload" href="/css/styles.css?v=1775333510" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775333510">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -163,33 +163,8 @@
     <!-- home-news hidden, carrousel suffit -->
     <div id="home-news" style="display:none"></div>
 
-    <!-- Agenda — Prochaines dates -->
-    <section class="bg-light">
-        <div class="container">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Agenda</h2>
-            <p class="section-sub section-sub-center">Prochains événements et dates à retenir</p>
-            <div class="cards-grid" id="home-events">
-                <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
-            </div>
-            <div class="text-center mt-24">
-                <a class="btn btn-primary" href="#agenda" onclick="navigate('agenda')">Voir tout l'agenda</a>
-                <a class="btn btn-primary" href="#evenements" onclick="navigate('evenements')" style="margin-left:12px;background:var(--gray-600)">Tous les événements</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Le Reseau Bouge -->
-    <section>
-        <div class="container">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Le Reseau Bouge</h2>
-            <p class="section-sub section-sub-center">Dernieres mobilites et evolutions de carriere de nos membres</p>
-            <div id="reseau-bouge-list" class="cards-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
-                <p class="empty-msg">Chargement...</p>
-            </div>
-        </div>
-    </section>
+    <div id="home-events" style="display:none"></div>
+    <div id="reseau-bouge-list" style="display:none"></div>
 
     <!-- Partenaires -->
     <section class="bg-light">
@@ -1266,11 +1241,11 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/app.js?v=1775333327" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775333327" defer></script>
+<script src="/js/app.js?v=1775333510" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775333510" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/members.js?v=1775333327','/js/social.js?v=1775333327','/js/datatable.js?v=1775333327','/js/admin.js?v=1775333327','/js/map.js?v=1775333327'];
+    var scripts = ['/js/members.js?v=1775333510','/js/social.js?v=1775333510','/js/datatable.js?v=1775333510','/js/admin.js?v=1775333510','/js/map.js?v=1775333510'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

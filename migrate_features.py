@@ -1,6 +1,7 @@
+import os
 """Migration: endorsements, polls, verified badges, event communication."""
 import psycopg2
-DB_URL = 'postgresql://neondb_owner:npg_jBZhGekb5l3t@ep-holy-grass-anqa8ub6-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require'
+DB_URL = os.environ.get('DATABASE_URL', '')
 conn = psycopg2.connect(DB_URL)
 cur = conn.cursor()
 

@@ -1,7 +1,10 @@
 .env
+.env*.local
 __pycache__/
 *.pyc
 .vercel/
-node_modules/
-
 .vercel
+node_modules/
+backups/
+*.sql.bak
+backup_neon_*.sql

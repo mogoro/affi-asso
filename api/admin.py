@@ -316,9 +316,12 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "message": "Membre archive"})
 
         elif action == "delete_member":
-            execute("DELETE FROM members WHERE id=%s AND is_admin=FALSE", [body["id"]])
-            self._log(admin["id"], "delete_member", f"Supprime: #{body['id']}")
-            return self._json(200, {"ok": True, "message": "Membre supprime"})
+            # Soft delete: archive au lieu de supprimer definitivement
+            execute("UPDATE members SET archived_at=NOW(), status='deleted', email=CONCAT('deleted_', id, '_', email) WHERE id=%s AND is_admin=FALSE", [body["id"]])
+            # Nettoyage des sessions actives
+            execute("DELETE FROM sessions WHERE member_id=%s", [body["id"]])
+            self._log(admin["id"], "delete_member", f"Archive (soft delete): #{body['id']}")
+            return self._json(200, {"ok": True, "message": "Membre supprime (archive)"})
 
         # === EVENTS ===
         elif action == "create_event":
@@ -346,7 +349,7 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "message": "Evenement depublie"})
 
         elif action == "delete_event":
-            execute("DELETE FROM events WHERE id=%s", [body["id"]])
+            execute("UPDATE events SET is_published=FALSE, title=CONCAT('[SUPPRIME] ', title) WHERE id=%s", [body["id"]])
             self._log(admin["id"], "delete_event", f"#{body['id']}")
             return self._json(200, {"ok": True})
 
@@ -373,7 +376,7 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "message": "Actualite depubliee"})
 
         elif action == "delete_news":
-            execute("DELETE FROM news WHERE id=%s", [body["id"]])
+            execute("UPDATE news SET is_published=FALSE, title=CONCAT('[SUPPRIME] ', title) WHERE id=%s", [body["id"]])
             self._log(admin["id"], "delete_news", f"#{body['id']}")
             return self._json(200, {"ok": True})
 
@@ -384,7 +387,7 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True})
 
         elif action == "delete_publication":
-            execute("DELETE FROM publications WHERE id=%s", [body["id"]])
+            execute("UPDATE publications SET is_published=FALSE, title=CONCAT('[SUPPRIME] ', title) WHERE id=%s", [body["id"]])
             return self._json(200, {"ok": True})
 
         # === ANNOUNCEMENTS MODERATION ===
@@ -397,7 +400,7 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "message": "Annonce rejetee"})
 
         elif action == "delete_announcement":
-            execute("DELETE FROM member_announcements WHERE id=%s", [body["id"]])
+            execute("UPDATE member_announcements SET is_active=FALSE, title=CONCAT('[SUPPRIME] ', title) WHERE id=%s", [body["id"]])
             return self._json(200, {"ok": True})
 
         # === MESSAGES ===

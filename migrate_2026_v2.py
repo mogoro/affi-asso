@@ -5,7 +5,7 @@ import hashlib
 import os
 
 DB_URL = os.getenv('DATABASE_URL',
-    'postgresql://neondb_owner:npg_jBZhGekb5l3t@ep-holy-grass-anqa8ub6-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require')
+os.environ.get('DATABASE_URL', ''))
 
 def hash_pw(pw):
     salt = "affi2026"

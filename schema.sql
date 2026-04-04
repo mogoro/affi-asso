@@ -475,3 +475,97 @@ ALTER TABLE members ADD COLUMN IF NOT EXISTS availability     VARCHAR(50);
 -- event_registrations : colonnes de presence (admin.py)
 ALTER TABLE event_registrations ADD COLUMN IF NOT EXISTS attended    BOOLEAN DEFAULT FALSE;
 ALTER TABLE event_registrations ADD COLUMN IF NOT EXISTS attended_at TIMESTAMP;
+
+-- ============================================================
+-- PROTECTIONS BASE DE DONNEES
+-- ============================================================
+
+-- Protection: empecher la suppression accidentelle de membres actifs
+CREATE OR REPLACE FUNCTION prevent_active_member_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.status = 'active' AND OLD.is_admin = FALSE AND OLD.archived_at IS NULL THEN
+        RAISE EXCEPTION 'Impossible de supprimer un membre actif. Archivez-le d''abord.';
+    END IF;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_prevent_active_member_delete ON members;
+CREATE TRIGGER trg_prevent_active_member_delete
+    BEFORE DELETE ON members
+    FOR EACH ROW EXECUTE FUNCTION prevent_active_member_delete();
+
+-- Protection: journalisation automatique des modifications sur members
+CREATE OR REPLACE FUNCTION log_member_changes()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' AND OLD.status != NEW.status THEN
+        INSERT INTO logs (action, user_id, details, ip_address)
+        VALUES ('status_change', NEW.id,
+                'Status: ' || OLD.status || ' -> ' || NEW.status, 'system');
+    END IF;
+    IF TG_OP = 'UPDATE' AND OLD.is_admin != NEW.is_admin THEN
+        INSERT INTO logs (action, user_id, details, ip_address)
+        VALUES ('admin_change', NEW.id,
+                'is_admin: ' || OLD.is_admin || ' -> ' || NEW.is_admin, 'system');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_log_member_changes ON members;
+CREATE TRIGGER trg_log_member_changes
+    AFTER UPDATE ON members
+    FOR EACH ROW EXECUTE FUNCTION log_member_changes();
+
+-- Protection: nettoyage automatique des sessions expirees
+CREATE OR REPLACE FUNCTION cleanup_expired_sessions()
+RETURNS INTEGER AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    DELETE FROM sessions WHERE expires_at < NOW();
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Protection: limite le nombre de sessions par membre (max 3)
+CREATE OR REPLACE FUNCTION limit_sessions_per_member()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM sessions
+    WHERE member_id = NEW.member_id
+      AND id NOT IN (
+          SELECT id FROM sessions
+          WHERE member_id = NEW.member_id
+          ORDER BY created_at DESC LIMIT 3
+      );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_limit_sessions ON sessions;
+CREATE TRIGGER trg_limit_sessions
+    AFTER INSERT ON sessions
+    FOR EACH ROW EXECUTE FUNCTION limit_sessions_per_member();
+
+-- Protection: empecher les injections via email (format basique)
+ALTER TABLE members DROP CONSTRAINT IF EXISTS chk_email_format;
+ALTER TABLE members ADD CONSTRAINT chk_email_format
+    CHECK (email ~* '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+
+-- Protection: mots de passe non vides
+ALTER TABLE members DROP CONSTRAINT IF EXISTS chk_password_not_empty;
+ALTER TABLE members ADD CONSTRAINT chk_password_not_empty
+    CHECK (length(password_hash) >= 10);
+
+-- Protection: limiter la taille des champs texte
+ALTER TABLE contact_messages DROP CONSTRAINT IF EXISTS chk_message_length;
+ALTER TABLE contact_messages ADD CONSTRAINT chk_message_length
+    CHECK (length(message) <= 10000);
+
+ALTER TABLE members DROP CONSTRAINT IF EXISTS chk_bio_length;
+ALTER TABLE members ADD CONSTRAINT chk_bio_length
+    CHECK (bio IS NULL OR length(bio) <= 5000);

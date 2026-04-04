@@ -1,6 +1,7 @@
+import os
 import psycopg2, hashlib
 
-DB_URL = 'postgresql://neondb_owner:npg_jBZhGekb5l3t@ep-holy-grass-anqa8ub6-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require'
+DB_URL = os.environ.get('DATABASE_URL', '')
 def hash_pw(pw):
     return hashlib.sha256(f"affi2026:{pw}".encode()).hexdigest()
 

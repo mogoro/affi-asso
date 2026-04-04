@@ -1,10 +1,11 @@
+import os
 #!/usr/bin/env python3
 """Seed v4: Real data from scraped AFFI website (ingenieur-ferroviaire.net).
 Updates events, news, publications, partners, and board members with actual content.
 """
 import psycopg2
 
-conn = psycopg2.connect('postgresql://neondb_owner:npg_jBZhGekb5l3t@ep-holy-grass-anqa8ub6-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require')
+conn = psycopg2.connect(os.environ.get('DATABASE_URL', ''))
 conn.autocommit = True
 cur = conn.cursor()
 

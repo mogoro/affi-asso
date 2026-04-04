@@ -1,26 +1,53 @@
 """POST /api/auth — Login / Logout / Session check / Password reset."""
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
-import json, hashlib, secrets, os, re
-import bcrypt
+import json, hashlib, secrets, os, re, base64
 from api._shared.db import fetchone, execute, get_conn
 
+# bcrypt optionnel (ne marche pas sur Vercel serverless)
+try:
+    import bcrypt
+    _HAS_BCRYPT = True
+except ImportError:
+    _HAS_BCRYPT = False
+
+# === PBKDF2 comme methode de hash principale (fonctionne partout) ===
+_PBKDF2_PREFIX = "pbkdf2:"
+_PBKDF2_ITERATIONS = 260000
+
 def hash_pw(pw):
-    """Hash a password with bcrypt (random per-user salt)."""
-    return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
+    """Hash un mot de passe avec PBKDF2-SHA256 (sel aleatoire, 260k iterations)."""
+    salt = secrets.token_bytes(16)
+    dk = hashlib.pbkdf2_hmac('sha256', pw.encode(), salt, _PBKDF2_ITERATIONS)
+    return _PBKDF2_PREFIX + base64.b64encode(salt).decode() + ":" + base64.b64encode(dk).decode()
+
+def _verify_pbkdf2(password, hashed):
+    """Verifie un hash PBKDF2."""
+    parts = hashed[len(_PBKDF2_PREFIX):].split(":")
+    if len(parts) != 2:
+        return False
+    salt = base64.b64decode(parts[0])
+    expected = base64.b64decode(parts[1])
+    dk = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, _PBKDF2_ITERATIONS)
+    return secrets.compare_digest(dk, expected)
 
 def _legacy_hash_pw(pw):
-    """Old SHA-256 hash kept for migration only."""
+    """Ancien hash SHA-256 garde pour migration."""
     salt = "affi2026"
     return hashlib.sha256(f"{salt}:{pw}".encode()).hexdigest()
 
 def verify_pw(password, hashed):
-    """Verify a password against a stored hash.
-    Supports bcrypt ($2b$) and falls back to legacy SHA-256 for migration."""
-    if hashed and hashed.startswith("$2b$"):
+    """Verifie un mot de passe. Supporte PBKDF2, bcrypt et SHA-256 legacy."""
+    if not hashed:
+        return False
+    # PBKDF2 (methode principale)
+    if hashed.startswith(_PBKDF2_PREFIX):
+        return _verify_pbkdf2(password, hashed)
+    # bcrypt (si disponible)
+    if hashed.startswith("$2b$") and _HAS_BCRYPT:
         return bcrypt.checkpw(password.encode(), hashed.encode())
-    # Legacy SHA-256 fallback
-    return hashed == _legacy_hash_pw(password)
+    # SHA-256 legacy
+    return secrets.compare_digest(hashed, _legacy_hash_pw(password))
 
 def _validate_password(password):
     """Return an error message if the password is too weak, or None if OK."""
@@ -74,8 +101,8 @@ class handler(BaseHTTPRequestHandler):
                 return self._json(401, {"error": "Email ou mot de passe incorrect"})
             if member["status"] == "blocked":
                 return self._json(403, {"error": "Compte desactive"})
-            # Migrate legacy SHA-256 hash to bcrypt on successful login
-            if member["password_hash"] and not member["password_hash"].startswith("$2b$"):
+            # Migrate legacy hash to PBKDF2 on successful login
+            if member["password_hash"] and not member["password_hash"].startswith(_PBKDF2_PREFIX):
                 execute("UPDATE members SET password_hash = %s WHERE id = %s",
                         [hash_pw(password), member["id"]])
             token = create_session(member["id"])

@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775332890" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775332890">
+<link rel="preload" href="/css/styles.css?v=1775333112" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775333112">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -128,8 +128,26 @@
         <div class="slide-dots"><span class="slide-dot active"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span></div>
     </div>
 
+    <!-- Bienvenue -->
+    <section>
+        <div class="container" style="max-width:900px">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Bienvenue sur le site de l'AFFI</h2>
+            <div style="text-align:center;color:var(--gray-600);line-height:1.8;font-size:15px">
+                <p>L'AFFI, Association Ferroviaire Française des Ingénieurs et cadres, est la première association française qui rassemble les ingénieurs et les cadres en activité ou en retraite, représentant tous les secteurs ferroviaires :</p>
+                <ul style="text-align:left;max-width:700px;margin:16px auto;list-style:disc;padding-left:24px">
+                    <li>les industries qui conçoivent et fabriquent les matériels et les équipements,</li>
+                    <li>les exploitants de réseaux de chemins de fer, de tramways, de métros fer et pneu,</li>
+                    <li>les entreprises qui posent et entretiennent les voies,</li>
+                    <li>d'une manière générale, toutes les personnes physiques ou morales qui s'intéressent au secteur ferroviaire.</li>
+                </ul>
+                <p>La richesse de l'AFFI réside dans l'apport personnel permanent de ses membres, leur savoir-faire et leur volonté d'échanger connaissances et expériences.</p>
+            </div>
+        </div>
+    </section>
+
     <!-- News Carousel -->
-    <section id="news-carousel-wrapper">
+    <section id="news-carousel-wrapper" class="bg-light">
         <div class="container">
             <div class="section-line section-line-center"></div>
             <h2 class="section-title section-title-center">Actualités</h2>
@@ -156,50 +174,14 @@
         <div class="container">
             <div class="section-line section-line-center"></div>
             <h2 class="section-title section-title-center">Agenda</h2>
-            <p class="section-sub section-sub-center">Prochains evenements et dates a retenir</p>
+            <p class="section-sub section-sub-center">Prochains événements et dates à retenir</p>
             <div class="cards-grid" id="home-events">
                 <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
             </div>
             <div class="text-center mt-24">
                 <a class="btn btn-primary" href="#agenda" onclick="navigate('agenda')">Voir tout l'agenda</a>
-                <a class="btn btn-primary" href="#evenements" onclick="navigate('evenements')" style="margin-left:12px;background:var(--gray-600)">Tous les evenements</a>
+                <a class="btn btn-primary" href="#evenements" onclick="navigate('evenements')" style="margin-left:12px;background:var(--gray-600)">Tous les événements</a>
             </div>
-        </div>
-    </section>
-
-    <!-- Bienvenue -->
-    <section>
-        <div class="container" style="max-width:900px">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Bienvenue sur le site de l'AFFI</h2>
-            <div style="text-align:center;color:var(--gray-600);line-height:1.8;font-size:15px">
-                <p>L'AFFI, Association Ferroviaire Francaise des Ingenieurs et cadres, est la premiere association francaise qui rassemble les ingenieurs et les cadres en activite ou en retraite, representant tous les secteurs ferroviaires :</p>
-                <ul style="text-align:left;max-width:700px;margin:16px auto;list-style:disc;padding-left:24px">
-                    <li>les industries qui concoivent et fabriquent les materiels et les equipements,</li>
-                    <li>les exploitants de reseaux de chemins de fer, de tramways, de metros fer et pneu,</li>
-                    <li>les entreprises qui posent et entretiennent les voies,</li>
-                    <li>d'une maniere generale, toutes les personnes physiques ou morales qui s'interessent au secteur ferroviaire.</li>
-                </ul>
-                <p>La richesse de l'AFFI reside dans l'apport personnel permanent de ses membres, leur savoir-faire et leur volonte d'echanger connaissances et experiences.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Communaute preview -->
-    <section class="bg-light">
-        <div class="container">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Communauté AFFI</h2>
-            <p class="section-sub section-sub-center">Échangez, débattez, partagez avec les membres</p>
-            <div id="feed-compose" style="display:none;margin-bottom:24px">
-                <div class="card"><div class="card-body">
-                    <form onsubmit="postToFeed(event)">
-                        <textarea name="content" placeholder="Partagez une actualité, une réflexion..." required style="width:100%;padding:12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px;min-height:80px;resize:vertical;margin-bottom:12px"></textarea>
-                        <button type="submit" class="btn btn-accent" style="font-size:13px;padding:8px 20px">Publier</button>
-                    </form>
-                </div></div>
-            </div>
-            <div id="feed-list"><p class="empty-msg">Connectez-vous pour accéder à la communauté</p></div>
         </div>
     </section>
 
@@ -1290,11 +1272,11 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/app.js?v=1775332890" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775332890" defer></script>
+<script src="/js/app.js?v=1775333112" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775333112" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/members.js?v=1775332890','/js/social.js?v=1775332890','/js/datatable.js?v=1775332890','/js/admin.js?v=1775332890','/js/map.js?v=1775332890'];
+    var scripts = ['/js/members.js?v=1775333112','/js/social.js?v=1775333112','/js/datatable.js?v=1775333112','/js/admin.js?v=1775333112','/js/map.js?v=1775333112'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

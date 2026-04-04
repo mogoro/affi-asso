@@ -48,7 +48,8 @@ img{max-width:100%;height:auto;}
 /* Nav links */
 .nav-links{display:flex;gap:0;margin:0 4px;flex-shrink:1;overflow:hidden;}
 .nav-link{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px;color:var(--gray-500);font-size:11px;font-weight:600;text-decoration:none;transition:all var(--transition);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;}
-.nav-link-icon{font-size:20px;line-height:1;}
+.nav-link-icon{font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;width:24px;height:24px;}
+.nav-link-icon svg{flex-shrink:0;}
 .nav-link-text{line-height:1;}
 .nav-link:hover{color:var(--gray-900);text-decoration:none;}
 .nav-link.active{color:var(--gray-900);border-bottom-color:var(--gray-900);}

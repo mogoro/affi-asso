@@ -89,7 +89,7 @@ function renderLockedPage(page) {
         </section>
         <div class="locked-page">
             <div class="locked-page-content">
-                <div class="locked-page-icon">&#128274;</div>
+                <div class="locked-page-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
                 <h2>Contenu reserve aux adherents</h2>
                 <p>Connectez-vous ou adherez a l'AFFI pour acceder a cette rubrique.</p>
                 <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
@@ -136,12 +136,12 @@ function updateNavbarState() {
         if (loggedIn) {
             adhesionLink.dataset.page = 'membres';
             adhesionLink.setAttribute('onclick', "navigate('membres');document.getElementById('nav-links').classList.remove('open')");
-            adhesionLink.querySelector('.nav-link-icon').textContent = '\u{1F4CA}';
+            adhesionLink.querySelector('.nav-link-icon').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>';
             adhesionLink.querySelector('.nav-link-text').textContent = 'Tableau de bord';
         } else {
             adhesionLink.dataset.page = 'adhesion';
             adhesionLink.setAttribute('onclick', "navigate('adhesion');document.getElementById('nav-links').classList.remove('open')");
-            adhesionLink.querySelector('.nav-link-icon').textContent = '\u{2795}';
+            adhesionLink.querySelector('.nav-link-icon').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
             adhesionLink.querySelector('.nav-link-text').textContent = 'Adhérer';
         }
     }
@@ -152,8 +152,8 @@ function updateNavbarState() {
         if (!link) return;
         const page = link.dataset.page;
         if (LOCKED_PAGES.includes(page)) {
-            if (loggedIn) { icon.dataset.originalIcon && (icon.textContent = icon.dataset.originalIcon); }
-            else { if (!icon.dataset.originalIcon) icon.dataset.originalIcon = icon.textContent; icon.textContent = '\u{1F512}'; }
+            if (loggedIn) { icon.dataset.originalIcon && (icon.innerHTML = icon.dataset.originalIcon); }
+            else { if (!icon.dataset.originalIcon) icon.dataset.originalIcon = icon.innerHTML; icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'; }
         }
     });
 }
@@ -1475,7 +1475,7 @@ function renderPublicAnnuaire(members) {
                 ${m.sector ? `<span class="ec-tag">${esc(m.sector)}</span>` : ''}
             </div>
             <div class="ec-anon-lock">
-                <span class="locked-badge" onclick="event.stopPropagation();showLoginPopup()">&#128274; Connectez-vous pour voir le profil complet</span>
+                <span class="locked-badge" onclick="event.stopPropagation();showLoginPopup()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Connectez-vous pour voir le profil complet</span>
             </div>
             <div class="ec-footer">
                 <span class="ec-rgpd">&#128994; Expert verifie</span>

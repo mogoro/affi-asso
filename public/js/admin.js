@@ -26,6 +26,7 @@ function switchAdminSection(id) {
     if (id === 'adm-pending') loadPendingContent();
     if (id === 'adm-stats') { if (typeof loadStatsDashboard === 'function') loadStatsDashboard(); }
     if (id === 'adm-polls') { if (typeof loadPolls === 'function') loadPolls(); }
+    if (id === 'adm-adhesions') loadAdminAdhesions();
     if (id === 'adm-connexions') loadAdminConnexions();
     if (id === 'adm-logs') loadAdminLogs();
 }
@@ -179,6 +180,75 @@ async function saveMemberEdit(evt, id) {
     });
     closeModal('member-modal');
     loadAdminMembers();
+}
+
+// === ADHESIONS ===
+async function loadAdminAdhesions() {
+    const members = await adminFetch('members', {});
+    const el = document.getElementById('adm-adhesions-content');
+    if (!el) return;
+
+    // Calculate adhesion stats
+    const stats = { aJour: 0, rappel: 0, radiation: 0, preRadiation: 0, total: 0 };
+    members.forEach(m => {
+        if (m.status === 'active') stats.aJour++;
+        else if (m.status === 'pending') stats.preRadiation++;
+        else if (m.status === 'blocked') stats.radiation++;
+        stats.total++;
+    });
+
+    // Group by company
+    const byCompany = {};
+    members.filter(m => m.status !== 'deleted').forEach(m => {
+        const co = m.company || 'Non renseigne';
+        byCompany[co] = (byCompany[co] || 0) + 1;
+    });
+    const topCompanies = Object.entries(byCompany).sort((a,b) => b[1]-a[1]).slice(0, 15);
+
+    // Group by membership type
+    const byType = {};
+    members.filter(m => m.status !== 'deleted').forEach(m => {
+        const t = m.membership_type || 'standard';
+        byType[t] = (byType[t] || 0) + 1;
+    });
+
+    // Summary cards
+    el.innerHTML = `
+        <div class="kpi-row" style="margin-bottom:24px">
+            <div class="kpi-card" style="border-top-color:var(--green)"><div class="kpi-val">${stats.aJour}</div><div class="kpi-label">A jour</div></div>
+            <div class="kpi-card" style="border-top-color:var(--orange)"><div class="kpi-val">${stats.preRadiation}</div><div class="kpi-label">Pre-radiation</div></div>
+            <div class="kpi-card" style="border-top-color:var(--accent)"><div class="kpi-val">${stats.radiation}</div><div class="kpi-label">Radies</div></div>
+            <div class="kpi-card" style="border-top-color:var(--primary)"><div class="kpi-val">${stats.total}</div><div class="kpi-label">Total</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+            <div class="card"><div class="card-body">
+                <h4 style="color:var(--primary);margin-bottom:12px">Par entreprise (top 15)</h4>
+                ${topCompanies.map(([co, n]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(co)}</span><strong>${n}</strong></div>`).join('')}
+            </div></div>
+            <div class="card"><div class="card-body">
+                <h4 style="color:var(--primary);margin-bottom:12px">Par type d'adhesion</h4>
+                ${Object.entries(byType).map(([t, n]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--gray-100)"><span class="card-tag">${esc(t)}</span><strong>${n}</strong></div>`).join('')}
+            </div></div>
+        </div>
+        <div id="adm-adhesions-table"></div>
+    `;
+
+    new DataTable('adm-adhesions-table', {
+        columns: [
+            { key: 'name', label: 'Membre', render: (v, r) => `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong>` },
+            { key: 'email', label: 'Email' },
+            { key: 'company', label: 'Entreprise' },
+            { key: 'membership_type', label: 'Type', render: v => `<span class="card-tag">${esc(v||'standard')}</span>` },
+            { key: 'status', label: 'Etat adhesion', render: v => {
+                const colors = { active: 'adm-badge-active', pending: 'adm-badge-pending', blocked: 'adm-badge-blocked' };
+                const labels = { active: 'A jour', pending: 'Pre-radiation', blocked: 'Radie' };
+                return `<span class="adm-badge ${colors[v]||''}">${labels[v]||v}</span>`;
+            }},
+            { key: 'joined_at', label: 'Depuis', type: 'date', render: v => formatDate(v) },
+        ],
+        data: members.filter(m => m.status !== 'deleted').map(m => ({ ...m, name: (m.first_name||'')+' '+(m.last_name||'') })),
+        pageSize: 50,
+    });
 }
 
 // === EVENTS ===

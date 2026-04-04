@@ -70,32 +70,119 @@ async function showMemberArea() {
     if (w && currentUser) w.textContent = currentUser.first_name + ' ' + currentUser.last_name;
 
     // Show admin tab if admin
-    const adminTab = document.getElementById('admin-tab');
-    if (adminTab) adminTab.style.display = currentUser && currentUser.is_admin ? 'inline-block' : 'none';
+    const adminTab = document.getElementById('admin-main-tab');
+    if (adminTab) adminTab.style.display = currentUser && currentUser.is_admin ? 'inline-flex' : 'none';
 
     // Debloquer tout le site
     if (typeof onUserLoggedIn === 'function') onUserLoggedIn();
 
-    switchMemberTab('dashboard');
+    switchMainTab('dashboard');
 }
 
-// === MEMBER TABS ===
-function switchMemberTab(tab) {
-    document.querySelectorAll('.mtab-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.mtab').forEach(el => el.classList.remove('active'));
-    const panel = document.getElementById('mtab-' + tab);
-    if (panel) panel.style.display = 'block';
-    const btn = document.querySelector(`.mtab[data-tab="${tab}"]`);
-    if (btn) btn.classList.add('active');
+// === MAIN TAB SYSTEM ===
+const SUBMENU_CONFIG = {
+    dashboard: [
+        { id: 'my-events', label: 'Mes evenements', icon: '&#128197;' },
+        { id: 'news-dashboard', label: 'Nouveautes', icon: '&#128240;' },
+        { id: 'activity', label: 'Activite', icon: '&#128200;' },
+    ],
+    tools: [
+        { id: 'directory', label: 'Annuaire', icon: '&#128101;' },
+        { id: 'announcements', label: 'Annonces', icon: '&#128227;' },
+        { id: 'profile', label: 'Profil & CV', icon: '&#128196;' },
+        { id: 'messages', label: 'Messages', icon: '&#128172;' },
+        { id: 'proposer', label: 'Proposer', icon: '&#9998;' },
+        { id: 'notifications', label: 'Notifications', icon: '&#128276;' },
+    ],
+    admin: [] // Admin uses its own internal nav (adm-nav)
+};
 
-    if (tab === 'directory') loadDirectory();
-    if (tab === 'announcements') loadAnnouncements();
-    // communaute, carriere, formations, cartographie sont sur la page d'accueil et identite
-    if (tab === 'proposer') loadMyProposals();
-    if (tab === 'profile') loadProfile();
-    if (tab === 'messages') loadConversations();
-    if (tab === 'notifications') loadNotifications();
-    if (tab === 'admin') loadAdmin();
+function switchMainTab(main) {
+    // Update main tabs
+    document.querySelectorAll('.mmtab').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.mmtab[data-main="${main}"]`)?.classList.add('active');
+
+    // Hide all main panels
+    document.querySelectorAll('.main-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('main-' + main);
+    if (panel) panel.style.display = 'block';
+
+    // Render submenu
+    const subEl = document.getElementById('member-sub-tabs');
+    const items = SUBMENU_CONFIG[main] || [];
+    if (items.length > 0) {
+        subEl.innerHTML = items.map((item, i) =>
+            `<button class="mstab ${i === 0 ? 'active' : ''}" data-sub="${item.id}" onclick="switchSubTab('${main}','${item.id}')">${item.icon} ${item.label}</button>`
+        ).join('');
+        subEl.style.display = 'flex';
+        // Auto-load first sub
+        switchSubTab(main, items[0].id);
+    } else if (main === 'admin') {
+        subEl.style.display = 'none';
+        loadAdmin();
+    } else {
+        subEl.style.display = 'none';
+    }
+}
+
+function switchSubTab(main, sub) {
+    // Update sub tabs
+    document.querySelectorAll('.mstab').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.mstab[data-sub="${sub}"]`)?.classList.add('active');
+
+    // Hide all content in this main panel
+    const panel = document.getElementById('main-' + main);
+    if (panel) panel.querySelectorAll('.mtab-content').forEach(c => c.style.display = 'none');
+    const content = document.getElementById('mtab-' + sub);
+    if (content) content.style.display = 'block';
+
+    // Load data
+    if (sub === 'directory') loadDirectory();
+    if (sub === 'announcements') loadAnnouncements();
+    if (sub === 'profile') loadProfile();
+    if (sub === 'messages') loadConversations();
+    if (sub === 'proposer') loadMyProposals();
+    if (sub === 'notifications') loadNotifications();
+    if (sub === 'my-events') loadMyEvents();
+    if (sub === 'news-dashboard') loadNewsDashboard();
+    if (sub === 'activity') loadFeed();
+}
+
+// Keep backward compat
+function switchMemberTab(tab) {
+    const toolTabs = ['directory','announcements','profile','messages','proposer','notifications'];
+    const dashTabs = ['my-events','news-dashboard','activity'];
+    if (toolTabs.includes(tab)) { switchMainTab('tools'); setTimeout(() => switchSubTab('tools', tab), 50); }
+    else if (dashTabs.includes(tab)) { switchMainTab('dashboard'); setTimeout(() => switchSubTab('dashboard', tab), 50); }
+    else if (tab === 'admin') { switchMainTab('admin'); }
+    else if (tab === 'dashboard') { switchMainTab('dashboard'); }
+}
+
+// === DASHBOARD: MY EVENTS ===
+async function loadMyEvents() {
+    const el = document.getElementById('my-events-list');
+    if (!el) return;
+    el.innerHTML = '<p class="empty-msg">Vos inscriptions aux evenements apparaitront ici</p>';
+}
+
+// === DASHBOARD: NEWS ===
+async function loadNewsDashboard() {
+    try {
+        const res = await fetch(`${API}/api/news?limit=10`);
+        const news = await res.json();
+        const el = document.getElementById('news-dashboard-list');
+        if (!el) return;
+        if (!news.length) { el.innerHTML = '<p class="empty-msg">Aucune nouveaute</p>'; return; }
+        el.innerHTML = news.map(n => `
+            <div style="padding:12px 0;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center">
+                <div>
+                    <strong>${esc(n.title)}</strong>
+                    <div style="font-size:12px;color:var(--gray-500)">${formatDate(n.published_at)}</div>
+                </div>
+                ${n.is_published ? '<span class="adm-badge adm-badge-active">Publiee</span>' : ''}
+            </div>
+        `).join('');
+    } catch(e) { console.warn('News dashboard:', e); }
 }
 
 // === DIRECTORY ===

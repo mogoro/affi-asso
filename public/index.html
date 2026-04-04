@@ -843,44 +843,40 @@
                     <button class="btn btn-primary" onclick="doLogout()" style="font-size:13px;padding:8px 20px">Deconnexion</button>
                 </div>
 
-                <!-- TABS -->
-                <div class="member-tabs">
-                    <button class="mtab active" data-tab="dashboard" onclick="switchMemberTab('dashboard')">Tableau de bord</button>
-                    <button class="mtab" data-tab="directory" onclick="switchMemberTab('directory')">Annuaire</button>
-                    <button class="mtab" data-tab="announcements" onclick="switchMemberTab('announcements')">Annonces</button>
-                    <button class="mtab" data-tab="profile" onclick="switchMemberTab('profile')">Mon Profil & CV</button>
-                    <button class="mtab" data-tab="messages" onclick="switchMemberTab('messages')">Messages</button>
-                    <button class="mtab" data-tab="proposer" onclick="switchMemberTab('proposer')">Proposer</button>
-                    <button class="mtab" data-tab="notifications" onclick="switchMemberTab('notifications')">Notifications</button>
-                    <button class="mtab" data-tab="admin" onclick="switchMemberTab('admin')" id="admin-tab" style="display:none;background:var(--accent);color:#fff">Administration</button>
+                <!-- MAIN MENU -->
+                <div class="member-main-tabs">
+                    <button class="mmtab active" data-main="dashboard" onclick="switchMainTab('dashboard')">
+                        <span class="mmtab-icon">&#128202;</span> Tableau de bord
+                    </button>
+                    <button class="mmtab" data-main="tools" onclick="switchMainTab('tools')">
+                        <span class="mmtab-icon">&#128736;</span> Outils membre
+                    </button>
+                    <button class="mmtab" data-main="admin" onclick="switchMainTab('admin')" id="admin-main-tab" style="display:none">
+                        <span class="mmtab-icon">&#9881;</span> Administration
+                    </button>
                 </div>
 
-                <!-- TAB: DASHBOARD -->
-                <div id="mtab-dashboard" class="mtab-content">
-                    <div class="cards-grid" style="grid-template-columns:repeat(3,1fr)">
-                        <div class="card" onclick="switchMemberTab('directory')" style="cursor:pointer">
-                            <div class="card-body text-center" style="padding:36px">
-                                <div style="font-size:48px;margin-bottom:12px">&#128101;</div>
-                                <div class="card-title">Annuaire Membres</div>
-                                <div class="card-text">Recherchez des collegues par nom, entreprise ou secteur</div>
-                            </div>
-                        </div>
-                        <div class="card" onclick="switchMemberTab('announcements')" style="cursor:pointer">
-                            <div class="card-body text-center" style="padding:36px">
-                                <div style="font-size:48px;margin-bottom:12px">&#128227;</div>
-                                <div class="card-title">Annonces</div>
-                                <div class="card-text">Publiez et consultez les annonces des membres (emploi, collaborations)</div>
-                            </div>
-                        </div>
-                        <div class="card" onclick="switchMemberTab('profile')" style="cursor:pointer">
-                            <div class="card-body text-center" style="padding:36px">
-                                <div style="font-size:48px;margin-bottom:12px">&#128196;</div>
-                                <div class="card-title">Mon Profil & CV</div>
-                                <div class="card-text">Mettez a jour votre profil, votre CV et importez vos donnees LinkedIn</div>
-                            </div>
-                        </div>
+                <!-- SUB MENU (changes based on main tab) -->
+                <div class="member-sub-tabs" id="member-sub-tabs"></div>
+
+                <!-- MAIN PANEL: DASHBOARD -->
+                <div id="main-dashboard" class="main-panel">
+                    <div id="mtab-my-events" class="mtab-content">
+                        <h3 style="color:var(--primary);margin-bottom:16px">Mes inscriptions</h3>
+                        <div id="my-events-list"><p class="empty-msg">Chargement...</p></div>
+                    </div>
+                    <div id="mtab-news-dashboard" class="mtab-content" style="display:none">
+                        <h3 style="color:var(--primary);margin-bottom:16px">Nouveautes</h3>
+                        <div id="news-dashboard-list"><p class="empty-msg">Chargement...</p></div>
+                    </div>
+                    <div id="mtab-activity" class="mtab-content" style="display:none">
+                        <h3 style="color:var(--primary);margin-bottom:16px">Activite recente</h3>
+                        <div id="activity-list"><p class="empty-msg">Chargement...</p></div>
                     </div>
                 </div>
+
+                <!-- MAIN PANEL: TOOLS -->
+                <div id="main-tools" class="main-panel" style="display:none">
 
                 <!-- TAB: DIRECTORY -->
                 <div id="mtab-directory" class="mtab-content" style="display:none">
@@ -1101,11 +1097,14 @@
                     <div id="notif-list"><p class="empty-msg">Chargement...</p></div>
                 </div>
 
-                <!-- TAB: ADMIN -->
-                <div id="mtab-admin" class="mtab-content" style="display:none">
+                </div><!-- /main-tools -->
+
+                <!-- MAIN PANEL: ADMIN -->
+                <div id="main-admin" class="main-panel" style="display:none">
                     <div class="adm-nav">
                         <button class="adm-nav-btn active" data-section="adm-dashboard" onclick="switchAdminSection('adm-dashboard')">Tableau de bord</button>
                         <button class="adm-nav-btn" data-section="adm-members" onclick="switchAdminSection('adm-members')">Membres</button>
+                        <button class="adm-nav-btn" data-section="adm-adhesions" onclick="switchAdminSection('adm-adhesions')">Adhesions</button>
                         <button class="adm-nav-btn" data-section="adm-events" onclick="switchAdminSection('adm-events')">Evenements</button>
                         <button class="adm-nav-btn" data-section="adm-news" onclick="switchAdminSection('adm-news')">Actualites</button>
                         <button class="adm-nav-btn" data-section="adm-announcements" onclick="switchAdminSection('adm-announcements')">Annonces membres</button>
@@ -1137,6 +1136,12 @@
                             <button class="btn btn-primary" onclick="exportMembers()" style="font-size:13px;padding:8px 20px;background:var(--teal)">Export CSV</button>
                         </div>
                         <div id="adm-members-list"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
+                    </div>
+
+                    <!-- Admin Adhesions -->
+                    <div id="adm-adhesions" class="adm-section">
+                        <h3 style="margin-bottom:16px;color:var(--primary)">Etat des adhesions et cotisations</h3>
+                        <div id="adm-adhesions-content"><p class="empty-msg">Chargement...</p></div>
                     </div>
 
                     <!-- Admin Events -->

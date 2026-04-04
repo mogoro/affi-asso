@@ -217,7 +217,6 @@ function updateNavSub(page) {
             {label:"Historique",action:"scrollToSection('ident-historique')"},
             {label:"Gouvernance",action:"scrollToSection('ident-gouvernance')"},
             {label:"Organigramme",action:"scrollToSection('ident-organigramme')"},
-            {label:"Carte",action:"scrollToSection('ident-cartographie')"},
         ],
         agenda: [
             {label:"Calendrier",action:"navigate('agenda')"},

@@ -1762,13 +1762,6 @@ async function loadPartenaires() {
                     </div>
                 </a>`;
             }).join('')}
-            <a class="pu-card pu-card-simple">
-                <div class="pu-logo"><span style="font-size:16px;font-weight:800;color:var(--primary)">Saferail</span></div>
-                <div class="pu-body">
-                    <div class="pu-name">Saferail</div>
-                    <div class="pu-sector">A Colas Rail Company</div>
-                </div>
-            </a>
         </div>`;
     } catch (e) { console.warn('Partenaires:', e); }
 }

@@ -545,10 +545,10 @@ async function doPopupResetPassword(evt) {
 
 async function doPopupLogin(evt) {
     evt.preventDefault();
-    const email = document.getElementById('popup-login-email').value;
-    const password = document.getElementById('popup-login-password').value;
-    const errEl = document.getElementById('popup-login-error');
-    const btn = document.getElementById('popup-login-btn');
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-error');
+    const btn = document.getElementById('auth-submit-btn');
     btn.textContent = 'Connexion...';
     btn.disabled = true;
     try {
@@ -563,7 +563,8 @@ async function doPopupLogin(evt) {
             currentUser = data.user;
             localStorage.setItem('affi_token', data.token);
             localStorage.setItem('affi_user', JSON.stringify(data.user));
-            document.querySelector('.login-popup-overlay')?.remove();
+            document.getElementById('auth-overlay')?.remove();
+            document.body.style.overflow = '';
             if (typeof onUserLoggedIn === 'function') onUserLoggedIn();
             showToast('Bienvenue, ' + (data.user.first_name || '') + ' !', 'success');
             const currentPage = location.hash.slice(1) || 'accueil';

@@ -1232,22 +1232,30 @@ function acceptCookies(level) {
 function openModal(html) {
     document.body.style.overflow = 'hidden';
     document.body.insertAdjacentHTML('beforeend', html);
+    // Stop clicks inside .adm-modal from closing the backdrop
+    const latest = document.querySelector('.adm-modal-bg:last-child .adm-modal');
+    if (latest) latest.addEventListener('mousedown', function(e) { e.stopPropagation(); });
 }
 function closeModal(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
-    // Restore scroll only if no other modals are open
     if (!document.querySelector('.adm-modal-bg')) {
         document.body.style.overflow = '';
     }
 }
-// Auto-close + restore scroll when clicking backdrop
-document.addEventListener('click', function(e) {
+// Close backdrop ONLY on direct mousedown on the dark overlay itself
+document.addEventListener('mousedown', function(e) {
+    // Only close if the mousedown is DIRECTLY on the backdrop (not on the modal content inside)
     if (e.target.classList.contains('adm-modal-bg')) {
-        e.target.remove();
-        if (!document.querySelector('.adm-modal-bg')) {
-            document.body.style.overflow = '';
-        }
+        // Small delay to avoid conflict with any button click inside
+        setTimeout(function() {
+            if (e.target.parentNode) {
+                e.target.remove();
+                if (!document.querySelector('.adm-modal-bg')) {
+                    document.body.style.overflow = '';
+                }
+            }
+        }, 50);
     }
 });
 // Close on Escape key

@@ -6,8 +6,9 @@
 <title>AFFI — Association Ferroviaire Francaise des Ingenieurs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775303403" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775303403">
+<link rel="preload" href="/css/styles.css?v=1775315100" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775315100">
+<link rel="preload" href="/images/slideshow/logo-slideshow.jpg" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
 <meta name="description" content="AFFI - Association Ferroviaire Française des Ingénieurs et Cadres. Première association française rassemblant les professionnels du secteur ferroviaire depuis 1996.">
@@ -102,7 +103,7 @@
                 <a class="btn btn-accent" href="#evenements" onclick="navigate('evenements')">Voir les evenements</a>
             </div>
         </div>
-        <div class="slide"><div class="slide-bg" style="background-image:url('/images/slideshow/voeux-2025-delorme.png')"></div>
+        <div class="slide"><div class="slide-bg" style="background-image:url('/images/slideshow/voeux-2025-delorme.jpg')"></div>
             <div class="slide-content">
                 <h1>Voeux AFFI avec M. Frederic DELORME</h1>
                 <p>PDG de Rails Logistics Europe — 27 janvier 2025</p>
@@ -183,52 +184,21 @@
         </div>
     </section>
 
-    <!-- Espace Carriere -->
+    <!-- Communaute preview -->
     <section class="bg-light">
         <div class="container">
             <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Espace Carriere</h2>
-            <p class="section-sub section-sub-center">Emploi, stages, apprentissage, missions freelance et opportunites dans le ferroviaire</p>
-            <div id="home-jobs">
-                <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
-                    <input type="text" id="job-search" placeholder="Rechercher une offre..." oninput="loadJobs(this.value,document.getElementById('job-sector').value,document.getElementById('job-freelance').checked)" style="flex:1;min-width:200px;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
-                    <select id="job-sector" onchange="loadJobs(document.getElementById('job-search').value,this.value,document.getElementById('job-freelance').checked)" style="padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
-                        <option value="">Tous secteurs</option>
-                        <option>Signalisation & ERTMS</option><option>Materiel roulant</option>
-                        <option>Infrastructure</option><option>Maintenance</option>
-                        <option>Numerique & IA</option><option>Ingenierie & Conseil</option>
-                    </select>
-                    <select id="job-type" onchange="loadJobs(document.getElementById('job-search').value,document.getElementById('job-sector').value,document.getElementById('job-freelance').checked)" style="padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
-                        <option value="">Tous types</option>
-                        <option>CDI</option><option>CDD</option>
-                        <option>Stage</option><option>Apprentissage</option>
-                        <option>VIE</option><option>Freelance</option>
-                    </select>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
-                        <input type="checkbox" id="job-freelance" onchange="loadJobs(document.getElementById('job-search').value,document.getElementById('job-sector').value,this.checked)"> Freelance uniquement
-                    </label>
-                    <button class="btn btn-accent" onclick="showJobForm()" style="font-size:13px;padding:8px 20px;display:none" id="btn-post-job">+ Publier une offre</button>
-                </div>
-                <div id="jobs-list"><p class="empty-msg">Chargement...</p></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Communaute preview -->
-    <section>
-        <div class="container">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Communaute AFFI</h2>
-            <p class="section-sub section-sub-center">Echangez, debattez, partagez avec les membres</p>
+            <h2 class="section-title section-title-center">Communauté AFFI</h2>
+            <p class="section-sub section-sub-center">Échangez, débattez, partagez avec les membres</p>
             <div id="feed-compose" style="display:none;margin-bottom:24px">
                 <div class="card"><div class="card-body">
                     <form onsubmit="postToFeed(event)">
-                        <textarea name="content" placeholder="Partagez une actualite, une reflexion..." required style="width:100%;padding:12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px;min-height:80px;resize:vertical;margin-bottom:12px"></textarea>
+                        <textarea name="content" placeholder="Partagez une actualité, une réflexion..." required style="width:100%;padding:12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px;min-height:80px;resize:vertical;margin-bottom:12px"></textarea>
                         <button type="submit" class="btn btn-accent" style="font-size:13px;padding:8px 20px">Publier</button>
                     </form>
                 </div></div>
             </div>
-            <div id="feed-list"><p class="empty-msg">Connectez-vous pour acceder a la communaute</p></div>
+            <div id="feed-list"><p class="empty-msg">Connectez-vous pour accéder à la communauté</p></div>
         </div>
     </section>
 
@@ -1326,12 +1296,20 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/datatable.js?v=1775303403" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775303403" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775303403" defer></script>
-<script src="/js/members.js?v=1775303403" defer></script>
-<script src="/js/admin.js?v=1775303403" defer></script>
-<script src="/js/social.js?v=1775303403" defer></script>
-<script src="/js/map.js?v=1775303403" defer></script>
+<script src="/js/app.js?v=1775315100" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775315100" defer></script>
+<script>
+window.addEventListener('load', function() {
+    var scripts = ['/js/members.js?v=1775315100','/js/social.js?v=1775315100','/js/datatable.js?v=1775315100','/js/admin.js?v=1775315100','/js/map.js?v=1775315100'];
+    function loadNext() {
+        if (!scripts.length) return;
+        var s = document.createElement('script');
+        s.src = scripts.shift();
+        s.onload = loadNext;
+        document.body.appendChild(s);
+    }
+    setTimeout(loadNext, 1000);
+});
+</script>
 </body>
 </html>

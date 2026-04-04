@@ -547,12 +547,22 @@ function initSlider() {
 
 // === HOME ===
 async function loadHome() {
+    // Show cached data immediately for fast first paint
+    try {
+        const cachedNews = sessionStorage.getItem('affi_home_news');
+        const cachedEvents = sessionStorage.getItem('affi_home_events');
+        if (cachedNews) { const n = JSON.parse(cachedNews); renderNewsCarousel(n); renderHomeNews(n); }
+        if (cachedEvents) renderHomeEvents(JSON.parse(cachedEvents));
+    } catch(e) {}
+    // Then fetch fresh data
     try {
         const [newsRes, eventsRes] = await Promise.all([
             fetch(`${API}/api/news?limit=6`), fetch(`${API}/api/events?upcoming=1&limit=4`)
         ]);
         const news = await newsRes.json();
         const events = await eventsRes.json();
+        try { sessionStorage.setItem('affi_home_news', JSON.stringify(news)); } catch(e) {}
+        try { sessionStorage.setItem('affi_home_events', JSON.stringify(events)); } catch(e) {}
         renderNewsCarousel(news);
         renderHomeNews(news);
         renderHomeEvents(events);
@@ -1240,8 +1250,8 @@ let _partnerBannerTimer = null;
 
 async function loadPartnerBanner() {
     try {
-        const res = await fetch('/data/partenaires.json');
-        const partenaires = await res.json();
+        const cached = sessionStorage.getItem('affi_partenaires');
+        const partenaires = cached ? JSON.parse(cached) : await (async () => { const r = await fetch('/data/partenaires.json'); const d = await r.json(); try { sessionStorage.setItem('affi_partenaires', JSON.stringify(d)); } catch(e) {} return d; })();
         if (!partenaires.length) return;
         _partnerBannerData = partenaires;
         _partnerBannerIdx = Math.floor(Math.random() * partenaires.length);
@@ -1557,31 +1567,7 @@ function initParticles() {
 }
 
 // === LOCK CARRIERE ===
-function lockCarriereIfNeeded() {
-    const jobsSection = document.getElementById('home-jobs');
-    if (!jobsSection) return;
-    const parent = jobsSection.closest('section');
-    if (!parent) return;
-    if (!isLoggedIn()) {
-        if (!parent.querySelector('.locked-banner')) {
-            jobsSection.style.display = 'none';
-            parent.insertAdjacentHTML('beforeend', `
-                <div class="locked-banner">
-                    <span class="locked-banner-icon">&#128274;</span>
-                    <div>
-                        <strong>Espace Carriere reserve aux adherents</strong>
-                        <p>Connectez-vous pour voir les offres d'emploi, stages et apprentissage.</p>
-                    </div>
-                    <a class="btn btn-accent" href="#" onclick="event.preventDefault();showLoginPopup()" style="font-size:13px;padding:8px 20px;flex-shrink:0">Se connecter</a>
-                </div>
-            `);
-        }
-    } else {
-        jobsSection.style.display = '';
-        const banner = parent.querySelector('.locked-banner');
-        if (banner) banner.remove();
-    }
-}
+function lockCarriereIfNeeded() { /* Section Carriere supprimee */ }
 
 // === PARTENAIRES ===
 const PARTENAIRES_LOGOS = {
@@ -1701,8 +1687,8 @@ function _renderOrgLevel4(items) {
 
 async function loadPartenaires() {
     try {
-        const res = await fetch('/data/partenaires.json');
-        const partenaires = await res.json();
+        const cached = sessionStorage.getItem('affi_partenaires');
+        const partenaires = cached ? JSON.parse(cached) : await (async () => { const r = await fetch('/data/partenaires.json'); const d = await r.json(); try { sessionStorage.setItem('affi_partenaires', JSON.stringify(d)); } catch(e) {} return d; })();
         const el = document.getElementById('partenaires-unified');
         if (!el) return;
         el.innerHTML = `<div class="partenaires-unified-grid">

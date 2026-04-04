@@ -330,7 +330,7 @@ function showLoginPopup() {
             <!-- ÉTAPE 1: Connexion -->
             <div id="auth-step-login">
                 <div class="auth-header">
-                    <img src="/images/logo-affi.png" alt="AFFI" class="auth-logo">
+                    <img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logo-affi" alt="AFFI" class="auth-logo">
                     <h2 class="auth-title">Connexion</h2>
                     <p class="auth-subtitle">Accédez à votre espace membre</p>
                 </div>
@@ -1571,18 +1571,18 @@ function lockCarriereIfNeeded() { /* Section Carriere supprimee */ }
 
 // === PARTENAIRES ===
 const PARTENAIRES_LOGOS = {
-    'Alstom': '/images/logos/alstom.png',
-    'Arcadis': '/images/logos/arcadis.png',
-    'BEA-TT': '/images/logos/bea-tt.png',
-    'Certifer': '/images/logos/certifer.png',
-    'EPSF': '/images/logos/epsf.png',
-    'FIF': '/images/logos/fif.png',
-    'Framafer': '/images/logos/framafer.png',
-    'RATP': '/images/logos/ratp.png',
-    'SNCF Reseau': '/images/logos/sncf.png',
-    'Vossloh': '/images/logos/vossloh.png',
-    'UIC': '/images/logos/uic.png',
-    'Universite de l\'Ingenierie': '/images/logos/udi.png',
+    'Alstom': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/alstom',
+    'Arcadis': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/arcadis',
+    'BEA-TT': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/bea-tt',
+    'Certifer': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/certifer',
+    'EPSF': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/epsf',
+    'FIF': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/fif',
+    'Framafer': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/framafer',
+    'RATP': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/ratp',
+    'SNCF Reseau': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/sncf',
+    'Vossloh': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/vossloh',
+    'UIC': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/uic',
+    'Universite de l\'Ingenierie': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/udi',
 };
 
 // === ORGANIGRAMME DYNAMIQUE ===

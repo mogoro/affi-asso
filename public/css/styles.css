@@ -257,34 +257,27 @@ section{padding:72px 0;}
 .board-name{font-size:18px;font-weight:700;color:var(--gray-900);}
 .board-role{font-size:14px;color:var(--accent);font-weight:700;margin-top:4px;}
 
-/* ========== ORG CHART ========== */
-.org-chart{max-width:900px;margin:0 auto;}
-.org-top{text-align:center;margin-bottom:0;}
-.org-president{display:inline-block;}
-.org-person{text-align:center;padding:8px;}
-.org-photo{width:80px;height:80px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;margin:0 auto 10px;box-shadow:0 4px 12px rgba(0,0,0,.15);border:3px solid #fff;}
-.org-name{font-size:14px;font-weight:700;color:var(--gray-900);line-height:1.3;}
-.org-title{font-size:13px;font-weight:700;margin-top:2px;}
-.org-title-accent{color:var(--accent);font-size:15px;text-transform:uppercase;letter-spacing:1px;}
-.org-subtitle{font-size:11px;color:var(--gray-500);font-weight:600;}
-.org-person-sm .org-name{font-size:13px;}
-.org-photo-sm{width:52px;height:52px;font-size:17px;margin-bottom:8px;}
-/* Lines */
-.org-line-v{width:2px;height:28px;background:var(--gray-300);margin:0 auto;}
-.org-line-h{height:2px;background:var(--gray-300);margin:0 60px;}
-/* Branches */
-.org-branches{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:0;}
-.org-group{border-top:2px solid var(--gray-300);padding-top:20px;text-align:center;}
-.org-group-label{display:inline-block;padding:4px 16px;color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-radius:20px;margin-bottom:16px;}
-.org-group-members{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;}
-@media(max-width:768px){
-    .org-branches{grid-template-columns:1fr;}
-    .org-line-h{display:none;}
-    .org-group{border-top:none;border-left:2px solid var(--gray-300);padding:16px 0 16px 16px;text-align:left;}
-    .org-group-members{justify-content:flex-start;}
-}
-body.dark-mode .org-name{color:#f0f6fc;}
-body.dark-mode .org-line-v,body.dark-mode .org-line-h,body.dark-mode .org-group{border-color:#30363d;}
+/* ========== ORG TILES ========== */
+.org-section{margin-bottom:28px;}
+.org-section-label{font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;text-align:center;}
+.org-tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;}
+.org-tile{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--gray-200);border-left:3px solid var(--primary);border-radius:8px;padding:10px 14px;transition:all .15s;cursor:default;min-width:180px;}
+.org-tile:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.org-tile-lg{padding:14px 20px;border-left-width:4px;min-width:220px;}
+.org-tile-sm{padding:8px 12px;min-width:150px;border-left-width:2px;}
+.org-tile-xs{padding:6px 10px;min-width:130px;border-left-width:2px;}
+.org-tile-avatar{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.org-tile-lg .org-tile-avatar{width:48px;height:48px;font-size:16px;}
+.org-tile-sm .org-tile-avatar{width:30px;height:30px;font-size:10px;}
+.org-tile-info{min-width:0;}
+.org-tile-name{font-size:13px;font-weight:700;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.org-tile-lg .org-tile-name{font-size:15px;}
+.org-tile-role{font-size:11px;color:var(--gray-500);font-weight:600;}
+.org-tile-lg .org-tile-role{font-size:13px;color:var(--accent);font-weight:700;}
+.org-connector{width:2px;height:20px;background:var(--gray-300);margin:0 auto;}
+body.dark-mode .org-tile{background:#161b22;border-color:#30363d;}
+body.dark-mode .org-tile-name{color:#f0f6fc;}
+body.dark-mode .org-connector{background:#30363d;}
 .board-company{font-size:13px;color:var(--gray-500);margin-top:4px;}
 
 /* ========== TIMELINE ========== */

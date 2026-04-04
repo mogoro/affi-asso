@@ -569,3 +569,9 @@ ALTER TABLE contact_messages ADD CONSTRAINT chk_message_length
 ALTER TABLE members DROP CONSTRAINT IF EXISTS chk_bio_length;
 ALTER TABLE members ADD CONSTRAINT chk_bio_length
     CHECK (bio IS NULL OR length(bio) <= 5000);
+
+-- Organigramme: ajout categorie et niveau hierarchique
+ALTER TABLE board_members ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'bureau';
+ALTER TABLE board_members ADD COLUMN IF NOT EXISTS level INT DEFAULT 2;
+-- category: 'bureau', 'bureau-other', 'administrateur'
+-- level: 1=president, 2=vp/sg/tresorier, 3=autres membres bureau, 4=administrateurs

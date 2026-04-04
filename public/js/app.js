@@ -65,7 +65,7 @@ function navigate(page) {
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
     if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); loadReseauBouge(); loadPartnerBanner(); _homeLoaded = true; } lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
-    if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
+    if (page === 'identite') { loadOrganigramme(); setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
     // Si connecte et on va sur membres, afficher directement l'espace membre
     if (page === 'membres' && isLoggedIn() && typeof showMemberArea === 'function') {
         showMemberArea();
@@ -1410,6 +1410,89 @@ const PARTENAIRES_LOGOS = {
     'UIC': '/images/logos/uic.png',
     'Universite de l\'Ingenierie': '/images/logos/udi.png',
 };
+
+// === ORGANIGRAMME DYNAMIQUE ===
+async function loadOrganigramme() {
+    try {
+        const res = await fetch(`${API}/api/members?action=board`);
+        const board = await res.json();
+        const el = document.getElementById('organigramme-content');
+        if (!el) return;
+        if (!board || !board.length) {
+            el.innerHTML = '<p class="empty-msg">Organigramme en cours de mise a jour.</p>';
+            return;
+        }
+
+        const level1 = board.filter(b => b.level === 1);
+        const level2 = board.filter(b => b.level === 2);
+        const level3 = board.filter(b => b.level === 3 || b.category === 'bureau-other');
+        const level4 = board.filter(b => b.level === 4 || b.category === 'administrateur');
+
+        el.innerHTML = _renderOrgLevel1(level1) + _renderOrgLevel2(level2) + _renderOrgLevel3(level3) + _renderOrgLevel4(level4);
+    } catch(e) { console.warn('Organigramme:', e); }
+}
+
+function _orgInitials(b) {
+    const f = (b.first_name || '').charAt(0).toUpperCase();
+    const l = (b.last_name || '').charAt(0).toUpperCase();
+    return f + l;
+}
+
+function _orgTile(b, size, borderColor) {
+    const cls = size === 'lg' ? 'org-tile-lg' : size === 'sm' ? 'org-tile-sm' : size === 'xs' ? 'org-tile-xs' : '';
+    const bc = borderColor || 'var(--primary)';
+    const avatar = b.photo_url
+        ? `<img src="${b.photo_url}" class="org-tile-avatar" style="object-fit:cover" alt="">`
+        : `<div class="org-tile-avatar" style="background:${bc}">${_orgInitials(b)}</div>`;
+    const name = (b.first_name || '') + ' ' + (b.last_name || '');
+    return `<div class="org-tile ${cls}" style="border-left-color:${bc}">
+        ${avatar}
+        <div class="org-tile-info">
+            <div class="org-tile-name">${name.trim()}</div>
+            <div class="org-tile-role">${b.role || ''}</div>
+        </div>
+    </div>`;
+}
+
+function _renderOrgLevel1(items) {
+    if (!items.length) return '';
+    return `<div class="org-section">
+        <div class="org-section-label">President</div>
+        <div class="org-tiles">${items.map(b => _orgTile(b, 'lg', 'var(--accent)')).join('')}</div>
+    </div><div class="org-connector"></div>`;
+}
+
+function _renderOrgLevel2(items) {
+    if (!items.length) return '';
+    const colorMap = {'vice':'var(--primary)','secr':'var(--teal)','tres':'var(--gold)'};
+    function getColor(role) {
+        const r = (role||'').toLowerCase();
+        if (r.includes('vice') || r.includes('vp')) return colorMap['vice'];
+        if (r.includes('secr')) return colorMap['secr'];
+        if (r.includes('tres') || r.includes('trésor')) return colorMap['tres'];
+        return 'var(--primary)';
+    }
+    return `<div class="org-section">
+        <div class="org-section-label">Bureau</div>
+        <div class="org-tiles">${items.map(b => _orgTile(b, '', getColor(b.role))).join('')}</div>
+    </div><div class="org-connector"></div>`;
+}
+
+function _renderOrgLevel3(items) {
+    if (!items.length) return '';
+    return `<div class="org-section">
+        <div class="org-section-label">Autres membres du Bureau</div>
+        <div class="org-tiles">${items.map(b => _orgTile(b, 'sm', 'var(--primary-light,#6c8ebf)')).join('')}</div>
+    </div><div class="org-connector"></div>`;
+}
+
+function _renderOrgLevel4(items) {
+    if (!items.length) return '';
+    return `<div class="org-section">
+        <div class="org-section-label">Administrateurs</div>
+        <div class="org-tiles">${items.map(b => _orgTile(b, 'xs', 'var(--gray-400)')).join('')}</div>
+    </div>`;
+}
 
 async function loadPartenaires() {
     try {

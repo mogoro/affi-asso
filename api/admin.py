@@ -207,6 +207,15 @@ class handler(BaseHTTPRequestHandler):
                 ORDER BY l.created_at DESC LIMIT 100""")
             return self._json(200, rows)
 
+        elif action == "board":
+            rows = fetchall("""SELECT b.id, b.member_id, b.role, b.title, b.sort_order, b.is_active, b.category, b.level,
+                m.first_name, m.last_name, m.company, m.photo_url, m.email
+                FROM board_members b
+                LEFT JOIN members m ON b.member_id = m.id
+                WHERE b.is_active = TRUE
+                ORDER BY b.level ASC, b.sort_order ASC, b.role ASC""")
+            return self._json(200, rows)
+
         return self._json(400, {"error": "Action inconnue"})
       except Exception as e:
         return self._json(500, {"error": "Erreur interne", "detail": str(e)})
@@ -440,6 +449,26 @@ class handler(BaseHTTPRequestHandler):
 
         elif action == "delete_announcement":
             execute("UPDATE member_announcements SET is_active=FALSE, title=CONCAT('[SUPPRIME] ', title) WHERE id=%s", [body["id"]])
+            return self._json(200, {"ok": True})
+
+        # === BOARD MEMBERS ===
+        elif action == "create_board_member":
+            execute("""INSERT INTO board_members (member_id, role, title, sort_order, category, level)
+                VALUES (%s,%s,%s,%s,%s,%s)""",
+                [body.get("member_id"), body.get("role"), body.get("title"),
+                 _safe_int(body.get("sort_order", 0)), body.get("category", "bureau"), _safe_int(body.get("level", 2))])
+            self._log(admin["id"], "create_board_member", f"Role: {body.get('role')}")
+            return self._json(200, {"ok": True, "message": "Poste cree"})
+
+        elif action == "update_board_member":
+            fields = {k: body[k] for k in ("member_id","role","title","sort_order","category","level","is_active") if k in body}
+            if fields:
+                sets = ", ".join(f"{k}=%s" for k in fields)
+                execute(f"UPDATE board_members SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
+            return self._json(200, {"ok": True, "message": "Poste mis a jour"})
+
+        elif action == "delete_board_member":
+            execute("UPDATE board_members SET is_active=FALSE WHERE id=%s", [body["id"]])
             return self._json(200, {"ok": True})
 
         # === MESSAGES ===

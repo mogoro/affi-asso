@@ -42,6 +42,15 @@ class handler(BaseHTTPRequestHandler):
             """, params)
             return self._json(200, rows)
 
+        elif action == "board":
+            rows = fetchall("""SELECT b.id, b.role, b.title, b.sort_order, b.category, b.level,
+                m.first_name, m.last_name, m.company, m.photo_url
+                FROM board_members b
+                LEFT JOIN members m ON b.member_id = m.id
+                WHERE b.is_active = TRUE
+                ORDER BY b.level ASC, b.sort_order ASC""")
+            return self._json(200, rows)
+
         elif action == "directory":
             # Annuaire membres (accessible aux membres connectes)
             if not user:

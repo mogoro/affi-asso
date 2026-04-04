@@ -29,6 +29,7 @@ function switchAdminSection(id) {
     if (id === 'adm-logs') loadAdminLogs();
     if (id === 'adm-pubs') loadAdminPubs();
     if (id === 'adm-partners') loadAdminPartners();
+    if (id === 'adm-board') loadAdminBoard();
 }
 
 async function adminFetch(action, params) {
@@ -1029,4 +1030,124 @@ async function deletePartner(id) {
     await adminPost({action: 'delete_partner', id});
     loadAdminPartners();
     showToast('Partenaire supprime', 'success');
+}
+
+// === ORGANIGRAMME / BOARD ADMIN ===
+let _boardData = [];
+let _allMembersForBoard = [];
+
+async function loadAdminBoard() {
+    try {
+        _boardData = await adminFetch('board', {});
+    } catch(e) { _boardData = []; }
+    if (!document.getElementById('adm-board-list')) return;
+    if (!_boardData.length) {
+        document.getElementById('adm-board-list').innerHTML = '<p class="empty-msg">Aucun poste dans l\'organigramme</p>';
+        return;
+    }
+    const catLabels = {'bureau':'Bureau','bureau-other':'Autres Bureau','administrateur':'Administrateur'};
+    const lvlLabels = {1:'1-President',2:'2-VP/SG/Tresorier',3:'3-Autre Bureau',4:'4-Administrateur'};
+    new DataTable('adm-board-list', {
+        columns: [
+            { key: 'sort_order', label: 'Ordre', render: v => v },
+            { key: 'first_name', label: 'Membre', render: (v, r) => r.first_name ? `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong>` : '<em style="color:var(--gray-400)">Non lie</em>' },
+            { key: 'role', label: 'Role / Poste', render: v => `<strong>${esc(v||'')}</strong>` },
+            { key: 'category', label: 'Categorie', render: v => catLabels[v] || v },
+            { key: 'level', label: 'Niveau', render: v => lvlLabels[v] || v },
+        ],
+        data: _boardData,
+        actions: (b) => `
+            <button onclick="editBoardMember(${b.id})" class="adm-btn" title="Modifier">&#9998;</button>
+            <button onclick="deleteBoardMember(${b.id})" class="adm-btn adm-btn-danger" title="Supprimer">&#128465;</button>
+        `,
+        pageSize: 50,
+    });
+}
+
+async function _loadMembersForBoard() {
+    if (_allMembersForBoard.length) return;
+    try {
+        _allMembersForBoard = await adminFetch('members', {});
+    } catch(e) { _allMembersForBoard = []; }
+}
+
+async function showBoardMemberForm(item) {
+    await _loadMembersForBoard();
+    const b = item || {};
+    const isEdit = !!b.id;
+    const memberOptions = _allMembersForBoard.map(m =>
+        `<option value="${m.id}" ${m.id === b.member_id ? 'selected' : ''}>${esc(m.first_name)} ${esc(m.last_name)} — ${esc(m.company||'')}</option>`
+    ).join('');
+    const html = `<div class="adm-modal-bg" id="board-modal"><div class="adm-modal" style="max-width:600px">
+        <h3 style="margin-bottom:20px;color:var(--primary)">${isEdit ? 'Modifier' : 'Nouveau'} poste organigramme</h3>
+        <form onsubmit="saveBoardMember(event,${isEdit ? b.id : 0})">
+            <div class="form-group"><label>Membre *</label>
+                <select id="bm-member" required><option value="">-- Choisir un membre --</option>${memberOptions}</select>
+            </div>
+            <div class="form-group"><label>Role / Poste *</label><input id="bm-role" required value="${esc(b.role||'')}" placeholder="President, Vice-President..."></div>
+            <div class="form-group"><label>Titre (optionnel)</label><input id="bm-title" value="${esc(b.title||'')}" placeholder="Description complementaire"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Categorie</label>
+                    <select id="bm-category">
+                        <option value="bureau" ${b.category==='bureau'?'selected':''}>Bureau</option>
+                        <option value="bureau-other" ${b.category==='bureau-other'?'selected':''}>Autres Bureau</option>
+                        <option value="administrateur" ${b.category==='administrateur'?'selected':''}>Administrateur</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Niveau hierarchique</label>
+                    <select id="bm-level">
+                        <option value="1" ${b.level==1?'selected':''}>1 - President</option>
+                        <option value="2" ${b.level==2?'selected':''}>2 - VP/SG/Tresorier</option>
+                        <option value="3" ${b.level==3?'selected':''}>3 - Autre Bureau</option>
+                        <option value="4" ${b.level==4?'selected':''}>4 - Administrateur</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group"><label>Ordre d'affichage</label><input type="number" id="bm-sort" value="${b.sort_order||0}"></div>
+            <div style="display:flex;gap:12px">
+                <button type="submit" class="btn btn-accent" style="flex:1">${isEdit ? 'Enregistrer' : 'Ajouter le poste'}</button>
+                <button type="button" class="btn btn-primary" style="flex:1" onclick="closeModal('board-modal')">Annuler</button>
+            </div>
+        </form>
+    </div></div>`;
+    openModal(html);
+}
+
+function editBoardMember(id) {
+    const b = _boardData.find(x => x.id === id);
+    if (b) showBoardMemberForm(b);
+}
+
+async function saveBoardMember(evt, id) {
+    evt.preventDefault();
+    const data = {
+        member_id: parseInt(document.getElementById('bm-member').value) || null,
+        role: document.getElementById('bm-role').value,
+        title: document.getElementById('bm-title').value,
+        category: document.getElementById('bm-category').value,
+        level: parseInt(document.getElementById('bm-level').value) || 2,
+        sort_order: parseInt(document.getElementById('bm-sort').value) || 0,
+    };
+    if (id > 0) {
+        data.action = 'update_board_member';
+        data.id = id;
+    } else {
+        data.action = 'create_board_member';
+    }
+    const res = await adminPost(data);
+    if (res.ok) {
+        closeModal('board-modal');
+        loadAdminBoard();
+        showToast(id > 0 ? 'Poste mis a jour' : 'Poste ajoute', 'success');
+    } else {
+        showToast(res.error || 'Erreur', 'error');
+    }
+}
+
+async function deleteBoardMember(id) {
+    const b = _boardData.find(x => x.id === id);
+    if (!confirm('Supprimer le poste ' + (b ? b.role : '#' + id) + ' ?')) return;
+    await adminPost({action: 'delete_board_member', id});
+    loadAdminBoard();
+    showToast('Poste supprime', 'success');
 }

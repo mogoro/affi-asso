@@ -206,57 +206,7 @@ async function onNavSearch(q) {
 }
 
 // === NAV SUB (contextuel) ===
-function updateNavSub(page) {
-    const sub = document.getElementById('nav-sub');
-    const links = document.getElementById('nav-sub-links');
-    if (!sub || !links) return;
-    const subs = {
-        accueil: [
-            {label:"Actualites",action:"document.getElementById('news-carousel-wrapper')?.scrollIntoView({behavior:'smooth',block:'start'})"},
-            {label:"Agenda",action:"document.getElementById('home-events')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'})"},
-            {label:"Partenaires",action:"document.getElementById('partenaires-unified')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'})"},
-        ],
-        identite: [
-            {label:"L'association",action:"scrollToSection('ident-association')"},
-            {label:"Ses actions",action:"scrollToSection('ident-actions')"},
-            {label:"Historique",action:"scrollToSection('ident-historique')"},
-            {label:"Gouvernance",action:"scrollToSection('ident-gouvernance')"},
-            {label:"Organigramme",action:"scrollToSection('ident-organigramme')"},
-            {label:"Carte",action:"scrollToSection('ident-cartographie')"},
-        ],
-        annuaire: [
-            {label:"Annuaire experts",action:"window.scrollTo({top:0,behavior:'smooth'})"},
-        ],
-        agenda: [
-            {label:"Calendrier",action:"navigate('agenda')"},
-            {label:"Formations",action:"navigate('agenda');setTimeout(()=>document.getElementById('courses-list')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'}),300)"},
-            {label:"Publications",action:"navigate('publications')"},
-            {label:"Quizz",action:"navigate('quizz')"},
-        ],
-        ecoles: [
-            {label:"Espace Etudiants",action:"window.scrollTo({top:0,behavior:'smooth'})"},
-            {label:"Stages",action:"document.getElementById('stages-list')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'})"},
-        ],
-        adhesion: [
-            {label:"Tarifs",action:"window.scrollTo({top:0,behavior:'smooth'})"},
-            {label:"Formulaire",action:"document.querySelector('.form-card')?.scrollIntoView({behavior:'smooth',block:'start'})"},
-        ],
-        contact: [
-            {label:"Coordonnees",action:"window.scrollTo({top:0,behavior:'smooth'})"},
-            {label:"Formulaire",action:"document.querySelector('form')?.scrollIntoView({behavior:'smooth',block:'start'})"},
-        ],
-        membres: [
-            {label:"Espace membre",action:"window.scrollTo({top:0,behavior:'smooth'})"},
-        ],
-    };
-    const items = subs[page] || (['publications','quizz','replays'].includes(page) ? subs.agenda : null);
-    if (items) {
-        links.innerHTML = items.map(i => `<a class="nav-sub-link" onclick="${i.action}">${i.label}</a>`).join('');
-        sub.style.display = '';
-    } else {
-        sub.style.display = 'none';
-    }
-}
+function updateNavSub() { /* Sous-nav supprimee — une seule ligne de navigation */ }
 
 // === SCROLL SPY for sub-nav highlight ===
 let _scrollSpySections = [];

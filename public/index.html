@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775333704" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775333704">
+<link rel="preload" href="/css/styles.css?v=1775333958" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775333958">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -76,10 +76,6 @@
             </div>
             <button class="nav-hamburger" aria-label="Menu de navigation" aria-expanded="false" onclick="this.setAttribute('aria-expanded',document.getElementById('nav-links').classList.toggle('open'))">&#9776;</button>
         </div>
-    </div>
-    <!-- Sub-nav contextuel (s'affiche selon la page) -->
-    <div class="nav-sub" id="nav-sub" style="display:none">
-        <div class="nav-sub-inner" id="nav-sub-links"></div>
     </div>
 </nav>
 
@@ -206,16 +202,6 @@
 <!-- L'ASSOCIATION                                                     -->
 <!-- ================================================================ -->
 <div id="page-identite" class="page">
-    <!-- Sub-navigation Identite -->
-    <div class="sub-nav">
-        <div class="container" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-            <a class="sub-nav-link active" onclick="scrollToSection('ident-association')">L'association</a>
-            <a class="sub-nav-link" onclick="scrollToSection('ident-actions')">Ses actions</a>
-            <a class="sub-nav-link" onclick="scrollToSection('ident-historique')">Historique</a>
-            <a class="sub-nav-link" onclick="scrollToSection('ident-organigramme')">Organigramme</a>
-            <a class="sub-nav-link" onclick="scrollToSection('ident-cartographie')">Carte des membres</a>
-        </div>
-    </div>
     <section id="ident-association">
         <div class="container">
             <div class="about-grid">
@@ -1263,11 +1249,11 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/app.js?v=1775333704" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775333704" defer></script>
+<script src="/js/app.js?v=1775333958" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775333958" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/members.js?v=1775333704','/js/social.js?v=1775333704','/js/datatable.js?v=1775333704','/js/admin.js?v=1775333704','/js/map.js?v=1775333704'];
+    var scripts = ['/js/members.js?v=1775333958','/js/social.js?v=1775333958','/js/datatable.js?v=1775333958','/js/admin.js?v=1775333958','/js/map.js?v=1775333958'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

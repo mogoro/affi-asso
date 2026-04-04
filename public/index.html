@@ -380,16 +380,90 @@
         <div class="container">
             <div class="section-line section-line-center"></div>
             <h2 class="section-title section-title-center">Organigramme</h2>
-            <h3 style="text-align:center;margin-bottom:24px;color:var(--primary);font-size:18px;font-weight:700">Conseil d'administration — Le Bureau</h3>
-            <div class="board-grid">
-                <div class="board-card"><div class="board-avatar">FP</div><div class="board-name">Francois-Xavier Picard</div><div class="board-role">President</div></div>
-                <div class="board-card"><div class="board-avatar">MA</div><div class="board-name">Marc Antoni</div><div class="board-role">Vice-President</div></div>
-                <div class="board-card"><div class="board-avatar">YR</div><div class="board-name">Yves Ramette</div><div class="board-role">Vice-President</div></div>
-                <div class="board-card"><div class="board-avatar">IB</div><div class="board-name">Igor Bilimoff</div><div class="board-role">Vice-President</div></div>
-                <div class="board-card"><div class="board-avatar">JM</div><div class="board-name">Jean-Jacques Mogoro</div><div class="board-role">Secretaire general</div></div>
-                <div class="board-card"><div class="board-avatar">PM</div><div class="board-name">Philippe Mingasson</div><div class="board-role">Secretaire general adjoint</div></div>
-                <div class="board-card"><div class="board-avatar">JR</div><div class="board-name">Jean-Pierre Riff</div><div class="board-role">Secretaire general adjoint</div></div>
-                <div class="board-card"><div class="board-avatar">CV</div><div class="board-name">Christophe Vandenbrouck</div><div class="board-role">Tresorier</div></div>
+            <h3 style="text-align:center;margin-bottom:28px;color:var(--primary);font-size:18px;font-weight:700">Conseil d'administration — Le Bureau</h3>
+
+            <!-- NIVEAU 1 : Président -->
+            <div class="bureau-president">
+                <div class="bureau-card bureau-card-president">
+                    <div class="bureau-avatar bureau-avatar-lg" style="background:var(--accent)">FP</div>
+                    <div class="bureau-info">
+                        <div class="bureau-name">François-Xavier Picard</div>
+                        <div class="bureau-role bureau-role-president">Président</div>
+                    </div>
+                </div>
+                <div class="bureau-connector"></div>
+            </div>
+
+            <!-- NIVEAU 2 : Vice-Présidents -->
+            <div class="bureau-level bureau-level-vp">
+                <div class="bureau-level-label">Vice-Présidents</div>
+                <div class="bureau-row">
+                    <div class="bureau-card">
+                        <div class="bureau-avatar" style="background:var(--primary-light)">MA</div>
+                        <div class="bureau-info">
+                            <div class="bureau-name">Marc Antoni</div>
+                            <div class="bureau-role">Vice-Président</div>
+                        </div>
+                    </div>
+                    <div class="bureau-card">
+                        <div class="bureau-avatar" style="background:var(--primary-light)">YR</div>
+                        <div class="bureau-info">
+                            <div class="bureau-name">Yves Ramette</div>
+                            <div class="bureau-role">Vice-Président</div>
+                        </div>
+                    </div>
+                    <div class="bureau-card">
+                        <div class="bureau-avatar" style="background:var(--primary-light)">IB</div>
+                        <div class="bureau-info">
+                            <div class="bureau-name">Igor Bilimoff</div>
+                            <div class="bureau-role">Vice-Président</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NIVEAU 3 : Secrétariat & Trésorerie -->
+            <div class="bureau-level bureau-level-sg">
+                <div class="bureau-split">
+                    <div class="bureau-branch">
+                        <div class="bureau-level-label">Secrétariat Général</div>
+                        <div class="bureau-row">
+                            <div class="bureau-card">
+                                <div class="bureau-avatar" style="background:var(--teal)">JM</div>
+                                <div class="bureau-info">
+                                    <div class="bureau-name">Jean-Jacques Mogoro</div>
+                                    <div class="bureau-role" style="color:var(--teal)">Secrétaire Général</div>
+                                </div>
+                            </div>
+                            <div class="bureau-card bureau-card-sm">
+                                <div class="bureau-avatar bureau-avatar-sm" style="background:var(--teal);opacity:.8">PM</div>
+                                <div class="bureau-info">
+                                    <div class="bureau-name" style="font-size:14px">Philippe Mingasson</div>
+                                    <div class="bureau-role" style="font-size:11px;color:var(--teal)">SG Adjoint</div>
+                                </div>
+                            </div>
+                            <div class="bureau-card bureau-card-sm">
+                                <div class="bureau-avatar bureau-avatar-sm" style="background:var(--teal);opacity:.8">JR</div>
+                                <div class="bureau-info">
+                                    <div class="bureau-name" style="font-size:14px">Jean-Pierre Riff</div>
+                                    <div class="bureau-role" style="font-size:11px;color:var(--teal)">SG Adjoint</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bureau-branch">
+                        <div class="bureau-level-label">Trésorerie</div>
+                        <div class="bureau-row">
+                            <div class="bureau-card">
+                                <div class="bureau-avatar" style="background:var(--gold)">CV</div>
+                                <div class="bureau-info">
+                                    <div class="bureau-name">Christophe Vandenbrouck</div>
+                                    <div class="bureau-role" style="color:var(--gold)">Trésorier</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <h3 style="text-align:center;margin:32px 0 16px;color:var(--gray-500);font-size:16px;font-weight:600">Autres membres du Bureau</h3>
             <div class="board-grid" style="max-width:900px;margin:0 auto">

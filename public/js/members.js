@@ -162,7 +162,39 @@ function switchMemberTab(tab) {
 async function loadMyEvents() {
     const el = document.getElementById('my-events-list');
     if (!el) return;
-    el.innerHTML = '<p class="empty-msg">Vos inscriptions aux evenements apparaitront ici</p>';
+    try {
+        const res = await fetch(`${API}/api/events?action=my_registrations`, {
+            headers: {'Authorization': 'Bearer ' + authToken}
+        });
+        const regs = await res.json();
+        if (!regs || !regs.length) {
+            el.innerHTML = '<p class="empty-msg">Vous n\'êtes inscrit à aucun événement pour le moment.</p>';
+            return;
+        }
+        el.innerHTML = regs.map(r => {
+            const d = new Date(r.start_date);
+            const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+            const isPast = d < new Date();
+            return `<div class="evt-card ${isPast ? 'evt-card-past' : ''}" style="cursor:pointer" onclick="showEventDetail(${r.event_id || r.id})">
+                <div class="evt-date-col" style="background:${isPast ? 'linear-gradient(135deg,#6c757d,#adb5bd)' : 'linear-gradient(135deg,var(--primary),var(--primary-light))'}">
+                    <div class="evt-date-day">${d.getDate()}</div>
+                    <div class="evt-date-month">${months[d.getMonth()] || ''}</div>
+                    <div class="evt-date-year">${d.getFullYear()}</div>
+                </div>
+                <div class="evt-body">
+                    <div class="evt-title">${esc(r.title)}</div>
+                    <div class="evt-meta">
+                        ${r.location ? `<span>&#128205; ${esc(r.location)}</span>` : ''}
+                        <span class="adm-badge ${isPast ? 'adm-badge-blocked' : 'adm-badge-active'}">${isPast ? 'Passé' : 'À venir'}</span>
+                        <span class="adm-badge adm-badge-active">&#10003; Inscrit</span>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        el.innerHTML = '<p class="empty-msg">Erreur de chargement</p>';
+        console.warn('MyEvents:', e);
+    }
 }
 
 // === DASHBOARD: NEWS ===

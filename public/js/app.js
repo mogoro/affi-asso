@@ -268,6 +268,8 @@ window.addEventListener('scroll', () => {
 function onUserLoggedIn() {
     restoreLockedPages();
     updateNavbarState();
+    // Charger les inscriptions evenements de l'utilisateur
+    loadUserRegistrations();
     // Recharger la page courante pour afficher le contenu
     const currentPage = location.hash.slice(1) || 'accueil';
     if (LOCKED_PAGES.includes(currentPage) || currentPage === 'annuaire' || currentPage === 'accueil') {
@@ -1142,11 +1144,16 @@ function renderAgendaEvents(events) {
         'linear-gradient(135deg,#6c3fa0,#9b6fd0)',
         'linear-gradient(135deg,#c8102e,#e8354f)',
     ];
+    const loggedIn = isLoggedIn();
     el.innerHTML = events.map((e, i) => {
         const d = new Date(e.start_date);
         const day = d.getDate();
         const month = months[d.getMonth()] || '';
         const year = d.getFullYear();
+        const isRegistered = userRegisteredEventIds.has(e.id);
+        const regCount = e.reg_count || 0;
+        const maxAtt = e.max_attendees || 0;
+        const pct = maxAtt > 0 ? Math.min(100, Math.round(regCount / maxAtt * 100)) : 0;
         return `<div class="evt-card" style="cursor:pointer" onclick="showEventDetail(${e.id})">
             <div class="evt-date-col" style="background:${gradients[i % gradients.length]}">
                 <div class="evt-date-day">${day}</div>
@@ -1159,14 +1166,35 @@ function renderAgendaEvents(events) {
                 <div class="evt-meta">
                     ${e.location ? `<span>&#128205; ${esc(e.location)}</span>` : ''}
                     ${e.end_date && e.end_date !== e.start_date ? `<span>&#8594; ${formatDate(e.end_date)}</span>` : ''}
+                    <span>&#128101; ${regCount} inscrit(s)</span>
                 </div>
+                ${maxAtt > 0 ? `<div class="evt-gauge"><div class="evt-gauge-fill" style="width:${pct}%"></div><span class="evt-gauge-text">${regCount}/${maxAtt}</span></div>` : ''}
                 <div class="evt-actions">
-                    <button onclick="downloadICS('${esc(e.title).replace(/'/g,"\\'")}','${esc(e.description||'').replace(/'/g,"\\'")}','${esc(e.location||'').replace(/'/g,"\\'")}','${e.start_date}','${e.end_date||''}')" class="btn btn-primary" style="font-size:12px;padding:6px 14px">&#128197; Calendrier</button>
+                    ${loggedIn
+                        ? (isRegistered
+                            ? `<button onclick="event.stopPropagation();unregisterFromEvent(${e.id})" class="evt-reg-btn evt-reg-done">&#10003; INSCRIT</button>`
+                            : `<button onclick="event.stopPropagation();registerForEvent(${e.id})" class="evt-reg-btn">S'INSCRIRE</button>`)
+                        : `<button onclick="event.stopPropagation();showLoginPopup()" class="evt-reg-btn">Connexion pour s'inscrire</button>`
+                    }
+                    <button onclick="event.stopPropagation();downloadICS('${esc(e.title).replace(/'/g,"\\'")}','${esc(e.description||'').replace(/'/g,"\\'")}','${esc(e.location||'').replace(/'/g,"\\'")}','${e.start_date}','${e.end_date||''}')" class="btn btn-primary" style="font-size:12px;padding:6px 14px">&#128197;</button>
                     ${typeof renderShareButtons==='function' ? renderShareButtons(e.title, e.id) : ''}
                 </div>
             </div>
         </div>`;
     }).join('');
+}
+
+// Charger les inscriptions de l'utilisateur connecte
+async function loadUserRegistrations() {
+    if (!isLoggedIn() || !authToken) return;
+    try {
+        const res = await fetch(`${API}/api/events?action=my_registrations`, {
+            headers: {'Authorization': 'Bearer ' + authToken}
+        });
+        const data = await res.json();
+        userRegisteredEventIds.clear();
+        if (Array.isArray(data)) data.forEach(r => userRegisteredEventIds.add(r.event_id));
+    } catch(e) { console.warn('My registrations:', e); }
 }
 
 // === EVENTS (all / archive) ===

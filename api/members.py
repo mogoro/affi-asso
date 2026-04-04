@@ -36,7 +36,7 @@ class handler(BaseHTTPRequestHandler):
             where = " AND ".join(clauses)
             rows = fetchall(f"""
                 SELECT id, first_name, last_name, company, job_title, sector, specialty,
-                       region, photo_url, bio, is_mentor, is_board, linkedin_url
+                       region, photo_url, bio, is_mentor, is_board, linkedin_url, interests, phone_visible, phone
                 FROM members WHERE {where}
                 ORDER BY last_name ASC LIMIT 200
             """, params)
@@ -81,7 +81,7 @@ class handler(BaseHTTPRequestHandler):
             rows = fetchall(f"""
                 SELECT id, first_name, last_name, company, job_title, sector, photo_url, bio,
                        membership_type, is_board, specialty, is_mentor, region, linkedin_url,
-                       consent_annuaire, joined_at
+                       consent_annuaire, joined_at, interests, phone_visible, phone
                 FROM members WHERE {where}
                 ORDER BY last_name ASC LIMIT 200
             """, params)
@@ -95,7 +95,7 @@ class handler(BaseHTTPRequestHandler):
                 SELECT id, email, first_name, last_name, phone, company, job_title, sector,
                        bio, photo_url, membership_type, status, is_admin, is_board,
                        linkedin_url, cv_text, cv_updated_at, joined_at, specialty, is_mentor,
-                       region, role, consent_annuaire, consent_newsletter
+                       region, role, consent_annuaire, consent_newsletter, interests, phone_visible
                 FROM members WHERE id = %s
             """, [user["id"]])
             return self._json(200, full)
@@ -142,7 +142,7 @@ class handler(BaseHTTPRequestHandler):
 
         if action == "update_profile":
             fields = {}
-            for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url","specialty","is_mentor","region","consent_annuaire","consent_newsletter"):
+            for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url","specialty","is_mentor","region","consent_annuaire","consent_newsletter","interests","phone_visible"):
                 if k in body:
                     fields[k] = body[k]
             # MAJ consent_date si consentement change

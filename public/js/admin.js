@@ -158,6 +158,7 @@ async function loadAdminMembers(status, search) {
             ${m.status==='pending' ? `<button onclick="adminAction('approve_member',${m.id})" class="adm-btn adm-btn-ok" title="Approuver">&#10003;</button>` : ''}
             ${m.status==='active' ? `<button onclick="adminAction('block_member',${m.id})" class="adm-btn adm-btn-warn" title="Bloquer">&#10007;</button>` : ''}
             ${m.status==='blocked' ? `<button onclick="adminAction('activate_member',${m.id})" class="adm-btn adm-btn-ok" title="Reactiver">&#8635;</button>` : ''}
+            <button onclick="event.stopPropagation();sendRGPDConsent(${m.id},'${esc(m.email).replace(/'/g,"&#39;")}','${esc(m.first_name).replace(/'/g,"&#39;")}')" class="adm-btn" title="Demander consentement RGPD" style="color:${m.consent_annuaire && m.consent_newsletter ? 'var(--green)' : 'var(--orange)'}">&#128274;</button>
             <button onclick="editMember(${m.id})" class="adm-btn" title="Modifier">&#9998;</button>
             ${!m.is_admin ? `<button onclick="adminAction('delete_member',${m.id})" class="adm-btn adm-btn-danger" title="Supprimer">&#128465;</button>` : ''}
         `,
@@ -1155,4 +1156,99 @@ function previewAdminImage(inputId, previewId) {
     } else {
         preview.innerHTML = '';
     }
+}
+
+// === RGPD CONSENT EMAIL ===
+async function sendRGPDConsent(memberId, email, firstName) {
+    if (!confirm(`Envoyer un email de demande de consentement RGPD à ${firstName} (${email}) ?`)) return;
+    try {
+        const res = await fetch(`${API}/api/email`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
+            body: JSON.stringify({
+                action: 'send',
+                to: email,
+                subject: '[AFFI] Consentement RGPD — Protection de vos données personnelles',
+                html: getRGPDEmailHTML(firstName)
+            })
+        });
+        const data = await res.json();
+        if (data.error) { showToast('Erreur: ' + data.error, 'error'); return; }
+        showToast(`Email RGPD envoyé à ${email}`, 'success');
+    } catch(e) {
+        showToast('Erreur réseau', 'error');
+    }
+}
+
+function getRGPDEmailHTML(firstName) {
+    return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background:#f4f6f8">
+<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+    <div style="background:#1a3c6e;padding:28px;text-align:center">
+        <img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logo-affi" alt="AFFI" style="height:40px;margin-bottom:8px"><br>
+        <span style="color:rgba(255,255,255,.7);font-size:13px">Association Ferroviaire Française des Ingénieurs</span>
+    </div>
+    <div style="padding:32px 28px">
+        <h2 style="color:#1a3c6e;margin:0 0 16px;font-size:22px">Consentement RGPD</h2>
+        <p>Bonjour <strong>${firstName}</strong>,</p>
+        <p>Dans le cadre de la réglementation européenne sur la protection des données personnelles (RGPD), l'AFFI vous informe des données que nous conservons et vous demande votre consentement explicite.</p>
+
+        <div style="background:#f0f4f8;border-radius:8px;padding:20px;margin:20px 0">
+            <h3 style="color:#1a3c6e;margin:0 0 12px;font-size:16px">&#128274; Données conservées par l'AFFI :</h3>
+            <ul style="margin:0;padding-left:20px;line-height:2;color:#495057">
+                <li><strong>Identité :</strong> Nom, prénom, email, téléphone</li>
+                <li><strong>Professionnel :</strong> Entreprise, fonction, secteur d'activité</li>
+                <li><strong>Adhésion :</strong> Type de cotisation, date d'inscription, statut</li>
+                <li><strong>Technique :</strong> Date de dernière connexion (sécurité)</li>
+            </ul>
+        </div>
+
+        <div style="background:#fff8e1;border-radius:8px;padding:20px;margin:20px 0;border-left:4px solid #ffc107">
+            <h3 style="color:#e65100;margin:0 0 8px;font-size:16px">&#128101; L'annuaire des membres :</h3>
+            <p style="margin:0;color:#495057">Si vous y consentez, votre profil (nom, entreprise, fonction, secteur) sera visible dans l'annuaire réservé aux membres connectés de l'AFFI. Cet annuaire permet aux adhérents de se retrouver et de se mettre en réseau. Votre email et téléphone ne sont <strong>jamais</strong> affichés dans l'annuaire public.</p>
+        </div>
+
+        <div style="background:#e8f5e9;border-radius:8px;padding:20px;margin:20px 0;border-left:4px solid #4caf50">
+            <h3 style="color:#2e7d32;margin:0 0 8px;font-size:16px">&#9989; Vos droits :</h3>
+            <ul style="margin:0;padding-left:20px;line-height:2;color:#495057">
+                <li>Droit d'accès, de rectification et de suppression de vos données</li>
+                <li>Droit de retirer votre consentement à tout moment</li>
+                <li>Droit de portabilité de vos données</li>
+                <li>Contact DPO : contact@ingenieur-ferroviaire.net</li>
+            </ul>
+        </div>
+
+        <p style="text-align:center;margin:28px 0">
+            <a href="https://affi-asso.vercel.app/#membres" style="display:inline-block;background:#c8102e;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:800;font-size:16px">Gérer mes consentements</a>
+        </p>
+        <p style="color:#6c757d;font-size:13px;text-align:center">Connectez-vous puis allez dans <strong>Profil & CV</strong> pour accepter ou refuser la publication dans l'annuaire et la newsletter.</p>
+    </div>
+    <div style="padding:16px 28px;background:#f8f9fa;text-align:center;font-size:12px;color:#6c757d;border-top:1px solid #e9ecef">
+        AFFI — 60 rue Anatole France, 92300 Levallois-Perret<br>
+        <a href="https://affi-asso.vercel.app" style="color:#1a3c6e">affi-asso.vercel.app</a> · Conformité RGPD (Règlement UE 2016/679)
+    </div>
+</div>
+</body></html>`;
+}
+
+// Mass RGPD consent request (send to all members without consent)
+async function sendRGPDConsentAll() {
+    if (!confirm('Envoyer l\'email de consentement RGPD à TOUS les membres sans consentement ? Cette action peut prendre du temps.')) return;
+    const members = await adminFetch('members', {});
+    const needConsent = members.filter(m => !m.consent_annuaire && m.status === 'active' && m.email);
+    if (!needConsent.length) { showToast('Tous les membres actifs ont déjà donné leur consentement', 'success'); return; }
+    if (!confirm(`${needConsent.length} membre(s) sans consentement. Confirmer l'envoi ?`)) return;
+    let sent = 0;
+    for (const m of needConsent) {
+        try {
+            await fetch(`${API}/api/email`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
+                body: JSON.stringify({action: 'send', to: m.email, subject: '[AFFI] Consentement RGPD', html: getRGPDEmailHTML(m.first_name)})
+            });
+            sent++;
+        } catch(e) {}
+    }
+    showToast(`${sent}/${needConsent.length} emails RGPD envoyés`, 'success');
 }

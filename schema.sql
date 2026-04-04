@@ -471,6 +471,8 @@ ALTER TABLE members ADD COLUMN IF NOT EXISTS website_url      TEXT;
 ALTER TABLE members ADD COLUMN IF NOT EXISTS is_freelance     BOOLEAN DEFAULT FALSE;
 ALTER TABLE members ADD COLUMN IF NOT EXISTS daily_rate       NUMERIC(8,2);
 ALTER TABLE members ADD COLUMN IF NOT EXISTS availability     VARCHAR(50);
+ALTER TABLE members ADD COLUMN IF NOT EXISTS interests        TEXT;
+ALTER TABLE members ADD COLUMN IF NOT EXISTS phone_visible    BOOLEAN DEFAULT FALSE;
 
 -- event_registrations : colonnes de presence (admin.py)
 ALTER TABLE event_registrations ADD COLUMN IF NOT EXISTS attended    BOOLEAN DEFAULT FALSE;

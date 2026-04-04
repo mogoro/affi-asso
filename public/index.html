@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775337770" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775337770">
+<link rel="preload" href="/css/styles.css?v=1775338110" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775338110">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -917,6 +917,10 @@
                                         </div>
                                     </div>
                                     <div class="form-group"><label>Bio / Presentation</label><textarea id="prof-bio" style="min-height:80px"></textarea></div>
+                                    <div class="form-group"><label>Centres d'intérêt ferroviaires</label><input id="prof-interests" placeholder="Ex: ERTMS, maintenance prédictive, hydrogène..."></div>
+                                    <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px">
+                                        <label><input type="checkbox" id="prof-phone_visible"> Afficher mon téléphone dans l'annuaire</label>
+                                    </div>
                                     <div class="form-group"><label>URL LinkedIn</label><input type="url" id="prof-linkedin_url" placeholder="https://linkedin.com/in/..."></div>
                                     <button type="submit" class="form-submit">Enregistrer le profil</button>
                                     <div class="form-success" id="profile-success">Profil mis a jour !</div>
@@ -1056,6 +1060,7 @@
                             <button class="btn btn-accent" onclick="showCreateMemberForm()" style="font-size:13px;padding:8px 20px">+ Nouveau membre</button>
                             <button class="btn btn-primary" onclick="showImportForm()" style="font-size:13px;padding:8px 20px">Import CSV</button>
                             <button class="btn btn-primary" onclick="exportMembers()" style="font-size:13px;padding:8px 20px;background:var(--teal)">Export CSV</button>
+                            <button class="btn btn-primary" onclick="sendRGPDConsentAll()" style="font-size:13px;padding:8px 20px;background:var(--teal)">&#128274; RGPD à tous</button>
                         </div>
                         <div id="adm-members-summary" style="margin-bottom:16px"></div>
                         <div id="adm-members-list"><p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p></div>
@@ -1196,12 +1201,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/members.js?v=1775337770" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775337770" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775337770" defer></script>
+<script src="/js/members.js?v=1775338110" defer fetchpriority="high"></script>
+<script src="/js/app.js?v=1775338110" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775338110" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/social.js?v=1775337770','/js/datatable.js?v=1775337770','/js/admin.js?v=1775337770','/js/map.js?v=1775337770'];
+    var scripts = ['/js/social.js?v=1775338110','/js/datatable.js?v=1775338110','/js/admin.js?v=1775338110','/js/map.js?v=1775338110'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

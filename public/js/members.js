@@ -211,6 +211,9 @@ function renderDirectory(members) {
             </div>
             <div class="ec-expand">
                 ${m.bio ? `<div class="ec-bio">${esc((m.bio || '').substring(0, 200))}${(m.bio||'').length > 200 ? '...' : ''}</div>` : '<div class="ec-bio" style="color:var(--gray-400);font-style:italic">Pas de bio renseignee</div>'}
+                ${m.linkedin_url ? `<div style="margin:8px 0"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:600;font-size:13px">&#128279; Profil LinkedIn</a></div>` : ''}
+                ${m.phone && m.phone_visible ? `<div style="font-size:13px;color:var(--gray-600);margin:4px 0">&#128222; ${esc(m.phone)}</div>` : ''}
+                ${m.interests ? `<div style="margin:8px 0;font-size:12px"><strong>Centres d'intérêt :</strong> ${esc(m.interests)}</div>` : ''}
                 <div class="ec-meta">
                     ${m.joined_at ? `<span>&#128197; Membre depuis ${formatDate(m.joined_at)}</span>` : ''}
                 </div>
@@ -292,12 +295,14 @@ async function loadProfile() {
         const p = await res.json();
         if (p.error) return;
         // Fill form
-        for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region','photo_url']) {
+        for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region','photo_url','interests']) {
             const inp = document.getElementById('prof-' + k);
             if (inp) inp.value = p[k] || '';
         }
         const mentorCb = document.getElementById('prof-is_mentor');
         if (mentorCb) mentorCb.checked = !!p.is_mentor;
+        const phoneVisCb = document.getElementById('prof-phone_visible');
+        if (phoneVisCb) phoneVisCb.checked = !!p.phone_visible;
         const consentAnn = document.getElementById('prof-consent_annuaire');
         if (consentAnn) consentAnn.checked = !!p.consent_annuaire;
         const consentNl = document.getElementById('prof-consent_newsletter');
@@ -321,12 +326,14 @@ async function saveProfile(evt) {
     evt.preventDefault();
     const f = evt.target;
     const data = {};
-    for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region','photo_url']) {
+    for (const k of ['first_name','last_name','phone','company','job_title','sector','bio','linkedin_url','specialty','region','photo_url','interests']) {
         const inp = document.getElementById('prof-' + k);
         if (inp) data[k] = inp.value;
     }
     const mentorCb = document.getElementById('prof-is_mentor');
     if (mentorCb) data.is_mentor = mentorCb.checked;
+    const phoneVisCb = document.getElementById('prof-phone_visible');
+    if (phoneVisCb) data.phone_visible = phoneVisCb.checked;
     const consentAnn = document.getElementById('prof-consent_annuaire');
     if (consentAnn) data.consent_annuaire = consentAnn.checked;
     const consentNl = document.getElementById('prof-consent_newsletter');

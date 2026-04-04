@@ -64,7 +64,7 @@ function navigate(page) {
     if (page === 'ecoles') { loadStages(); if (typeof loadEcoles === 'function') loadEcoles(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
-    if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); loadReseauBouge(); loadPartnerBanner(); _homeLoaded = true; } lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); initScrollSpy(); }
+    if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); loadReseauBouge(); loadPartnerBanner(); _homeLoaded = true; } lockCarriereIfNeeded(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); initScrollSpy(); }
     if (page === 'identite') { loadOrganigramme(); setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); initScrollSpy(); }
     // Si connecte et on va sur membres, afficher directement l'espace membre
     if (page === 'membres' && isLoggedIn() && typeof showMemberArea === 'function') {
@@ -297,6 +297,87 @@ function onUserLoggedIn() {
     if (LOCKED_PAGES.includes(currentPage) || currentPage === 'annuaire' || currentPage === 'accueil') {
         navigate(currentPage);
     }
+    // Afficher un sondage en popup si disponible (1 seule fois par session)
+    if (!sessionStorage.getItem('affi_poll_shown')) {
+        setTimeout(() => showPollPopup(), 2000);
+    }
+}
+
+async function showPollPopup() {
+    try {
+        const res = await fetch(`${API}/api/social?action=polls`, {
+            headers: {'Authorization': 'Bearer ' + (typeof authToken !== 'undefined' ? authToken : '')}
+        });
+        const polls = await res.json();
+        if (!polls || !polls.length) return;
+        // Trouver un sondage auquel l'utilisateur n'a pas encore voté
+        const unvoted = polls.find(p => !p.my_votes || p.my_votes.length === 0);
+        if (!unvoted) return;
+        sessionStorage.setItem('affi_poll_shown', '1');
+
+        const totalVotes = unvoted.total_votes || 0;
+        const optionsHtml = (unvoted.options || []).map(o => {
+            const pct = totalVotes > 0 ? Math.round(o.votes / totalVotes * 100) : 0;
+            return `<button class="poll-popup-option" onclick="votePollPopup(${unvoted.id},${o.id},this)">
+                <span class="poll-popup-opt-label">${esc(o.label)}</span>
+                <span class="poll-popup-opt-bar" style="width:${pct}%"></span>
+                <span class="poll-popup-opt-pct">${pct}%</span>
+            </button>`;
+        }).join('');
+
+        const html = `<div class="auth-overlay" id="poll-popup-overlay" style="z-index:1500">
+            <div class="auth-card" style="max-width:480px">
+                <button class="auth-close" onclick="document.getElementById('poll-popup-overlay').remove();document.body.style.overflow=''">&times;</button>
+                <div style="padding:28px 32px">
+                    <div style="text-align:center;margin-bottom:20px">
+                        <div style="font-size:32px;margin-bottom:8px">&#128202;</div>
+                        <h2 style="font-size:20px;font-weight:900;color:var(--primary);margin:0 0 4px">Votre avis compte !</h2>
+                        <p style="color:var(--gray-500);font-size:13px;margin:0">${totalVotes} vote(s) · ${esc(unvoted.first_name || '')} ${esc(unvoted.last_name || '')}</p>
+                    </div>
+                    <h3 style="font-size:17px;font-weight:800;color:var(--gray-900);margin-bottom:16px;text-align:center">${esc(unvoted.title)}</h3>
+                    ${unvoted.description ? `<p style="font-size:13px;color:var(--gray-500);text-align:center;margin-bottom:16px">${esc(unvoted.description)}</p>` : ''}
+                    <div class="poll-popup-options" id="poll-popup-options">${optionsHtml}</div>
+                    <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--gray-400)">Cliquez sur une option pour voter</p>
+                </div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+        document.body.style.overflow = 'hidden';
+    } catch(e) { console.warn('Poll popup:', e); }
+}
+
+async function votePollPopup(pollId, optionId, btn) {
+    if (!authToken) return;
+    // Highlight selected
+    document.querySelectorAll('.poll-popup-option').forEach(b => b.classList.remove('poll-popup-voted'));
+    btn.classList.add('poll-popup-voted');
+    try {
+        await fetch(`${API}/api/social`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken},
+            body: JSON.stringify({action: 'vote_poll', poll_id: pollId, option_id: optionId})
+        });
+        // Refresh results
+        const res = await fetch(`${API}/api/social?action=polls`, {headers: {'Authorization': 'Bearer ' + authToken}});
+        const polls = await res.json();
+        const poll = polls.find(p => p.id === pollId);
+        if (poll) {
+            const total = poll.total_votes || 1;
+            const el = document.getElementById('poll-popup-options');
+            if (el) {
+                el.innerHTML = (poll.options || []).map(o => {
+                    const pct = Math.round(o.votes / total * 100);
+                    const voted = (poll.my_votes || []).includes(o.id);
+                    return `<div class="poll-popup-option poll-popup-result ${voted ? 'poll-popup-voted' : ''}">
+                        <span class="poll-popup-opt-label">${esc(o.label)}</span>
+                        <span class="poll-popup-opt-bar" style="width:${pct}%"></span>
+                        <span class="poll-popup-opt-pct">${pct}%</span>
+                    </div>`;
+                }).join('');
+            }
+        }
+        showToast('Merci pour votre vote !', 'success');
+    } catch(e) { console.warn('Vote:', e); }
 }
 
 function onUserLoggedOut() {
@@ -577,7 +658,6 @@ async function loadHome() {
     if (fc) fc.style.display = (typeof authToken !== 'undefined' && authToken) ? 'block' : 'none';
     const jb = document.getElementById('btn-post-job');
     if (jb) jb.style.display = (typeof authToken !== 'undefined' && authToken) ? 'inline-block' : 'none';
-    if (typeof loadPolls === 'function') loadPolls();
 }
 
 function renderHomeNews(items) {

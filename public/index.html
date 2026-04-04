@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775333510" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775333510">
+<link rel="preload" href="/css/styles.css?v=1775333704" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775333704">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -128,55 +128,77 @@
         <div class="slide-dots"><span class="slide-dot active"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span></div>
     </div>
 
-    <!-- Bienvenue -->
-    <section>
-        <div class="container" style="max-width:900px">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Bienvenue sur le site de l'AFFI</h2>
-            <div style="text-align:center;color:var(--gray-600);line-height:1.8;font-size:15px">
-                <p>L'AFFI, Association Ferroviaire Française des Ingénieurs et cadres, est la première association française qui rassemble les ingénieurs et les cadres en activité ou en retraite, représentant tous les secteurs ferroviaires :</p>
-                <ul style="text-align:left;max-width:700px;margin:16px auto;list-style:disc;padding-left:24px">
-                    <li>les industries qui conçoivent et fabriquent les matériels et les équipements,</li>
-                    <li>les exploitants de réseaux de chemins de fer, de tramways, de métros fer et pneu,</li>
-                    <li>les entreprises qui posent et entretiennent les voies,</li>
-                    <li>d'une manière générale, toutes les personnes physiques ou morales qui s'intéressent au secteur ferroviaire.</li>
-                </ul>
-                <p>La richesse de l'AFFI réside dans l'apport personnel permanent de ses membres, leur savoir-faire et leur volonté d'échanger connaissances et expériences.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- News Carousel -->
-    <section id="news-carousel-wrapper" class="bg-light">
+    <!-- Bienvenue — style magazine, pas scolaire -->
+    <section class="home-welcome">
         <div class="container">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Actualités</h2>
-            <p class="section-sub section-sub-center">Les dernières nouvelles du monde ferroviaire</p>
-            <div class="news-carousel-wrap">
-                <button class="nc-arrow nc-arrow-left" onclick="slideNewsCarousel(-1)">&#10094;</button>
-                <div id="news-carousel"></div>
-                <button class="nc-arrow nc-arrow-right" onclick="slideNewsCarousel(1)">&#10095;</button>
+            <div class="hw-layout">
+                <div class="hw-text">
+                    <span class="hw-badge">Depuis 1996</span>
+                    <h2 class="hw-title">L'association qui rassemble<br>le ferroviaire français</h2>
+                    <p class="hw-desc">L'AFFI réunit ingénieurs et cadres en activité ou retraités, représentant tous les métiers du rail : constructeurs, exploitants, bureaux d'études, mainteneurs et passionnés.</p>
+                    <div class="hw-stats">
+                        <div class="hw-stat"><span class="hw-stat-val">300+</span><span class="hw-stat-label">Membres</span></div>
+                        <div class="hw-stat"><span class="hw-stat-val">30</span><span class="hw-stat-label">Ans d'histoire</span></div>
+                        <div class="hw-stat"><span class="hw-stat-val">12</span><span class="hw-stat-label">Partenaires</span></div>
+                    </div>
+                    <div class="hw-actions">
+                        <a class="btn btn-accent" href="#adhesion" onclick="navigate('adhesion')">Rejoindre l'AFFI</a>
+                        <a class="btn btn-primary" href="#identite" onclick="navigate('identite')" style="background:transparent;border:2px solid var(--primary);color:var(--primary)">En savoir plus</a>
+                    </div>
+                </div>
+                <div class="hw-visual">
+                    <div class="hw-card hw-card-1">
+                        <div class="hw-card-icon">&#128747;</div>
+                        <div class="hw-card-text">Signalisation & ERTMS</div>
+                    </div>
+                    <div class="hw-card hw-card-2">
+                        <div class="hw-card-icon">&#128642;</div>
+                        <div class="hw-card-text">Matériel roulant</div>
+                    </div>
+                    <div class="hw-card hw-card-3">
+                        <div class="hw-card-icon">&#128736;</div>
+                        <div class="hw-card-text">Infrastructure</div>
+                    </div>
+                    <div class="hw-card hw-card-4">
+                        <div class="hw-card-icon">&#129302;</div>
+                        <div class="hw-card-text">Numérique & IA</div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- home-news hidden, carrousel suffit -->
-    <div id="home-news" style="display:none"></div>
+    <!-- Actualités — style épuré sans titre scolaire -->
+    <section id="news-carousel-wrapper" style="padding:48px 0;background:var(--gray-50)">
+        <div class="container">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">
+                <div>
+                    <h2 style="font-size:26px;font-weight:900;color:var(--primary);margin:0">Actualités</h2>
+                    <p style="color:var(--gray-500);font-size:14px;margin:4px 0 0">Les dernières nouvelles du ferroviaire</p>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button class="nc-arrow" onclick="slideNewsCarousel(-1)" style="position:static;transform:none">&#10094;</button>
+                    <button class="nc-arrow" onclick="slideNewsCarousel(1)" style="position:static;transform:none">&#10095;</button>
+                </div>
+            </div>
+            <div style="overflow:hidden">
+                <div id="news-carousel"></div>
+            </div>
+        </div>
+    </section>
 
+    <div id="home-news" style="display:none"></div>
     <div id="home-events" style="display:none"></div>
     <div id="reseau-bouge-list" style="display:none"></div>
 
-    <!-- Partenaires -->
-    <section class="bg-light">
+    <!-- Partenaires — bandeau logos simple -->
+    <section style="padding:40px 0;border-top:1px solid var(--gray-200)">
         <div class="container">
-            <div class="section-line section-line-center"></div>
-            <h2 class="section-title section-title-center">Nos Partenaires</h2>
-            <p class="section-sub section-sub-center">Ils soutiennent l'AFFI et l'excellence ferroviaire</p>
+            <p style="text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:var(--gray-400);margin-bottom:24px">Ils nous font confiance</p>
             <div id="partenaires-unified"></div>
         </div>
     </section>
 
-    <!-- Sondages popup (charges a la connexion, pas sur l'accueil) -->
     <div id="polls-container" style="display:none"></div>
 </div>
 
@@ -1241,11 +1263,11 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/app.js?v=1775333510" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775333510" defer></script>
+<script src="/js/app.js?v=1775333704" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775333704" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/members.js?v=1775333510','/js/social.js?v=1775333510','/js/datatable.js?v=1775333510','/js/admin.js?v=1775333510','/js/map.js?v=1775333510'];
+    var scripts = ['/js/members.js?v=1775333704','/js/social.js?v=1775333704','/js/datatable.js?v=1775333704','/js/admin.js?v=1775333704','/js/map.js?v=1775333704'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

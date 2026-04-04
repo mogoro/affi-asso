@@ -120,15 +120,6 @@ class DataTable {
                                 `).join('')}
                                 ${this.actions ? '<th class="dt-th dt-th-actions">Actions</th>' : ''}
                             </tr>
-                            <tr class="dt-filter-row">
-                                <td></td>
-                                ${this.columns.map(col => `
-                                    <td class="dt-filter-cell">
-                                        ${col.filterable !== false ? `<input type="text" class="dt-filter-input" data-key="${col.key}" placeholder="Filtrer..." value="${this.filters[col.key] || ''}" />` : ''}
-                                    </td>
-                                `).join('')}
-                                ${this.actions ? '<td></td>' : ''}
-                            </tr>
                         </thead>
                         <tbody>
                             ${paged.length === 0 ? `<tr><td colspan="${this.columns.length + (this.actions ? 2 : 1)}" class="dt-empty">Aucun résultat</td></tr>` : ''}
@@ -198,18 +189,6 @@ class DataTable {
                 if (this.sortKey === key) this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
                 else { this.sortKey = key; this.sortDir = 'asc'; }
                 this.render();
-            });
-        });
-        // Per-column filter
-        c.querySelectorAll('.dt-filter-input').forEach(inp => {
-            let debounce;
-            inp.addEventListener('input', (e) => {
-                clearTimeout(debounce);
-                debounce = setTimeout(() => {
-                    this.filters[e.target.dataset.key] = e.target.value;
-                    this.currentPage = 1;
-                    this.render();
-                }, 250);
             });
         });
         // Select all

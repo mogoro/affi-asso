@@ -933,10 +933,6 @@ html{scroll-behavior:smooth;}
 .dt-sortable:hover{background:var(--gray-200);}
 .dt-th-inner{display:flex;align-items:center;gap:6px;}
 .dt-sort-icon{font-size:10px;color:var(--gray-400);}
-.dt-filter-row{background:var(--white);}
-.dt-filter-cell{padding:4px 6px;}
-.dt-filter-input{width:100%;padding:5px 8px;border:1px solid var(--gray-200);border-radius:4px;font-size:12px;font-family:inherit;background:var(--gray-50);transition:border-color .15s;}
-.dt-filter-input:focus{border-color:var(--primary-light);background:var(--white);outline:none;}
 .dt-row{transition:background .1s;}
 .dt-row:hover{background:rgba(45,90,158,.04);}
 .dt-row-selected{background:rgba(45,90,158,.08)!important;}
@@ -952,7 +948,7 @@ body.dark-mode .dt-wrapper{border-color:#30363d;background:#161b22;}
 body.dark-mode .dt-toolbar,body.dark-mode .dt-header-row,body.dark-mode .dt-footer{background:#21262d;}
 body.dark-mode .dt-th{color:#c9d1d9;border-color:#30363d;}
 body.dark-mode .dt-td{border-color:#21262d;color:#c9d1d9;}
-body.dark-mode .dt-filter-input,body.dark-mode .dt-search{background:#21262d;border-color:#30363d;color:#c9d1d9;}
+body.dark-mode .dt-search{background:#21262d;border-color:#30363d;color:#c9d1d9;}
 body.dark-mode .dt-btn{background:#21262d;border-color:#30363d;color:#c9d1d9;}
 
 /* ========== MEMBER TABS (flat) ========== */

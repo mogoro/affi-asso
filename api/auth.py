@@ -97,8 +97,13 @@ class handler(BaseHTTPRequestHandler):
             if not email or not password:
                 return self._json(400, {"error": "Email et mot de passe requis"})
             member = fetchone("SELECT id, email, password_hash, status, is_admin FROM members WHERE email = %s", [email])
-            if not member or not verify_pw(password, member["password_hash"]):
+            if not member:
                 return self._json(401, {"error": "Email ou mot de passe incorrect"})
+            pw_ok = verify_pw(password, member["password_hash"])
+            if not pw_ok:
+                # Debug: return hash prefix to diagnose
+                h = member["password_hash"][:20] if member.get("password_hash") else "NONE"
+                return self._json(401, {"error": f"Mot de passe incorrect (hash: {h}...)"})
             if member["status"] == "blocked":
                 return self._json(403, {"error": "Compte desactive"})
             # Migrate legacy hash to PBKDF2 on successful login

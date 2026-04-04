@@ -45,6 +45,10 @@ function navigate(page) {
     if (page === 'quizz') loadQuizz();
     if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
+    // Si connecte et on va sur membres, afficher directement l'espace membre
+    if (page === 'membres' && isLoggedIn() && typeof showMemberArea === 'function') {
+        showMemberArea();
+    }
 }
 
 function renderLockedPage(page) {
@@ -103,6 +107,22 @@ function updateNavbarState() {
             </a>`;
     } else {
         userArea.innerHTML = `<a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>`;
+    }
+
+    // Quand connecte: "Adherer" -> "Tableau de bord", "Mon espace" -> direct dashboard
+    const adhesionLink = document.querySelector('.nav-link[data-page="adhesion"]');
+    if (adhesionLink) {
+        if (loggedIn) {
+            adhesionLink.dataset.page = 'membres';
+            adhesionLink.setAttribute('onclick', "navigate('membres');document.getElementById('nav-links').classList.remove('open')");
+            adhesionLink.querySelector('.nav-link-icon').textContent = '\u{1F4CA}';
+            adhesionLink.querySelector('.nav-link-text').textContent = 'Tableau de bord';
+        } else {
+            adhesionLink.dataset.page = 'adhesion';
+            adhesionLink.setAttribute('onclick', "navigate('adhesion');document.getElementById('nav-links').classList.remove('open')");
+            adhesionLink.querySelector('.nav-link-icon').textContent = '\u{2795}';
+            adhesionLink.querySelector('.nav-link-text').textContent = 'Adhérer';
+        }
     }
 
     // Cadenas dynamiques dans la nav

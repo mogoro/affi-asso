@@ -49,30 +49,12 @@ function renderShareButtons(title, eventId) {
     </div>`;
 }
 
-// === DARK MODE ===
+// === DARK MODE (desactive — garder le CSS pour usage futur) ===
 function initDarkMode() {
     const saved = localStorage.getItem('affi_dark_mode');
     if (saved === 'true') document.body.classList.add('dark-mode');
-    // Injecter le toggle dans la navbar
-    const actions = document.querySelector('.nav-actions');
-    if (actions && !document.getElementById('dark-toggle')) {
-        const btn = document.createElement('button');
-        btn.id = 'dark-toggle';
-        btn.className = 'nav-dark-toggle';
-        btn.title = 'Mode sombre';
-        btn.innerHTML = document.body.classList.contains('dark-mode') ? '&#9728;' : '&#127769;';
-        btn.onclick = toggleDarkMode;
-        actions.insertBefore(btn, actions.firstChild);
-    }
 }
-
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('affi_dark_mode', isDark);
-    const btn = document.getElementById('dark-toggle');
-    if (btn) btn.innerHTML = isDark ? '&#9728;' : '&#127769;';
-}
+function toggleDarkMode() {}
 
 // === ENDORSEMENTS ===
 function renderEndorseButton(memberId, memberName) {

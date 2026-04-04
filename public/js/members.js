@@ -94,9 +94,7 @@ function switchTab(tab) {
     if (tab === 'my-events') loadMyEvents();
     if (tab === 'directory') loadDirectory();
     if (tab === 'profile') loadProfile();
-    if (tab === 'announcements') loadAnnouncements();
-    if (tab === 'messages') loadConversations();
-    if (tab === 'proposer') { loadMyProposals(); if (typeof loadContributions === 'function') loadContributions(); }
+    if (tab === 'announcements') { loadAnnouncements(); if (typeof loadMyProposals === 'function') loadMyProposals(); }
     if (tab === 'notifications') loadNotifications();
     if (tab === 'admin') { if (typeof loadAdmin === 'function') loadAdmin(); }
 }

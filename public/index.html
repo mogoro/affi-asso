@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775341218" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775341218">
+<link rel="preload" href="/css/styles.css?v=1775341585" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775341585">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -791,8 +791,6 @@
                     <button class="mtab-u" data-tab="directory" onclick="switchTab('directory')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Annuaire</button>
                     <button class="mtab-u" data-tab="profile" onclick="switchTab('profile')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Profil & CV</button>
                     <button class="mtab-u" data-tab="announcements" onclick="switchTab('announcements')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg> Annonces</button>
-                    <button class="mtab-u" data-tab="messages" onclick="switchTab('messages')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Messages</button>
-                    <button class="mtab-u" data-tab="proposer" onclick="switchTab('proposer')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Proposer</button>
                     <button class="mtab-u" data-tab="notifications" onclick="switchTab('notifications')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg> Notifications</button>
                     <button class="mtab-u" data-tab="admin" onclick="switchTab('admin')" id="admin-main-tab" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Administration</button>
                 </div>
@@ -838,26 +836,59 @@
 
                 <!-- TAB: ANNOUNCEMENTS -->
                 <div id="mtab-announcements" class="mtab-content" style="display:none">
+                    <!-- Formulaire de contribution unifié -->
                     <div class="card" style="margin-bottom:24px">
                         <div class="card-body">
-                            <h3 style="margin-bottom:16px;color:var(--primary);font-weight:800">Publier une annonce</h3>
-                            <form onsubmit="postAnnouncement(event)">
-                                <div style="display:grid;grid-template-columns:1fr auto;gap:12px;margin-bottom:12px">
-                                    <input type="text" name="title" placeholder="Titre de l'annonce" required style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
-                                    <select name="category" style="padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px">
-                                        <option value="general">General</option>
-                                        <option value="emploi">Offre d'emploi</option>
-                                        <option value="collaboration">Collaboration</option>
-                                    </select>
+                            <h3 style="color:var(--primary);margin-bottom:8px;font-weight:800">Publier une annonce</h3>
+                            <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Votre annonce sera soumise aux administrateurs pour validation.</p>
+                            <form onsubmit="submitContribution(event)" id="contrib-form">
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                                    <div class="form-group"><label>Type</label>
+                                        <select id="contrib-type" onchange="updateContribForm()" required style="width:100%">
+                                            <option value="annonce">Annonce générale</option>
+                                            <option value="emploi">Offre d'emploi</option>
+                                            <option value="stage">Stage</option>
+                                            <option value="apprentissage">Apprentissage</option>
+                                            <option value="collaboration">Collaboration</option>
+                                            <option value="evenement">Événement</option>
+                                            <option value="actualite">Actualité</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group"><label>Titre *</label><input id="contrib-title" required></div>
                                 </div>
-                                <textarea name="content" placeholder="Contenu de votre annonce..." required style="width:100%;padding:10px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px;min-height:80px;margin-bottom:12px;resize:vertical"></textarea>
-                                <button type="submit" class="btn btn-accent" style="font-size:14px;padding:10px 24px">Publier</button>
+                                <div class="form-group"><label>Description *</label><textarea id="contrib-content" style="min-height:80px" required></textarea></div>
+                                <div id="contrib-event-fields" style="display:none">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                        <div class="form-group"><label>Type d'événement</label><select id="contrib-event-type"><option>conférence</option><option>visite</option><option>rencontre</option><option>webinaire</option></select></div>
+                                        <div class="form-group"><label>Lieu</label><input id="contrib-location"></div>
+                                    </div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                        <div class="form-group"><label>Date début</label><input type="datetime-local" id="contrib-start"></div>
+                                        <div class="form-group"><label>Date fin</label><input type="datetime-local" id="contrib-end"></div>
+                                    </div>
+                                </div>
+                                <div id="contrib-job-fields" style="display:none">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                        <div class="form-group"><label>Entreprise</label><input id="contrib-company"></div>
+                                        <div class="form-group"><label>Lieu</label><input id="contrib-job-location"></div>
+                                    </div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                        <div class="form-group"><label>Secteur</label><input id="contrib-job-sector"></div>
+                                        <div class="form-group"><label>Durée</label><input id="contrib-job-duration" placeholder="CDI, 6 mois..."></div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-accent" style="width:100%">Soumettre</button>
+                                <div class="form-success" id="contrib-success" style="display:none">Annonce soumise !</div>
                             </form>
                         </div>
                     </div>
-                    <div id="announcements-list">
-                        <p style="text-align:center;color:var(--gray-400);padding:40px">Chargement...</p>
-                    </div>
+                    <!-- Liste des annonces -->
+                    <div id="announcements-list"><p class="empty-msg">Chargement...</p></div>
+                    <!-- Mes propositions -->
+                    <div class="card" style="margin-top:24px"><div class="card-body">
+                        <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Mes propositions</h3>
+                        <div id="my-proposals"><p class="empty-msg">Chargement...</p></div>
+                    </div></div>
                 </div>
 
                 <!-- TAB: PROFILE & CV -->
@@ -966,79 +997,8 @@
                     </div>
                 </div>
 
-                <!-- TAB: MESSAGES -->
-                <div id="mtab-messages" class="mtab-content" style="display:none">
-                    <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;min-height:500px">
-                        <div class="card" style="overflow-y:auto;max-height:600px">
-                            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px">
-                                <span>Conversations</span>
-                                <button onclick="showNewMessageForm()" class="btn btn-accent" style="font-size:11px;padding:4px 12px">+ Nouveau</button>
-                            </div>
-                            <div id="conversations-list"><p class="empty-msg">Chargement...</p></div>
-                        </div>
-                        <div id="thread-panel" class="card" style="display:none"></div>
-                    </div>
-                </div>
 
                 <!-- TAB: PROPOSER (Unified Contribution Form) -->
-                <div id="mtab-proposer" class="mtab-content" style="display:none">
-                    <div class="card"><div class="card-body">
-                        <h3 style="color:var(--primary);margin-bottom:8px;font-weight:800">Proposer une contribution</h3>
-                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px">Selectionnez le type de contribution. Votre proposition sera soumise aux administrateurs pour validation.</p>
-                        <form onsubmit="submitContribution(event)" id="contrib-form">
-                            <div class="form-group"><label>Type de contribution *</label>
-                                <select id="contrib-type" onchange="updateContribForm()" required>
-                                    <option value="evenement">Evenement</option>
-                                    <option value="actualite">Actualite</option>
-                                    <option value="annonce">Annonce generale</option>
-                                    <option value="emploi">Offre d'emploi</option>
-                                    <option value="stage">Stage</option>
-                                    <option value="apprentissage">Apprentissage</option>
-                                    <option value="collaboration">Collaboration</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><label>Titre *</label><input id="contrib-title" required></div>
-                            <div class="form-group"><label>Description / Contenu *</label><textarea id="contrib-content" style="min-height:100px" required></textarea></div>
-                            <!-- Event-specific fields -->
-                            <div id="contrib-event-fields" style="display:none">
-                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                                    <div class="form-group"><label>Type d'evenement</label><select id="contrib-event-type"><option>conference</option><option>visite</option><option>rencontre</option><option>webinaire</option><option>colloque</option></select></div>
-                                    <div class="form-group"><label>Lieu</label><input id="contrib-location"></div>
-                                </div>
-                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                                    <div class="form-group"><label>Date debut</label><input type="datetime-local" id="contrib-start"></div>
-                                    <div class="form-group"><label>Date fin</label><input type="datetime-local" id="contrib-end"></div>
-                                </div>
-                            </div>
-                            <!-- Job-specific fields -->
-                            <div id="contrib-job-fields" style="display:none">
-                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                                    <div class="form-group"><label>Entreprise</label><input id="contrib-company"></div>
-                                    <div class="form-group"><label>Lieu</label><input id="contrib-job-location"></div>
-                                </div>
-                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                                    <div class="form-group"><label>Secteur</label><input id="contrib-job-sector" placeholder="Signalisation, Materiel roulant..."></div>
-                                    <div class="form-group"><label>Duree</label><input id="contrib-job-duration" placeholder="CDI, 6 mois..."></div>
-                                </div>
-                                <div class="form-group"><label>Email de contact</label><input type="email" id="contrib-job-email"></div>
-                            </div>
-                            <!-- Image upload -->
-                            <div class="form-group"><label>Image (optionnel)</label><input type="file" id="contrib-image" accept="image/*" onchange="previewContribImage(this)"></div>
-                            <div id="contrib-image-preview" style="display:none;margin-bottom:12px"><img id="contrib-image-img" style="max-width:200px;border-radius:var(--radius);border:2px solid var(--gray-200)"></div>
-                            <button type="submit" class="btn btn-accent" style="width:100%">Soumettre la proposition</button>
-                            <div class="form-success" id="contrib-success" style="display:none">Proposition soumise avec succes !</div>
-                        </form>
-                    </div></div>
-                    <!-- Existing contributions list -->
-                    <div class="card" style="margin-top:24px"><div class="card-body">
-                        <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Annonces des membres</h3>
-                        <div id="contributions-list"><p class="empty-msg">Chargement...</p></div>
-                    </div></div>
-                    <div class="card" style="margin-top:24px"><div class="card-body">
-                        <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Mes propositions</h3>
-                        <div id="my-proposals"><p class="empty-msg">Chargement...</p></div>
-                    </div></div>
-                </div>
 
                 <!-- TAB: NOTIFICATIONS -->
                 <div id="mtab-notifications" class="mtab-content" style="display:none">
@@ -1222,12 +1182,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/members.js?v=1775341218" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775341218" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775341218" defer></script>
+<script src="/js/members.js?v=1775341585" defer fetchpriority="high"></script>
+<script src="/js/app.js?v=1775341585" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775341585" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/social.js?v=1775341218','/js/datatable.js?v=1775341218','/js/admin.js?v=1775341218','/js/map.js?v=1775341218'];
+    var scripts = ['/js/social.js?v=1775341585','/js/datatable.js?v=1775341585','/js/admin.js?v=1775341585','/js/map.js?v=1775341585'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

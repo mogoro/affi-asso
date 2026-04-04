@@ -268,18 +268,104 @@ window.addEventListener('scroll', () => {
 function onUserLoggedIn() {
     restoreLockedPages();
     updateNavbarState();
-    // Charger les inscriptions evenements de l'utilisateur
     loadUserRegistrations();
-    // Recharger la page courante pour afficher le contenu
+    loadBellNotifications();
     const currentPage = location.hash.slice(1) || 'accueil';
     if (LOCKED_PAGES.includes(currentPage) || currentPage === 'annuaire' || currentPage === 'accueil') {
         navigate(currentPage);
     }
-    // Afficher un sondage en popup si disponible (1 seule fois par session)
     if (!sessionStorage.getItem('affi_poll_shown')) {
         setTimeout(() => showPollPopup(), 2000);
     }
 }
+
+// === NOTIFICATION BELL ===
+let _bellNotifs = [];
+async function loadBellNotifications() {
+    if (!isLoggedIn() || typeof authToken === 'undefined' || !authToken) {
+        document.getElementById('nav-bell')?.style && (document.getElementById('nav-bell').style.display = 'none');
+        return;
+    }
+    try {
+        const res = await fetch(`${API}/api/social?action=notifications`, {headers:{'Authorization':'Bearer '+authToken}});
+        const data = await res.json();
+        _bellNotifs = data.items || [];
+        const unread = data.unread || 0;
+        const bell = document.getElementById('nav-bell');
+        const badge = document.getElementById('nav-bell-count');
+        if (!bell) return;
+        if (_bellNotifs.length > 0) {
+            bell.style.display = 'flex';
+            if (unread > 0) {
+                badge.textContent = unread > 9 ? '9+' : unread;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        } else {
+            bell.style.display = 'none';
+        }
+    } catch(e) { console.warn('Bell:', e); }
+}
+
+function toggleNotifPanel() {
+    const panel = document.getElementById('notif-panel');
+    if (!panel) return;
+    if (panel.style.display === 'none' || !panel.style.display) {
+        renderNotifPanel();
+        panel.style.display = 'block';
+        // Close on click outside
+        setTimeout(() => {
+            document.addEventListener('click', _closeNotifPanel, { once: true, capture: true });
+        }, 100);
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function _closeNotifPanel(e) {
+    const panel = document.getElementById('notif-panel');
+    const bell = document.getElementById('nav-bell');
+    if (panel && !panel.contains(e.target) && !bell.contains(e.target)) {
+        panel.style.display = 'none';
+    } else if (panel && panel.style.display !== 'none') {
+        setTimeout(() => document.addEventListener('click', _closeNotifPanel, { once: true, capture: true }), 50);
+    }
+}
+
+function renderNotifPanel() {
+    const list = document.getElementById('notif-panel-list');
+    if (!list) return;
+    if (!_bellNotifs.length) {
+        list.innerHTML = '<div class="notif-panel-empty">Aucune notification</div>';
+        return;
+    }
+    list.innerHTML = _bellNotifs.slice(0, 15).map(n => {
+        const icons = { message: '&#128172;', endorsement: '&#10003;', event: '&#128197;', system: '&#128276;' };
+        const icon = icons[n.type] || '&#128276;';
+        return `<div class="notif-panel-item ${n.is_read ? '' : 'notif-unread'}">
+            <div class="notif-panel-icon">${icon}</div>
+            <div class="notif-panel-body">
+                <div class="notif-panel-title">${esc(n.title || '')}</div>
+                <div class="notif-panel-text">${esc(n.content || '')}</div>
+                <div class="notif-panel-time">${formatDate(n.created_at)}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function markAllNotifReadFromBell() {
+    if (!authToken) return;
+    try {
+        await fetch(`${API}/api/social`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+            body:JSON.stringify({action:'read_notifications'})});
+        loadBellNotifications();
+        document.getElementById('notif-panel').style.display = 'none';
+    } catch(e) {}
+}
+
+// Refresh bell every 30s
+setInterval(() => { if (typeof authToken !== 'undefined' && authToken) loadBellNotifications(); }, 30000);
 
 async function showPollPopup() {
     try {
@@ -360,7 +446,11 @@ async function votePollPopup(pollId, optionId, btn) {
 
 function onUserLoggedOut() {
     updateNavbarState();
-    // Re-naviguer pour reverrouiller si necessaire
+    // Cacher la cloche
+    const bell = document.getElementById('nav-bell');
+    if (bell) bell.style.display = 'none';
+    const panel = document.getElementById('notif-panel');
+    if (panel) panel.style.display = 'none';
     const currentPage = location.hash.slice(1) || 'accueil';
     navigate(currentPage);
 }

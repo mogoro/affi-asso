@@ -109,8 +109,8 @@ function updateNavbarState() {
         userArea.innerHTML = `<a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>`;
     }
 
-    // Quand connecte: "Adherer" -> "Tableau de bord", "Mon espace" -> direct dashboard
-    const adhesionLink = document.querySelector('.nav-link[data-page="adhesion"]');
+    // Quand connecte: "Adherer" -> "Tableau de bord"
+    const adhesionLink = document.getElementById('nav-adhesion-link');
     if (adhesionLink) {
         if (loggedIn) {
             adhesionLink.dataset.page = 'membres';

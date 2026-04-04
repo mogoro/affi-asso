@@ -1052,14 +1052,7 @@ function renderPastAgenda(events) {
     }).join('');
 }
 
-let _calCollapsed = false;
-
-function toggleCalendar() {
-    const el = document.getElementById('agenda-calendar');
-    if (!el) return;
-    _calCollapsed = !_calCollapsed;
-    el.classList.toggle('cal-collapsed', _calCollapsed);
-}
+function toggleCalendar() { /* desactive — calendrier toujours visible */ }
 
 function renderCalendar() {
     const el = document.getElementById('agenda-calendar');
@@ -1098,10 +1091,10 @@ function renderCalendar() {
     }
 
     el.innerHTML = `
-        <div class="cal-header" onclick="toggleCalendar()" style="cursor:pointer" title="Cliquer pour afficher/masquer le calendrier">
-            <button class="cal-nav" onclick="event.stopPropagation();changeCalMonth(-1)">&#8249;</button>
-            <h3>${months[_calMonth]} ${_calYear} <span class="cal-toggle-icon">${_calCollapsed ? '&#9660;' : '&#9650;'}</span></h3>
-            <button class="cal-nav" onclick="event.stopPropagation();changeCalMonth(1)">&#8250;</button>
+        <div class="cal-header">
+            <button class="cal-nav" onclick="changeCalMonth(-1)">&#8249;</button>
+            <h3>${months[_calMonth]} ${_calYear}</h3>
+            <button class="cal-nav" onclick="changeCalMonth(1)">&#8250;</button>
         </div>
         <div class="cal-body">
             <div class="cal-grid">
@@ -1111,36 +1104,6 @@ function renderCalendar() {
         </div>
     `;
 
-    // Auto-collapse calendar when events scroll above it
-    initCalAutoCollapse();
-}
-
-let _calObserver = null;
-function initCalAutoCollapse() {
-    if (_calObserver) _calObserver.disconnect();
-    const calendar = document.getElementById('agenda-calendar');
-    const eventsList = document.getElementById('agenda-list');
-    if (!calendar || !eventsList) return;
-
-    // Use IntersectionObserver to detect when events list top goes above calendar
-    const sentinel = eventsList.querySelector('.evt-card');
-    if (!sentinel) return;
-
-    _calObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            // When first event card goes out of view above, collapse calendar
-            if (!entry.isIntersecting && entry.boundingClientRect.top < 200) {
-                if (!_calCollapsed) {
-                    _calCollapsed = true;
-                    calendar.classList.add('cal-collapsed');
-                    const icon = calendar.querySelector('.cal-toggle-icon');
-                    if (icon) icon.innerHTML = '&#9660;';
-                }
-            }
-        });
-    }, { threshold: 0, rootMargin: '-80px 0px 0px 0px' });
-
-    _calObserver.observe(sentinel);
 }
 
 function changeCalMonth(delta) {

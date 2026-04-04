@@ -305,6 +305,12 @@ body.dark-mode .org-connector{background:#30363d;}
 .form-submit{width:100%;padding:14px;background:var(--accent);color:var(--white);border:none;border-radius:var(--radius);font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:background var(--transition);letter-spacing:.3px;}
 .form-submit:hover{background:var(--accent-light);}
 .form-success{background:var(--green);color:var(--white);padding:14px;border-radius:var(--radius);text-align:center;margin-top:16px;display:none;font-weight:600;}
+.adh-choice{display:flex;align-items:center;gap:12px;padding:12px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);cursor:pointer;transition:all .2s;}
+.adh-choice:hover{border-color:var(--primary-light);background:rgba(26,60,110,.02);}
+.adh-choice-selected{border-color:var(--primary);background:rgba(26,60,110,.04);}
+.adh-pay-choice{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);cursor:pointer;transition:all .2s;text-align:center;}
+.adh-pay-choice:hover{border-color:var(--primary-light);}
+.adh-pay-selected{border-color:var(--primary);background:rgba(26,60,110,.04);}
 
 /* ========== PARTNERS ========== */
 .partners-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;}

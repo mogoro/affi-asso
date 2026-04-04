@@ -2208,123 +2208,91 @@ function sendAdhesionEmail(formData) {
 
 async function submitAdhesion(evt) {
     evt.preventDefault();
-    const f = evt.target;
-    const prenom = f.first_name.value;
-    const nom = f.last_name.value;
-    const email = f.email.value;
-    const phone = f.phone.value;
-    if (phone && !validatePhone(phone)) {
-        alert('Numero de telephone invalide. Format attendu : 06 12 34 56 78 ou +33 6 12 34 56 78');
-        return;
-    }
-    const entreprise = f.company.value;
-    const fonction = f.job_title.value;
-    const secteur = f.sector.value;
-    const type = f.membership_type.value;
+    const prenom = document.getElementById('adh-prenom').value;
+    const nom = document.getElementById('adh-nom').value;
+    const email = document.getElementById('adh-email').value;
+    const phone = document.getElementById('adh-phone').value;
+    const entreprise = document.getElementById('adh-entreprise').value;
+    const fonction = document.getElementById('adh-fonction').value;
+    const type = document.querySelector('[name=adh_type]:checked').value;
+    const payment = document.querySelector('[name=adh_payment]:checked').value;
     const prix = ADH_PRICES[type] || 0;
     const label = ADH_LABELS[type] || type;
 
-    // Save to contact_messages
+    if (phone && typeof validatePhone === 'function' && !validatePhone(phone)) {
+        alert('Format de téléphone invalide');
+        return;
+    }
+
+    // Save to DB
     try {
-        await fetch(`${API}/api/contact`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+        await fetch(API + '/api/contact', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 name: prenom + ' ' + nom, email,
-                subject: 'Adhesion ' + label,
-                message: `Adhesion AFFI 2026\nType: ${label} (${prix} EUR)\nPrenom: ${prenom}\nNom: ${nom}\nEmail: ${email}\nTel: ${phone}\nEntreprise: ${entreprise}\nFonction: ${fonction}\nSecteur: ${secteur}`
+                subject: 'Adhésion ' + label + ' — ' + payment,
+                message: `Adhésion AFFI 2026\nType: ${label} (${prix} EUR)\nPaiement: ${payment}\nPrénom: ${prenom}\nNom: ${nom}\nEmail: ${email}\nTél: ${phone}\nEntreprise: ${entreprise}\nFonction: ${fonction}`
             })
         });
+        sendAdhesionEmail({first_name:prenom,last_name:nom,email,phone,company:entreprise,job_title:fonction,membership_type:type});
     } catch(e) {}
 
-    // Show payment choice modal
-    openModal(`<div class="adm-modal-bg" id="modal-adh-payment">
-        <div class="adm-modal" style="max-width:540px;padding:36px;text-align:center">
-            <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px">Adhesion enregistree !</h2>
-            <p style="color:var(--gray-600);margin-bottom:4px">${esc(label)}</p>
-            <p style="font-size:28px;font-weight:900;color:var(--accent);margin-bottom:20px">${prix > 0 ? prix + ' EUR / an' : 'Exonere'}</p>
-            <div style="background:var(--gray-50);border-radius:var(--radius);padding:16px;margin-bottom:20px;text-align:left;font-size:13px;color:var(--gray-500)">
-                <strong style="color:var(--primary)">&#10003; Recapitulatif</strong><br>
-                ${esc(prenom)} ${esc(nom)} &mdash; ${esc(email)}<br>
-                ${entreprise ? esc(entreprise) + ' &mdash; ' : ''}${esc(label)}<br>
-                ${secteur ? 'Secteur : ' + esc(secteur) + '<br>' : ''}
-                Montant : ${prix} EUR
-            </div>
-            ${prix > 0 ? `<p style="font-size:15px;font-weight:700;color:var(--primary);margin-bottom:16px">Choisissez votre mode de paiement :</p>
-            <div style="display:flex;flex-direction:column;gap:12px;max-width:400px;margin:0 auto 20px">
-                <a href="https://www.helloasso.com/associations/affi-association-ferroviaire-francaise-des-ingenieurs-et-cadres/adhesions/affi-cotisation-2026" target="_blank" rel="noopener" class="btn btn-accent" style="font-size:14px;padding:14px 24px">&#128179; Carte bancaire / HelloAsso &mdash; ${prix} EUR</a>
-                <button class="btn btn-primary" onclick="showAdhCheque('${esc(prenom)}','${esc(nom)}','${esc(email)}','${esc(phone)}','${esc(entreprise)}','${esc(fonction)}','${esc(label)}','${prix}')" style="font-size:14px;padding:14px 24px">&#128231; Cheque &mdash; Imprimer le bulletin</button>
-                <button class="btn btn-primary" onclick="showAdhVirement('${esc(label)}','${prix}')" style="font-size:14px;padding:14px 24px;background:var(--teal)">&#127974; Virement bancaire &mdash; Voir IBAN</button>
-            </div>` : '<p style="color:var(--gray-500);margin-bottom:16px">Votre categorie ne requiert pas de cotisation. Nous vous recontactons sous 48h.</p>'}
-            <button onclick="closeModal('modal-adh-payment')" style="background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>
-        </div>
-    </div>`);
-    document.getElementById('adhesion-success').style.display = 'block';
-    f.reset();
-    showToast("Demande d'adhesion envoyee !", 'success');
-    sendAdhesionEmail({ first_name: prenom, last_name: nom, email, phone, company: entreprise, job_title: fonction, sector: secteur, membership_type: type });
-}
-
-function showAdhCheque(prenom, nom, email, phone, entreprise, fonction, label, prix) {
-    closeModal('modal-adh-payment');
-    openModal(`<div class="adm-modal-bg" id="modal-adh-cheque">
-        <div class="adm-modal" style="max-width:540px;padding:36px;text-align:center">
-            <div style="font-size:48px;margin-bottom:12px">&#128231;</div>
-            <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px">Paiement par cheque</h2>
-            <p style="color:var(--gray-600);margin-bottom:16px">${esc(label)} &mdash; <strong>${prix} EUR</strong></p>
-            <div id="adh-bulletin-content" style="background:var(--gray-50);border:2px solid var(--primary);border-radius:var(--radius);padding:20px;margin-bottom:16px;text-align:left;font-size:14px;line-height:1.8">
-                <strong style="color:var(--primary)">Bulletin d'adhesion AFFI 2026</strong><br>
-                <strong>Prenom :</strong> ${esc(prenom)}<br>
+    // Show confirmation popup
+    let popupContent = '';
+    if (payment === 'helloasso') {
+        popupContent = `<div style="text-align:center;padding:32px">
+            <div style="font-size:48px;margin-bottom:12px">&#127760;</div>
+            <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px">Adhésion via HelloAsso</h2>
+            <p style="color:var(--gray-600);margin-bottom:4px">${esc(label)} — <strong>${prix} €</strong></p>
+            <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px">${esc(prenom)} ${esc(nom)} — ${esc(email)}</p>
+            <a href="https://www.helloasso.com/associations/affi-association-ferroviaire-francaise-des-ingenieurs-et-cadres/adhesions/affi-cotisation-2026" target="_blank" rel="noopener" class="btn btn-accent" style="font-size:16px;padding:14px 40px;display:inline-block">Payer ${prix} € sur HelloAsso</a>
+            <p style="margin-top:16px;font-size:12px;color:var(--gray-400)">Vous serez redirigé vers HelloAsso. Un email de confirmation sera envoyé.</p>
+        </div>`;
+    } else if (payment === 'cheque') {
+        popupContent = `<div style="padding:32px">
+            <div style="text-align:center"><div style="font-size:48px;margin-bottom:12px">&#9993;</div>
+            <h2 style="color:var(--primary);font-size:22px;margin-bottom:16px">Paiement par chèque</h2></div>
+            <div style="background:var(--gray-50);border:2px solid var(--primary);border-radius:var(--radius);padding:20px;font-size:14px;line-height:1.8" id="adh-bulletin">
+                <div style="text-align:center;margin-bottom:12px"><strong style="font-size:16px;color:var(--primary)">BULLETIN D'ADHÉSION AFFI 2026</strong></div>
+                <strong>Prénom :</strong> ${esc(prenom)}<br>
                 <strong>Nom :</strong> ${esc(nom)}<br>
                 <strong>Email :</strong> ${esc(email)}<br>
-                ${phone ? '<strong>Tel :</strong> ' + esc(phone) + '<br>' : ''}
+                ${phone ? '<strong>Tél :</strong> ' + esc(phone) + '<br>' : ''}
                 ${entreprise ? '<strong>Entreprise :</strong> ' + esc(entreprise) + '<br>' : ''}
                 ${fonction ? '<strong>Fonction :</strong> ' + esc(fonction) + '<br>' : ''}
                 <strong>Type :</strong> ${esc(label)}<br>
-                <strong>Montant :</strong> ${prix} EUR<br>
-                <hr style="border:none;border-top:1px solid var(--gray-200);margin:8px 0">
-                <strong>Cheque a l'ordre de :</strong> AFFI<br>
-                <strong>Adresse :</strong> AFFI &mdash; 60 rue Anatole France &mdash; 92300 Levallois-Perret
+                <strong>Montant :</strong> ${prix} €<br>
+                <hr style="border:none;border-top:1px solid var(--gray-300);margin:12px 0">
+                <strong>Chèque à l'ordre de :</strong> AFFI<br>
+                <strong>Adresse :</strong> AFFI — 60 rue Anatole France — 92300 Levallois-Perret
             </div>
-            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-                <button class="btn btn-primary" onclick="printAdhesionBulletin()" style="font-size:13px;padding:10px 20px">&#128424; Imprimer le bulletin</button>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:16px">
+                <button class="btn btn-primary" onclick="window.print()" style="font-size:13px;padding:10px 20px">Imprimer le bulletin</button>
             </div>
-            <p style="margin-top:16px;font-size:12px;color:var(--gray-400)">Votre compte sera active des reception du reglement.</p>
-            <button onclick="closeModal('modal-adh-cheque')" style="margin-top:8px;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>
-        </div>
-    </div>`);
-}
-
-function showAdhVirement(label, prix) {
-    closeModal('modal-adh-payment');
-    openModal(`<div class="adm-modal-bg" id="modal-adh-virement">
-        <div class="adm-modal" style="max-width:540px;padding:36px;text-align:center">
+        </div>`;
+    } else {
+        popupContent = `<div style="text-align:center;padding:32px">
             <div style="font-size:48px;margin-bottom:12px">&#127974;</div>
-            <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px">Virement bancaire</h2>
-            <p style="color:var(--gray-600);margin-bottom:16px">${esc(label)} &mdash; <strong>${prix} EUR</strong></p>
-            <div style="background:var(--gray-50);border:2px solid var(--primary);border-radius:var(--radius);padding:20px;margin-bottom:16px;text-align:left;font-size:14px;line-height:1.8">
-                <strong style="color:var(--primary)">Coordonnees bancaires AFFI</strong><br>
-                <strong>Banque :</strong> CIC<br>
-                <strong>IBAN :</strong> <span style="font-family:monospace;background:var(--gray-100);padding:2px 8px;border-radius:4px">FR76 3006 6100 0100 0206 2440 168</span><br>
-                <strong>BIC :</strong> CMCIFRPP<br>
-                <strong>Titulaire :</strong> AFFI<br>
-                <hr style="border:none;border-top:1px solid var(--gray-200);margin:8px 0">
-                <strong>Montant :</strong> ${prix} EUR<br>
-                <strong>Reference :</strong> Adhesion AFFI 2026 + votre nom
+            <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px">Paiement par virement</h2>
+            <p style="color:var(--gray-600);margin-bottom:16px">${esc(label)} — <strong>${prix} €</strong></p>
+            <div style="background:var(--gray-50);border:2px solid var(--primary);border-radius:var(--radius);padding:20px;text-align:left;font-size:14px;line-height:1.8">
+                <strong>Bénéficiaire :</strong> AFFI<br>
+                <strong>IBAN :</strong> <span style="font-family:monospace;letter-spacing:1px">Contactez admin@ingenieur-ferroviaire.net</span><br>
+                <strong>Référence :</strong> ADH2026-${esc(nom).toUpperCase()}<br>
+                <strong>Montant :</strong> ${prix} €
             </div>
-            <p style="font-size:12px;color:var(--gray-400)">Votre compte sera active des reception du virement.</p>
-            <button onclick="closeModal('modal-adh-virement')" style="margin-top:12px;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>
-        </div>
-    </div>`);
-}
+            <p style="margin-top:16px;font-size:12px;color:var(--gray-400)">Votre adhésion sera activée dès réception du virement.</p>
+        </div>`;
+    }
 
-function printAdhesionBulletin() {
-    const content = document.getElementById('adh-bulletin-content');
-    if (!content) return;
-    const w = window.open('', '_blank');
-    w.document.write('<html><head><title>Bulletin adhesion AFFI 2026</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#333}h2{color:#1a3c6e}strong{color:#1a3c6e}hr{border:none;border-top:1px solid #ddd;margin:12px 0}</style></head><body>' + content.innerHTML + '</body></html>');
-    w.document.close();
-    w.print();
+    const html = `<div class="adm-modal-bg" id="adh-confirm-modal">
+        <div class="adm-modal" style="max-width:520px">
+            <button class="auth-close" onclick="closeModal('adh-confirm-modal')">&times;</button>
+            ${popupContent}
+        </div>
+    </div>`;
+    openModal(html);
+    evt.target.reset();
 }
 
 // === COOKIE CONSENT ===

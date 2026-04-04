@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AFFI — Site en construction</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f8f9fb;font-family:'Source Sans 3','Segoe UI',sans-serif;color:#1a3c6e;overflow:hidden;}
+.container{text-align:center;padding:40px 24px;max-width:560px;}
+.logo{width:180px;margin-bottom:40px;animation:fadeDown .8s ease both;}
+.badge{display:inline-block;background:#1a3c6e;color:#fff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;padding:6px 20px;border-radius:20px;margin-bottom:24px;animation:fadeDown .8s ease .2s both;}
+h1{font-size:36px;font-weight:900;line-height:1.2;margin-bottom:16px;color:#0e2444;animation:fadeDown .8s ease .3s both;}
+p{font-size:18px;color:#6c757d;line-height:1.7;font-weight:300;animation:fadeDown .8s ease .4s both;}
+.contact{margin-top:32px;animation:fadeDown .8s ease .5s both;}
+.contact a{display:inline-flex;align-items:center;gap:8px;color:#1a3c6e;font-weight:600;font-size:15px;text-decoration:none;padding:12px 28px;border:2px solid #e2e6ea;border-radius:8px;transition:all .3s ease;}
+.contact a:hover{border-color:#1a3c6e;background:#1a3c6e;color:#fff;}
+.line{width:48px;height:3px;background:linear-gradient(90deg,#c8102e,#2d5a9e);border-radius:3px;margin:0 auto 24px;animation:fadeDown .8s ease .25s both;}
+.footer{position:fixed;bottom:24px;left:0;right:0;text-align:center;font-size:13px;color:#adb5bd;animation:fadeDown .8s ease .6s both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="container">
+    <img src="/images/logo-affi.png" alt="AFFI" class="logo">
+    <div class="badge">En construction</div>
+    <div class="line"></div>
+    <h1>Notre nouveau site arrive bientot</h1>
+    <p>L'Association Ferroviaire Francaise des Ingenieurs prepare un tout nouveau site pour ses membres. Restez connectes !</p>
+    <div class="contact">
+        <a href="mailto:contact@affi-asso.fr">Nous contacter</a>
+    </div>
+</div>
+<div class="footer">AFFI &mdash; Association Ferroviaire Francaise des Ingenieurs &bull; Depuis 1996</div>
+</body>
+</html>

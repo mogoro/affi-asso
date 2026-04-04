@@ -141,7 +141,7 @@ function switchSubTab(main, sub) {
     if (sub === 'announcements') loadAnnouncements();
     if (sub === 'profile') loadProfile();
     if (sub === 'messages') loadConversations();
-    if (sub === 'proposer') loadMyProposals();
+    if (sub === 'proposer') { loadMyProposals(); loadContributions(); }
     if (sub === 'notifications') loadNotifications();
     if (sub === 'my-events') loadMyEvents();
     if (sub === 'news-dashboard') loadNewsDashboard();
@@ -463,6 +463,133 @@ async function loadMyProposals() {
             </div>
         `).join('');
     } catch (e) { console.warn('Proposals:', e); }
+}
+
+// === UNIFIED CONTRIBUTION FORM ===
+function updateContribForm() {
+    const type = document.getElementById('contrib-type').value;
+    const eventFields = document.getElementById('contrib-event-fields');
+    const jobFields = document.getElementById('contrib-job-fields');
+    if (eventFields) eventFields.style.display = (type === 'evenement') ? 'block' : 'none';
+    if (jobFields) jobFields.style.display = (['emploi','stage','apprentissage'].includes(type)) ? 'block' : 'none';
+}
+
+function previewContribImage(input) {
+    const preview = document.getElementById('contrib-image-preview');
+    const img = document.getElementById('contrib-image-img');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function submitContribution(evt) {
+    evt.preventDefault();
+    const type = document.getElementById('contrib-type').value;
+    const title = document.getElementById('contrib-title').value;
+    const content = document.getElementById('contrib-content').value;
+
+    if (type === 'evenement') {
+        // Use existing propose_event endpoint
+        try {
+            const res = await fetch(`${API}/api/members`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+                body: JSON.stringify({
+                    action: 'propose_event',
+                    title, description: content,
+                    event_type: document.getElementById('contrib-event-type').value,
+                    location: document.getElementById('contrib-location').value,
+                    start_date: document.getElementById('contrib-start').value,
+                    end_date: document.getElementById('contrib-end').value || null,
+                })
+            });
+            const data = await res.json();
+            if (data.ok || data.message) {
+                document.getElementById('contrib-success').style.display = 'block';
+                evt.target.reset();
+                updateContribForm();
+                showToast('Proposition soumise !','success');
+                loadMyProposals();
+            } else {
+                showToast(data.error||'Erreur','error');
+            }
+        } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+    } else if (type === 'actualite') {
+        // Use existing propose_news endpoint
+        try {
+            const res = await fetch(`${API}/api/members`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+                body: JSON.stringify({action:'propose_news', title, content, excerpt: content.substring(0, 200)})
+            });
+            const data = await res.json();
+            if (data.ok || data.message) {
+                document.getElementById('contrib-success').style.display = 'block';
+                evt.target.reset();
+                updateContribForm();
+                showToast('Proposition soumise !','success');
+                loadMyProposals();
+            } else {
+                showToast(data.error||'Erreur','error');
+            }
+        } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+    } else {
+        // Announcement types: annonce, emploi, stage, apprentissage, collaboration
+        const jobData = ['emploi','stage','apprentissage'].includes(type) ? {
+            company: document.getElementById('contrib-company')?.value || '',
+            location: document.getElementById('contrib-job-location')?.value || '',
+            sector: document.getElementById('contrib-job-sector')?.value || '',
+            duration: document.getElementById('contrib-job-duration')?.value || '',
+            contact_email: document.getElementById('contrib-job-email')?.value || '',
+        } : {};
+        const fullContent = ['emploi','stage','apprentissage'].includes(type)
+            ? `${content}\n\n---\nEntreprise : ${jobData.company}\nLieu : ${jobData.location}\nDomaine : ${jobData.sector}\nDuree : ${jobData.duration}\nContact : ${jobData.contact_email}`
+            : content;
+        try {
+            const res = await fetch(`${API}/api/social`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+                body: JSON.stringify({action:'post_announcement', title, content: fullContent, category: type})
+            });
+            const data = await res.json();
+            if (data.ok || data.message) {
+                document.getElementById('contrib-success').style.display = 'block';
+                evt.target.reset();
+                updateContribForm();
+                showToast('Annonce publiee !','success');
+                loadContributions();
+                loadMyProposals();
+            } else {
+                showToast(data.error||'Erreur','error');
+            }
+        } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+    }
+}
+
+async function loadContributions() {
+    try {
+        const res = await fetch(`${API}/api/social?action=announcements`);
+        const items = await res.json();
+        const el = document.getElementById('contributions-list');
+        if (!el) return;
+        if (!items.length) { el.innerHTML = '<p class="empty-msg">Aucune annonce pour le moment</p>'; return; }
+        el.innerHTML = items.map(a => `
+            <div style="padding:16px;border-bottom:1px solid var(--gray-100)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="card-tag" style="background:${a.category==='emploi'?'var(--green)':a.category==='collaboration'?'var(--teal)':'var(--primary)'}">${esc(a.category||'general')}</span>
+                    <span style="font-size:12px;color:var(--gray-400)">${formatDate(a.created_at)}</span>
+                </div>
+                <div style="font-weight:700;color:var(--primary);font-size:15px">${esc(a.title)}</div>
+                <div style="font-size:13px;color:var(--gray-600);margin-top:4px">${esc((a.content||'').substring(0,200))}</div>
+                <div style="font-size:12px;color:var(--gray-400);margin-top:8px">Par ${esc(a.first_name||'')} ${esc(a.last_name||'')}</div>
+            </div>
+        `).join('');
+    } catch (e) { console.warn('Contributions:', e); }
 }
 
 // === PHOTO PREVIEW ===

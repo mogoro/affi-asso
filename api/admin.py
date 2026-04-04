@@ -56,7 +56,10 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, m or {"error": "Membre introuvable"})
 
         elif action == "events":
-            rows = fetchall("SELECT * FROM events ORDER BY start_date DESC LIMIT 100")
+            rows = fetchall("""SELECT e.*,
+                (SELECT COUNT(*) FROM event_registrations r WHERE r.event_id = e.id) as reg_count,
+                (SELECT COUNT(*) FROM event_registrations r WHERE r.event_id = e.id AND r.attended = TRUE) as attended_count
+                FROM events e ORDER BY e.start_date DESC LIMIT 100""")
             return self._json(200, rows)
 
         elif action == "news":
@@ -92,7 +95,7 @@ class handler(BaseHTTPRequestHandler):
 
         elif action == "event_registrations":
             event_id = qs.get("event_id", ["0"])[0]
-            rows = fetchall("""SELECT r.id, r.status, r.registered_at,
+            rows = fetchall("""SELECT r.id, r.status, r.registered_at, r.attended, r.attended_at,
                 m.first_name, m.last_name, m.email, m.company, m.phone
                 FROM event_registrations r
                 JOIN members m ON r.member_id = m.id
@@ -101,6 +104,10 @@ class handler(BaseHTTPRequestHandler):
 
         elif action == "messages":
             rows = fetchall("SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 100")
+            return self._json(200, rows)
+
+        elif action == "partners":
+            rows = fetchall("SELECT * FROM partners ORDER BY sort_order ASC, name ASC")
             return self._json(200, rows)
 
         elif action == "subscriptions":
@@ -325,15 +332,21 @@ class handler(BaseHTTPRequestHandler):
 
         # === EVENTS ===
         elif action == "create_event":
-            execute("""INSERT INTO events (title, event_type, description, location, start_date, end_date, is_members_only, is_published)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
+            execute("""INSERT INTO events (title, event_type, description, location, address,
+                start_date, end_date, image_url, max_attendees, price, is_members_only, is_published,
+                organizer, tags)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                 [body.get("title"), body.get("event_type","conference"), body.get("description"),
-                 body.get("location"), body.get("start_date"), body.get("end_date"),
-                 body.get("is_members_only", False), body.get("is_published", True)])
+                 body.get("location"), body.get("address"),
+                 body.get("start_date"), body.get("end_date"),
+                 body.get("image_url"), body.get("max_attendees"), body.get("price", 0),
+                 body.get("is_members_only", False), body.get("is_published", True),
+                 body.get("organizer"), body.get("tags")])
+            self._log(admin["id"], "create_event", f"Cree: {body.get('title')}")
             return self._json(200, {"ok": True, "message": "Evenement cree"})
 
         elif action == "update_event":
-            fields = {k: body[k] for k in ("title","event_type","description","location","start_date","end_date","is_members_only","is_published") if k in body}
+            fields = {k: body[k] for k in ("title","event_type","description","location","address","start_date","end_date","image_url","max_attendees","price","is_members_only","is_published","organizer","tags") if k in body}
             if fields:
                 sets = ", ".join(f"{k}=%s" for k in fields)
                 execute(f"UPDATE events SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
@@ -355,12 +368,15 @@ class handler(BaseHTTPRequestHandler):
 
         # === NEWS ===
         elif action == "create_news":
-            execute("INSERT INTO news (title, excerpt, content, is_published) VALUES (%s,%s,%s,%s)",
-                [body.get("title"), body.get("excerpt"), body.get("content"), body.get("is_published", True)])
+            execute("""INSERT INTO news (title, excerpt, content, image_url, category, is_published)
+                VALUES (%s,%s,%s,%s,%s,%s)""",
+                [body.get("title"), body.get("excerpt"), body.get("content"),
+                 body.get("image_url"), body.get("category"), body.get("is_published", True)])
+            self._log(admin["id"], "create_news", f"Cree: {body.get('title')}")
             return self._json(200, {"ok": True, "message": "Actualite creee"})
 
         elif action == "update_news":
-            fields = {k: body[k] for k in ("title","excerpt","content","is_published") if k in body}
+            fields = {k: body[k] for k in ("title","excerpt","content","image_url","category","is_published") if k in body}
             if fields:
                 sets = ", ".join(f"{k}=%s" for k in fields)
                 execute(f"UPDATE news SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
@@ -389,6 +405,29 @@ class handler(BaseHTTPRequestHandler):
         elif action == "delete_publication":
             execute("UPDATE publications SET is_published=FALSE, title=CONCAT('[SUPPRIME] ', title) WHERE id=%s", [body["id"]])
             return self._json(200, {"ok": True})
+
+        # === PARTNERS ===
+        elif action == "create_partner":
+            execute("""INSERT INTO partners (name, description, website_url, logo_url, sector, city, address, contact, sort_order)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                [body.get("name"), body.get("description"), body.get("website_url"),
+                 body.get("logo_url"), body.get("sector"), body.get("city"),
+                 body.get("address"), body.get("contact"), _safe_int(body.get("sort_order", 0))])
+            self._log(admin["id"], "create_partner", f"Cree: {body.get('name')}")
+            return self._json(200, {"ok": True, "message": "Partenaire cree"})
+
+        elif action == "update_partner":
+            fields = {k: body[k] for k in ("name","description","website_url","logo_url","sector","city","address","contact","sort_order","is_active") if k in body}
+            if fields:
+                sets = ", ".join(f"{k}=%s" for k in fields)
+                execute(f"UPDATE partners SET {sets} WHERE id=%s", list(fields.values()) + [_safe_int(body.get("id"))])
+            self._log(admin["id"], "update_partner", f"#{body.get('id')}")
+            return self._json(200, {"ok": True, "message": "Partenaire mis a jour"})
+
+        elif action == "delete_partner":
+            execute("UPDATE partners SET is_active=FALSE, name=CONCAT('[SUPPRIME] ', name) WHERE id=%s", [_safe_int(body.get("id"))])
+            self._log(admin["id"], "delete_partner", f"#{body.get('id')}")
+            return self._json(200, {"ok": True, "message": "Partenaire supprime"})
 
         # === ANNOUNCEMENTS MODERATION ===
         elif action == "approve_announcement":
@@ -421,8 +460,13 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True})
 
         elif action == "event_attend":
-            reg_id = body.get("registration_id")
+            reg_id = _safe_int(body.get("registration_id"))
             execute("UPDATE event_registrations SET attended=TRUE, attended_at=NOW() WHERE id=%s", [reg_id])
+            return self._json(200, {"ok": True})
+
+        elif action == "event_unattend":
+            reg_id = _safe_int(body.get("registration_id"))
+            execute("UPDATE event_registrations SET attended=FALSE, attended_at=NULL WHERE id=%s", [reg_id])
             return self._json(200, {"ok": True})
 
         elif action == "send_event_comm":

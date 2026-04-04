@@ -31,6 +31,7 @@
 </head>
 <body>
 <a href="#page-accueil" class="skip-link">Aller au contenu principal</a>
+<div id="reading-progress" class="reading-progress"></div>
 
 <!-- NAVBAR PRO -->
 <nav class="navbar">
@@ -125,7 +126,21 @@
         <div class="slide-dots"><span class="slide-dot active"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span></div>
     </div>
 
-    <!-- Articles / Actualites style blog (like original homepage) -->
+    <!-- News Carousel -->
+    <section id="news-carousel-wrapper">
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Actualites</h2>
+            <p class="section-sub section-sub-center">Les dernieres nouvelles du monde ferroviaire</p>
+            <div style="position:relative;overflow:hidden">
+                <button class="carousel-arrow carousel-arrow-left" onclick="slideNewsCarousel(-1)">&#10094;</button>
+                <div id="news-carousel" style="display:flex;gap:24px;transition:transform .4s ease;padding:8px 0"></div>
+                <button class="carousel-arrow carousel-arrow-right" onclick="slideNewsCarousel(1)">&#10095;</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Articles / Actualites style blog -->
     <section>
         <div class="container">
             <div class="cards-grid" id="home-news" style="grid-template-columns:1fr 1fr">
@@ -214,6 +229,18 @@
                 </div></div>
             </div>
             <div id="feed-list"><p class="empty-msg">Connectez-vous pour acceder a la communaute</p></div>
+        </div>
+    </section>
+
+    <!-- Le Reseau Bouge -->
+    <section>
+        <div class="container">
+            <div class="section-line section-line-center"></div>
+            <h2 class="section-title section-title-center">Le Reseau Bouge</h2>
+            <p class="section-sub section-sub-center">Dernieres mobilites et evolutions de carriere de nos membres</p>
+            <div id="reseau-bouge-list" class="cards-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
+                <p class="empty-msg">Chargement...</p>
+            </div>
         </div>
     </section>
 
@@ -496,6 +523,11 @@
                     <p style="color:var(--gray-400);text-align:center;padding:40px">Chargement...</p>
                 </div>
             </div>
+            <!-- Événements passés -->
+            <div style="margin-top:40px">
+                <h3 style="color:var(--gray-500);font-size:16px;font-weight:700;margin-bottom:16px">Événements récents</h3>
+                <div id="past-events-list" class="agenda-events"></div>
+            </div>
         </div>
     </section>
 
@@ -551,6 +583,12 @@
             <div class="section-line section-line-center"></div>
             <h2 class="section-title section-title-center">Publications</h2>
             <p class="section-sub section-sub-center">Articles, comptes rendus et documents techniques</p>
+            <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;justify-content:center">
+                <button class="course-filter active" onclick="filterPubCat(this,'')">Toutes</button>
+                <button class="course-filter" onclick="filterPubCat(this,'AFFI Info')">AFFI Info</button>
+                <button class="course-filter" onclick="filterPubCat(this,'Technique')">Technique</button>
+                <button class="course-filter" onclick="filterPubCat(this,'Rapport')">Rapport</button>
+            </div>
             <div class="cards-grid" id="publications-list">
                 <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
             </div>
@@ -1046,39 +1084,60 @@
                     </div>
                 </div>
 
-                <!-- TAB: PROPOSER -->
+                <!-- TAB: PROPOSER (Unified Contribution Form) -->
                 <div id="mtab-proposer" class="mtab-content" style="display:none">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-                        <div class="card"><div class="card-body">
-                            <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Proposer un evenement</h3>
-                            <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">Votre proposition sera soumise aux administrateurs pour validation avant publication.</p>
-                            <form onsubmit="proposeEvent(event)">
-                                <div class="form-group"><label>Titre *</label><input id="pe-title" required></div>
+                    <div class="card"><div class="card-body">
+                        <h3 style="color:var(--primary);margin-bottom:8px;font-weight:800">Proposer une contribution</h3>
+                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px">Selectionnez le type de contribution. Votre proposition sera soumise aux administrateurs pour validation.</p>
+                        <form onsubmit="submitContribution(event)" id="contrib-form">
+                            <div class="form-group"><label>Type de contribution *</label>
+                                <select id="contrib-type" onchange="updateContribForm()" required>
+                                    <option value="evenement">Evenement</option>
+                                    <option value="actualite">Actualite</option>
+                                    <option value="annonce">Annonce generale</option>
+                                    <option value="emploi">Offre d'emploi</option>
+                                    <option value="stage">Stage</option>
+                                    <option value="apprentissage">Apprentissage</option>
+                                    <option value="collaboration">Collaboration</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Titre *</label><input id="contrib-title" required></div>
+                            <div class="form-group"><label>Description / Contenu *</label><textarea id="contrib-content" style="min-height:100px" required></textarea></div>
+                            <!-- Event-specific fields -->
+                            <div id="contrib-event-fields" style="display:none">
                                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                                    <div class="form-group"><label>Type</label><select id="pe-type"><option>conference</option><option>visite</option><option>rencontre</option><option>webinaire</option></select></div>
-                                    <div class="form-group"><label>Lieu</label><input id="pe-location"></div>
+                                    <div class="form-group"><label>Type d'evenement</label><select id="contrib-event-type"><option>conference</option><option>visite</option><option>rencontre</option><option>webinaire</option><option>colloque</option></select></div>
+                                    <div class="form-group"><label>Lieu</label><input id="contrib-location"></div>
                                 </div>
                                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                                    <div class="form-group"><label>Date debut</label><input type="datetime-local" id="pe-start" required></div>
-                                    <div class="form-group"><label>Date fin</label><input type="datetime-local" id="pe-end"></div>
+                                    <div class="form-group"><label>Date debut</label><input type="datetime-local" id="contrib-start"></div>
+                                    <div class="form-group"><label>Date fin</label><input type="datetime-local" id="contrib-end"></div>
                                 </div>
-                                <div class="form-group"><label>Description</label><textarea id="pe-desc" style="min-height:80px"></textarea></div>
-                                <button type="submit" class="btn btn-accent" style="width:100%">Soumettre</button>
-                                <div class="form-success" id="pe-success" style="display:none"></div>
-                            </form>
-                        </div></div>
-                        <div class="card"><div class="card-body">
-                            <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Proposer une actualite</h3>
-                            <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">Partagez une actualite du monde ferroviaire — soumise a validation.</p>
-                            <form onsubmit="proposeNews(event)">
-                                <div class="form-group"><label>Titre *</label><input id="pn-title" required></div>
-                                <div class="form-group"><label>Resume</label><input id="pn-excerpt"></div>
-                                <div class="form-group"><label>Contenu</label><textarea id="pn-content" style="min-height:120px"></textarea></div>
-                                <button type="submit" class="btn btn-accent" style="width:100%">Soumettre</button>
-                                <div class="form-success" id="pn-success" style="display:none"></div>
-                            </form>
-                        </div></div>
-                    </div>
+                            </div>
+                            <!-- Job-specific fields -->
+                            <div id="contrib-job-fields" style="display:none">
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                    <div class="form-group"><label>Entreprise</label><input id="contrib-company"></div>
+                                    <div class="form-group"><label>Lieu</label><input id="contrib-job-location"></div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                    <div class="form-group"><label>Secteur</label><input id="contrib-job-sector" placeholder="Signalisation, Materiel roulant..."></div>
+                                    <div class="form-group"><label>Duree</label><input id="contrib-job-duration" placeholder="CDI, 6 mois..."></div>
+                                </div>
+                                <div class="form-group"><label>Email de contact</label><input type="email" id="contrib-job-email"></div>
+                            </div>
+                            <!-- Image upload -->
+                            <div class="form-group"><label>Image (optionnel)</label><input type="file" id="contrib-image" accept="image/*" onchange="previewContribImage(this)"></div>
+                            <div id="contrib-image-preview" style="display:none;margin-bottom:12px"><img id="contrib-image-img" style="max-width:200px;border-radius:var(--radius);border:2px solid var(--gray-200)"></div>
+                            <button type="submit" class="btn btn-accent" style="width:100%">Soumettre la proposition</button>
+                            <div class="form-success" id="contrib-success" style="display:none">Proposition soumise avec succes !</div>
+                        </form>
+                    </div></div>
+                    <!-- Existing contributions list -->
+                    <div class="card" style="margin-top:24px"><div class="card-body">
+                        <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Annonces des membres</h3>
+                        <div id="contributions-list"><p class="empty-msg">Chargement...</p></div>
+                    </div></div>
                     <div class="card" style="margin-top:24px"><div class="card-body">
                         <h3 style="color:var(--primary);margin-bottom:16px;font-weight:800">Mes propositions</h3>
                         <div id="my-proposals"><p class="empty-msg">Chargement...</p></div>
@@ -1104,9 +1163,8 @@
                         <button class="adm-nav-btn" data-section="adm-adhesions" onclick="switchAdminSection('adm-adhesions')">Adhesions</button>
                         <button class="adm-nav-btn" data-section="adm-events" onclick="switchAdminSection('adm-events')">Evenements</button>
                         <button class="adm-nav-btn" data-section="adm-news" onclick="switchAdminSection('adm-news')">Actualites</button>
-                        <button class="adm-nav-btn" data-section="adm-announcements" onclick="switchAdminSection('adm-announcements')">Annonces membres</button>
-                        <button class="adm-nav-btn" data-section="adm-pending" onclick="switchAdminSection('adm-pending')">A valider <span id="pending-count-badge" style="background:var(--accent);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:4px"></span></button>
-                        <button class="adm-nav-btn" data-section="adm-messages" onclick="switchAdminSection('adm-messages')">Messages</button>
+                        <button class="adm-nav-btn" data-section="adm-partners" onclick="switchAdminSection('adm-partners')">Partenaires</button>
+                        <button class="adm-nav-btn" data-section="adm-moderation" onclick="switchAdminSection('adm-moderation')">Moderation <span id="pending-count-badge" style="background:var(--accent);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:4px"></span></button>
                         <button class="adm-nav-btn" data-section="adm-stats" onclick="switchAdminSection('adm-stats')">Statistiques</button>
                         <button class="adm-nav-btn" data-section="adm-polls" onclick="switchAdminSection('adm-polls')">Sondages</button>
                         <button class="adm-nav-btn" data-section="adm-connexions" onclick="switchAdminSection('adm-connexions')">Connexions</button>
@@ -1157,23 +1215,19 @@
                         <div id="adm-news-list"></div>
                     </div>
 
-                    <!-- Admin Announcements Moderation -->
-                    <div id="adm-announcements" class="adm-section">
-                        <h3 style="margin-bottom:16px;color:var(--primary)">Moderation des annonces membres</h3>
-                        <div id="adm-announcements-list"></div>
+                    <!-- Admin Partners -->
+                    <div id="adm-partners" class="adm-section">
+                        <div class="adm-toolbar">
+                            <button class="btn btn-accent" onclick="showPartnerForm()" style="font-size:13px;padding:8px 20px">+ Nouveau partenaire</button>
+                        </div>
+                        <div id="adm-partners-list"><p class="empty-msg">Chargement...</p></div>
                     </div>
 
-                    <!-- Admin Messages -->
-                    <div id="adm-messages" class="adm-section">
-                        <h3 style="margin-bottom:16px;color:var(--primary)">Messages de contact</h3>
-                        <div id="adm-messages-list"></div>
-                    </div>
-
-                    <!-- Admin Pending Content -->
-                    <div id="adm-pending" class="adm-section">
-                        <h3 style="margin-bottom:16px;color:var(--primary)">Contenus en attente de validation</h3>
-                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Les membres peuvent proposer des evenements, actualites et annonces. En tant qu'administrateur, vous devez valider leur publication.</p>
-                        <div id="adm-pending-list"><p class="empty-msg">Chargement...</p></div>
+                    <!-- Admin Unified Moderation (pending + announcements + messages) -->
+                    <div id="adm-moderation" class="adm-section">
+                        <h3 style="margin-bottom:8px;color:var(--primary)">Moderation unifiee</h3>
+                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Evenements, actualites et annonces en attente de validation, annonces membres, et messages de contact.</p>
+                        <div id="adm-moderation-content"><p class="empty-msg">Chargement...</p></div>
                     </div>
 
                     <!-- Admin Stats -->
@@ -1259,6 +1313,15 @@
         <div class="footer-bar">&copy; 2026 AFFI — Tous droits reserves &middot; <a href="#contact" onclick="navigate('contact')" style="color:rgba(255,255,255,.4)">Mentions légales</a> &middot; <a href="#contact" onclick="navigate('contact')" style="color:rgba(255,255,255,.4)">Confidentialité</a></div>
     </div>
 </footer>
+
+<!-- PARTNER ROTATING BANNER -->
+<div id="partner-banner" class="partner-banner" style="display:none">
+    <div class="partner-banner-inner">
+        <span class="partner-banner-label">Partenaire</span>
+        <div id="partner-banner-content"></div>
+        <button onclick="document.getElementById('partner-banner').style.display='none'" class="partner-banner-close">&times;</button>
+    </div>
+</div>
 
 <!-- COOKIE CONSENT BANNER -->
 <div id="cookie-banner" class="cookie-banner" style="display:none">

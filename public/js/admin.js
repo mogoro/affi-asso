@@ -21,14 +21,14 @@ function switchAdminSection(id) {
     if (id === 'adm-members') loadAdminMembers();
     if (id === 'adm-events') loadAdminEvents();
     if (id === 'adm-news') loadAdminNews();
-    if (id === 'adm-announcements') loadAdminAnnouncements();
-    if (id === 'adm-messages') loadAdminMessages();
-    if (id === 'adm-pending') loadPendingContent();
+    if (id === 'adm-moderation') loadAdminModeration();
     if (id === 'adm-stats') { if (typeof loadStatsDashboard === 'function') loadStatsDashboard(); }
     if (id === 'adm-polls') { if (typeof loadPolls === 'function') loadPolls(); }
     if (id === 'adm-adhesions') loadAdminAdhesions();
     if (id === 'adm-connexions') loadAdminConnexions();
     if (id === 'adm-logs') loadAdminLogs();
+    if (id === 'adm-pubs') loadAdminPubs();
+    if (id === 'adm-partners') loadAdminPartners();
 }
 
 async function adminFetch(action, params) {
@@ -261,34 +261,59 @@ async function loadAdminEvents() {
             { key: 'title', label: 'Titre', render: v => `<strong>${esc(v)}</strong>` },
             { key: 'event_type', label: 'Type', render: v => `<span class="card-tag">${esc(v||'')}</span>` },
             { key: 'location', label: 'Lieu' },
-            { key: 'is_published', label: 'Publié', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
+            { key: 'reg_count', label: 'Inscrits', render: (v, r) => `<strong style="color:var(--primary)">${v||0}</strong>${r.attended_count ? `<span style="color:var(--green);font-size:11px"> (${r.attended_count}&#10003;)</span>` : ''}` },
+            { key: 'is_published', label: 'Publie', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
         ],
         data: events,
         actions: (e) => `
+            <button onclick="editEvent(${e.id})" class="adm-btn" title="Modifier">&#9998;</button>
             <button onclick="showEventCommForm(${e.id},'${esc(e.title).replace(/'/g,"&#39;")}')" class="adm-btn" title="Communiquer">&#128231;</button>
             <button onclick="showEventRegistrations(${e.id},'${esc(e.title).replace(/'/g,"&#39;")}')" class="adm-btn" title="Inscrits">&#128101;</button>
             ${!e.is_published ? `<button onclick="adminAction('publish_event',${e.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_event',${e.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
+            ${new Date(e.start_date) < new Date() ? `<button onclick="convertEventToArticle(${e.id})" class="adm-btn" title="Convertir en article" style="color:var(--teal)">&#128240;</button>` : ''}
             <button onclick="adminAction('delete_event',${e.id})" class="adm-btn adm-btn-danger">&#128465;</button>
         `,
         pageSize: 25,
     });
 }
 
-function showEventForm() {
-    const html = `<div class="adm-modal-bg" id="event-modal" ><div class="adm-modal">
-        <h3 style="margin-bottom:20px;color:var(--primary)">Nouvel evenement</h3>
-        <form onsubmit="createEvent(event)">
-            <div class="form-group"><label>Titre</label><input id="ne-title" required></div>
+function showEventForm(editEvt) {
+    const e = editEvt || {};
+    const isEdit = !!e.id;
+    const html = `<div class="adm-modal-bg" id="event-modal" ><div class="adm-modal" style="max-width:700px">
+        <h3 style="margin-bottom:20px;color:var(--primary)">${isEdit ? 'Modifier' : 'Nouvel'} evenement</h3>
+        <form onsubmit="${isEdit ? `updateEvent(event,${e.id})` : 'createEvent(event)'}">
+            <div class="form-group"><label>Titre *</label><input id="ne-title" required value="${esc(e.title||'')}"></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <div class="form-group"><label>Type</label><select id="ne-type"><option>conference</option><option>visite</option><option>rencontre</option><option>challenge</option><option>webinaire</option></select></div>
-                <div class="form-group"><label>Lieu</label><input id="ne-location"></div>
+                <div class="form-group"><label>Type</label><select id="ne-type">
+                    <option ${(e.event_type||'')==='conference'?'selected':''}>conference</option>
+                    <option ${(e.event_type||'')==='visite'?'selected':''}>visite</option>
+                    <option ${(e.event_type||'')==='webinaire'?'selected':''}>webinaire</option>
+                    <option ${(e.event_type||'')==='rencontre'?'selected':''}>rencontre</option>
+                    <option ${(e.event_type||'')==='assemblee'?'selected':''}>assemblee</option>
+                    <option ${(e.event_type||'')==='ceremonie'?'selected':''}>ceremonie</option>
+                    <option ${(e.event_type||'')==='challenge'?'selected':''}>challenge</option>
+                </select></div>
+                <div class="form-group"><label>Lieu</label><input id="ne-location" value="${esc(e.location||'')}"></div>
             </div>
+            <div class="form-group"><label>Adresse complete</label><input id="ne-address" value="${esc(e.address||'')}" placeholder="Ex: 1 Place aux Etoiles, 93210 Saint-Denis"></div>
+            <div class="form-group"><label>Organisateur</label><input id="ne-organizer" value="${esc(e.organizer||'AFFI')}" placeholder="Ex: AFFI"></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <div class="form-group"><label>Date debut</label><input type="datetime-local" id="ne-start" required></div>
-                <div class="form-group"><label>Date fin</label><input type="datetime-local" id="ne-end"></div>
+                <div class="form-group"><label>Date debut *</label><input type="datetime-local" id="ne-start" required value="${e.start_date ? e.start_date.replace(' ','T').substring(0,16) : ''}"></div>
+                <div class="form-group"><label>Date fin</label><input type="datetime-local" id="ne-end" value="${e.end_date ? e.end_date.replace(' ','T').substring(0,16) : ''}"></div>
             </div>
-            <div class="form-group"><label>Description</label><textarea id="ne-desc" style="min-height:100px"></textarea></div>
-            <button type="submit" class="btn btn-accent" style="width:100%">Creer</button>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div class="form-group"><label>Places max</label><input type="number" id="ne-max" value="${e.max_attendees||''}"></div>
+                <div class="form-group"><label>Prix (EUR)</label><input type="number" id="ne-price" step="0.01" value="${e.price||0}"></div>
+                <div class="form-group"><label>Image URL</label><input id="ne-image" value="${esc(e.image_url||'')}" placeholder="https://..."></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea id="ne-desc" style="min-height:150px">${esc(e.description||'')}</textarea></div>
+            <div class="form-group"><label>Mots-cles (separes par des virgules)</label><input id="ne-tags" value="${esc(e.tags||'')}" placeholder="Ex : ERTMS, signalisation, conference"></div>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="ne-members" ${e.is_members_only ? 'checked' : ''}> Reserve aux membres</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="ne-published" ${e.is_published !== false ? 'checked' : ''}> Publie</label>
+            </div>
+            <button type="submit" class="btn btn-accent" style="width:100%">${isEdit ? 'Enregistrer' : 'Creer l\'evenement'}</button>
         </form>
     </div></div>`;
     openModal(html);
@@ -301,12 +326,95 @@ async function createEvent(evt) {
         title: document.getElementById('ne-title').value,
         event_type: document.getElementById('ne-type').value,
         location: document.getElementById('ne-location').value,
+        address: document.getElementById('ne-address').value,
+        organizer: document.getElementById('ne-organizer').value,
         start_date: document.getElementById('ne-start').value,
         end_date: document.getElementById('ne-end').value || null,
         description: document.getElementById('ne-desc').value,
+        tags: document.getElementById('ne-tags').value,
+        max_attendees: document.getElementById('ne-max').value ? parseInt(document.getElementById('ne-max').value) : null,
+        price: parseFloat(document.getElementById('ne-price').value) || 0,
+        image_url: document.getElementById('ne-image').value || null,
+        is_members_only: document.getElementById('ne-members').checked,
+        is_published: document.getElementById('ne-published').checked,
     });
     closeModal('event-modal');
     loadAdminEvents();
+}
+
+async function updateEvent(evt, id) {
+    evt.preventDefault();
+    await adminPost({
+        action: 'update_event', id,
+        title: document.getElementById('ne-title').value,
+        event_type: document.getElementById('ne-type').value,
+        location: document.getElementById('ne-location').value,
+        address: document.getElementById('ne-address').value,
+        organizer: document.getElementById('ne-organizer').value,
+        start_date: document.getElementById('ne-start').value,
+        end_date: document.getElementById('ne-end').value || null,
+        description: document.getElementById('ne-desc').value,
+        tags: document.getElementById('ne-tags').value,
+        max_attendees: document.getElementById('ne-max').value ? parseInt(document.getElementById('ne-max').value) : null,
+        price: parseFloat(document.getElementById('ne-price').value) || 0,
+        image_url: document.getElementById('ne-image').value || null,
+        is_members_only: document.getElementById('ne-members').checked,
+        is_published: document.getElementById('ne-published').checked,
+    });
+    closeModal('event-modal');
+    loadAdminEvents();
+}
+
+async function editEvent(id) {
+    const events = await adminFetch('events', {});
+    const e = events.find(ev => ev.id === id);
+    if (e) showEventForm(e);
+}
+
+function convertEventToArticle(eventId) {
+    adminFetch('events', {}).then(events => {
+        const ev = events.find(e => e.id === eventId);
+        if (!ev) return;
+        const html = `<div class="adm-modal-bg" id="e2a-modal"><div class="adm-modal" style="max-width:600px">
+            <h3 style="color:var(--primary);margin-bottom:16px">&#128240; Convertir en article</h3>
+            <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Creer un article a partir de l'evenement passe.</p>
+            <form onsubmit="submitEventToArticle(event,${eventId})">
+                <div class="form-group"><label>Titre de l'article</label><input id="e2a-title" required value="Retour sur : ${esc(ev.title)}"></div>
+                <div class="form-group"><label>Categorie</label><select id="e2a-category">
+                    <option value="Conference" ${ev.event_type==='conference'?'selected':''}>Conference</option>
+                    <option value="Visite">Visite</option>
+                    <option value="Publication">Publication</option>
+                    <option value="Vie associative">Vie associative</option>
+                </select></div>
+                <div class="form-group"><label>Resume</label><textarea id="e2a-excerpt" style="min-height:60px">Retour sur l'evenement du ${formatDate(ev.start_date)}.</textarea></div>
+                <div class="form-group"><label>Contenu complet</label><textarea id="e2a-content" style="min-height:150px">${esc(ev.description||'')}</textarea></div>
+                <div style="display:flex;gap:12px">
+                    <button type="submit" class="btn btn-accent" style="flex:1">Publier l'article</button>
+                    <button type="button" class="btn btn-primary" style="flex:1" onclick="closeModal('e2a-modal')">Annuler</button>
+                </div>
+            </form>
+        </div></div>`;
+        openModal(html);
+    });
+}
+
+async function submitEventToArticle(evt, eventId) {
+    evt.preventDefault();
+    const res = await adminPost({
+        action: 'create_news',
+        title: document.getElementById('e2a-title').value,
+        category: document.getElementById('e2a-category').value,
+        excerpt: document.getElementById('e2a-excerpt').value,
+        content: document.getElementById('e2a-content').value,
+        is_published: true,
+    });
+    if (res.ok) {
+        closeModal('e2a-modal');
+        showToast('Article publie !', 'success');
+        loadAdminEvents();
+    } else {
+        showToast(res.error || 'Erreur', 'error');
+    }
 }
 
 // === NEWS ===
@@ -317,10 +425,12 @@ async function loadAdminNews() {
         columns: [
             { key: 'published_at', label: 'Date', type: 'date', render: v => `<span style="font-size:13px">${formatDate(v)}</span>` },
             { key: 'title', label: 'Titre', render: v => `<strong>${esc(v)}</strong>` },
-            { key: 'is_published', label: 'Publié', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
+            { key: 'category', label: 'Categorie', render: v => v ? `<span class="card-tag">${esc(v)}</span>` : '-' },
+            { key: 'is_published', label: 'Publie', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
         ],
         data: items,
         actions: (n) => `
+            <button onclick="editNews(${n.id})" class="adm-btn" title="Modifier">&#9998;</button>
             ${!n.is_published ? `<button onclick="adminAction('publish_news',${n.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_news',${n.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
             <button onclick="adminAction('delete_news',${n.id})" class="adm-btn adm-btn-danger">&#128465;</button>
         `,
@@ -328,14 +438,30 @@ async function loadAdminNews() {
     });
 }
 
-function showNewsForm() {
-    const html = `<div class="adm-modal-bg" id="news-modal" ><div class="adm-modal">
-        <h3 style="margin-bottom:20px;color:var(--primary)">Nouvelle actualite</h3>
-        <form onsubmit="createNews(event)">
-            <div class="form-group"><label>Titre</label><input id="nn-title" required></div>
-            <div class="form-group"><label>Resume</label><input id="nn-excerpt"></div>
-            <div class="form-group"><label>Contenu</label><textarea id="nn-content" style="min-height:120px"></textarea></div>
-            <button type="submit" class="btn btn-accent" style="width:100%">Publier</button>
+function showNewsForm(editItem) {
+    const n = editItem || {};
+    const isEdit = !!n.id;
+    const html = `<div class="adm-modal-bg" id="news-modal" ><div class="adm-modal" style="max-width:700px">
+        <h3 style="margin-bottom:20px;color:var(--primary)">${isEdit ? 'Modifier l\'' : 'Nouvelle '}actualite</h3>
+        <form onsubmit="${isEdit ? `updateNews(event,${n.id})` : 'createNews(event)'}">
+            <div class="form-group"><label>Titre *</label><input id="nn-title" required value="${esc(n.title||'')}"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Categorie</label><select id="nn-category">
+                    <option value="">Aucune</option>
+                    <option ${(n.category||'')==='Conference'?'selected':''}>Conference</option>
+                    <option ${(n.category||'')==='Innovation'?'selected':''}>Innovation</option>
+                    <option ${(n.category||'')==='Industrie'?'selected':''}>Industrie</option>
+                    <option ${(n.category||'')==='Publication'?'selected':''}>Publication</option>
+                    <option ${(n.category||'')==='Vie associative'?'selected':''}>Vie associative</option>
+                </select></div>
+                <div class="form-group"><label>Image URL</label><input id="nn-image" value="${esc(n.image_url||'')}" placeholder="https://..."></div>
+            </div>
+            <div class="form-group"><label>Resume (extrait)</label><textarea id="nn-excerpt" style="min-height:60px">${esc(n.excerpt||'')}</textarea></div>
+            <div class="form-group"><label>Contenu complet</label><textarea id="nn-content" style="min-height:200px">${esc(n.content||'')}</textarea></div>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="nn-published" ${n.is_published !== false ? 'checked' : ''}> Publie</label>
+            </div>
+            <button type="submit" class="btn btn-accent" style="width:100%">${isEdit ? 'Enregistrer' : 'Publier l\'actualite'}</button>
         </form>
     </div></div>`;
     openModal(html);
@@ -343,30 +469,43 @@ function showNewsForm() {
 
 async function createNews(evt) {
     evt.preventDefault();
-    await adminPost({action:'create_news', title:document.getElementById('nn-title').value, excerpt:document.getElementById('nn-excerpt').value, content:document.getElementById('nn-content').value});
+    await adminPost({
+        action: 'create_news',
+        title: document.getElementById('nn-title').value,
+        excerpt: document.getElementById('nn-excerpt').value,
+        content: document.getElementById('nn-content').value,
+        category: document.getElementById('nn-category').value || null,
+        image_url: document.getElementById('nn-image').value || null,
+        is_published: document.getElementById('nn-published').checked,
+    });
     closeModal('news-modal');
     loadAdminNews();
 }
 
-// === ANNOUNCEMENTS MODERATION ===
-async function loadAdminAnnouncements() {
-    const items = await adminFetch('announcements', {});
-    if (!document.getElementById('adm-announcements-list')) return;
-    new DataTable('adm-announcements-list', {
-        columns: [
-            { key: 'created_at', label: 'Date', type: 'date', render: v => `<span style="font-size:13px">${formatDate(v)}</span>` },
-            { key: 'author', label: 'Auteur', render: (v, r) => `${esc(r.first_name)} ${esc(r.last_name)}` },
-            { key: 'title', label: 'Titre', render: (v, r) => `<strong>${esc(v)}</strong><br><span style="font-size:12px;color:var(--gray-500)">${esc((r.content||'').substring(0,80))}</span>` },
-            { key: 'category', label: 'Cat.', render: v => `<span class="card-tag">${esc(v)}</span>` },
-            { key: 'is_active', label: 'Actif', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
-        ],
-        data: items.map(a => ({ ...a, author: (a.first_name||'') + ' ' + (a.last_name||'') })),
-        actions: (a) => `
-            ${!a.is_active ? `<button onclick="adminAction('approve_announcement',${a.id})" class="adm-btn adm-btn-ok" title="Approuver">&#10003;</button>` : `<button onclick="adminAction('reject_announcement',${a.id})" class="adm-btn adm-btn-warn" title="Masquer">&#10007;</button>`}
-            <button onclick="adminAction('delete_announcement',${a.id})" class="adm-btn adm-btn-danger">&#128465;</button>
-        `,
-        pageSize: 25,
+async function updateNews(evt, id) {
+    evt.preventDefault();
+    await adminPost({
+        action: 'update_news', id,
+        title: document.getElementById('nn-title').value,
+        excerpt: document.getElementById('nn-excerpt').value,
+        content: document.getElementById('nn-content').value,
+        category: document.getElementById('nn-category').value || null,
+        image_url: document.getElementById('nn-image').value || null,
+        is_published: document.getElementById('nn-published').checked,
     });
+    closeModal('news-modal');
+    loadAdminNews();
+}
+
+async function editNews(id) {
+    const items = await adminFetch('news', {});
+    const n = items.find(x => x.id === id);
+    if (n) showNewsForm(n);
+}
+
+// === ANNOUNCEMENTS MODERATION (kept for backward compat) ===
+async function loadAdminAnnouncements() {
+    loadAdminModeration();
 }
 
 // === CREATE MEMBER ===
@@ -562,93 +701,198 @@ async function loadAdminLogs() {
     });
 }
 
-// === EVENT REGISTRATIONS ===
+// === EVENT REGISTRATIONS (full attendance tracking) ===
 async function showEventRegistrations(eventId, title) {
     const regs = await adminFetch('event_registrations', {event_id: String(eventId)});
-    const html = `<div class="adm-modal-bg" id="regs-modal" ><div class="adm-modal">
-        <h3 style="margin-bottom:16px;color:var(--primary)">Inscrits — ${esc(title)}</h3>
-        ${regs.length ? `
-            <p style="margin-bottom:12px;font-size:13px;color:var(--gray-500)">${regs.length} inscrit(s)</p>
-            <table class="adm-table"><thead><tr><th>Nom</th><th>Email</th><th>Entreprise</th><th>Telephone</th><th>Inscription</th><th>Presence</th></tr></thead><tbody>
-            ${regs.map(r => `<tr>
-                <td><strong>${esc(r.first_name)} ${esc(r.last_name)}</strong></td>
-                <td style="font-size:13px">${esc(r.email)}</td>
-                <td>${esc(r.company||'')}</td>
-                <td style="font-size:13px">${esc(r.phone||'')}</td>
-                <td style="font-size:12px">${formatDate(r.registered_at)}</td>
-                <td>${r.attended ? '<span style="color:var(--green);font-weight:700">&#10004; Present</span>' : `<button onclick="markAttended(${r.id});this.outerHTML='<span style=\\'color:var(--green);font-weight:700\\'>&#10004;</span>'" class="adm-btn adm-btn-ok" style="font-size:11px;padding:4px 10px">Pointer</button>`}</td>
-            </tr>`).join('')}
-            </tbody></table>
-        ` : '<p class="empty-msg">Aucun inscrit pour cet evenement</p>'}
-        <button onclick="closeModal('regs-modal')" class="btn btn-primary" style="margin-top:16px;width:100%">Fermer</button>
+    const presentCount = regs.filter(r => r.attended).length;
+    const uncheckedCount = regs.length - presentCount;
+    const html = `<div class="adm-modal-bg" id="regs-modal" ><div class="adm-modal" style="max-width:850px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h3 style="color:var(--primary)">Inscriptions — ${esc(title)}</h3>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-primary" onclick="exportRegistrations(${eventId},'${esc(title).replace(/'/g,"\\'")}')" style="font-size:12px;padding:6px 16px">&#128196; Exporter CSV</button>
+                <button class="btn btn-accent" onclick="closeModal('regs-modal')" style="font-size:12px;padding:6px 16px">Fermer</button>
+            </div>
+        </div>
+        <div style="display:flex;gap:16px;margin-bottom:16px;padding:12px;background:var(--gray-50);border-radius:var(--radius)">
+            <div><strong style="font-size:24px;color:var(--primary)">${regs.length}</strong> <span style="font-size:13px;color:var(--gray-500)">inscrits</span></div>
+            <div><strong style="font-size:24px;color:var(--green)">${presentCount}</strong> <span style="font-size:13px;color:var(--gray-500)">presents</span></div>
+            <div><strong style="font-size:24px;color:var(--orange)">${uncheckedCount}</strong> <span style="font-size:13px;color:var(--gray-500)">non pointes</span></div>
+        </div>
+        <div id="regs-table-container"></div>
     </div></div>`;
     openModal(html);
+    if (regs.length) {
+        new DataTable('regs-table-container', {
+            columns: [
+                { key: 'name', label: 'Nom', render: (v, r) => `<strong>${esc(r.first_name||'')} ${esc(r.last_name||'')}</strong>` },
+                { key: 'email', label: 'Email' },
+                { key: 'company', label: 'Entreprise' },
+                { key: 'phone', label: 'Tel' },
+                { key: 'registered_at', label: 'Inscrit le', type: 'date', render: v => `<span style="font-size:12px">${formatDate(v)}</span>` },
+                { key: 'attended', label: 'Present', render: v => v ? '<span style="color:var(--green);font-weight:700">&#10003; Present</span>' : '<span style="color:var(--gray-400)">--</span>' },
+            ],
+            data: regs.map(r => ({ ...r, name: (r.first_name||'') + ' ' + (r.last_name||'') })),
+            actions: (r) => `${!r.attended
+                ? `<button onclick="markPresent(${r.id},${eventId},'${esc(title).replace(/'/g,"\\'")}')" class="adm-btn adm-btn-ok" title="Pointer present" style="font-size:16px">&#9745;</button>`
+                : `<button onclick="unmarkPresent(${r.id},${eventId},'${esc(title).replace(/'/g,"\\'")}')" class="adm-btn adm-btn-warn" title="Retirer presence" style="font-size:16px">&#9746;</button>`}`,
+            pageSize: 50,
+        });
+    } else {
+        document.getElementById('regs-table-container').innerHTML = '<p class="empty-msg">Aucune inscription</p>';
+    }
 }
 
-// === PENDING CONTENT (MODERATION) ===
+async function markPresent(regId, eventId, eventTitle) {
+    await adminPost({action: 'event_attend', registration_id: regId});
+    closeModal('regs-modal');
+    showEventRegistrations(eventId, eventTitle);
+}
+
+async function unmarkPresent(regId, eventId, eventTitle) {
+    await adminPost({action: 'event_unattend', registration_id: regId});
+    closeModal('regs-modal');
+    showEventRegistrations(eventId, eventTitle);
+}
+
+function exportRegistrations(eventId, eventTitle) {
+    const table = document.querySelector('#regs-modal .adm-table, #regs-table-container table');
+    if (!table) return;
+    const rows = table.querySelectorAll('tbody tr');
+    let csv = 'Nom,Email,Entreprise,Telephone,Inscrit le,Present\n';
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const vals = [
+            cells[0]?.textContent?.trim() || '',
+            cells[1]?.textContent?.trim() || '',
+            cells[2]?.textContent?.trim() || '',
+            cells[3]?.textContent?.trim() || '',
+            cells[4]?.textContent?.trim() || '',
+            cells[5]?.textContent?.trim() || '',
+        ];
+        csv += vals.map(v => '"' + v.replace(/"/g,'""') + '"').join(',') + '\n';
+    });
+    const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `inscriptions_${eventTitle.replace(/[^a-zA-Z0-9]/g,'_')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Export CSV telecharge', 'success');
+}
+
+// === PENDING CONTENT (legacy, redirects to unified moderation) ===
 async function loadPendingContent() {
-    const data = await adminFetch('pending_content', {});
-    const badge = document.getElementById('pending-count-badge');
-    if (badge) badge.textContent = data.total > 0 ? data.total : '';
-    const el = document.getElementById('adm-pending-list');
+    loadAdminModeration();
+}
+
+// === UNIFIED MODERATION VIEW ===
+async function loadAdminModeration() {
+    const [pending, announcements, messages] = await Promise.all([
+        adminFetch('pending_content', {}),
+        adminFetch('announcements', {}),
+        adminFetch('messages', {})
+    ]);
+    const el = document.getElementById('adm-moderation-content');
     if (!el) return;
-    if (!data.total) { el.innerHTML = '<p class="empty-msg" style="color:var(--green)">&#10003; Aucun contenu en attente de validation</p>'; return; }
-    let html = '';
-    if (data.events.length) {
-        html += `<h4 style="color:var(--primary);margin:16px 0 8px">Evenements proposes (${data.events.length})</h4>`;
-        html += data.events.map(e => `
-            <div class="announcement-card">
-                <div class="ann-header">
-                    <span><strong>${esc(e.title)}</strong></span>
-                    <span class="ann-date">${formatDate(e.created_at)}</span>
-                </div>
-                <div style="font-size:13px;color:var(--gray-500);margin-bottom:8px">
-                    ${e.event_type ? `<span class="card-tag">${esc(e.event_type)}</span>` : ''}
-                    ${e.location ? ` &#128205; ${esc(e.location)}` : ''}
-                    ${e.start_date ? ` &#128197; ${formatDate(e.start_date)}` : ''}
-                </div>
-                <div class="ann-content">${esc(e.description || '')}</div>
-                <div class="ann-author">Propose par ${esc(e.first_name||'')} ${esc(e.last_name||'')}</div>
-                <div style="margin-top:12px;display:flex;gap:8px">
-                    <button onclick="adminAction('publish_event',${e.id})" class="btn btn-accent" style="font-size:12px;padding:6px 16px">Publier</button>
-                    <button onclick="adminAction('delete_event',${e.id})" class="btn btn-primary" style="font-size:12px;padding:6px 16px;background:var(--gray-500)">Rejeter</button>
-                </div>
-            </div>`).join('');
+
+    const totalPending = (pending.total || 0) + (messages.filter(m => !m.is_read).length);
+    const badge = document.getElementById('pending-count-badge');
+    if (badge) badge.textContent = totalPending > 0 ? totalPending : '';
+
+    el.innerHTML = `
+        ${pending.events && pending.events.length ? `
+            <h3 style="color:var(--accent);margin-bottom:12px">&#128197; Evenements a valider (${pending.events.length})</h3>
+            <div id="mod-events-table"></div>
+            <div style="margin-bottom:24px"></div>
+        ` : ''}
+
+        ${pending.news && pending.news.length ? `
+            <h3 style="color:var(--accent);margin-bottom:12px">&#128240; Actualites a valider (${pending.news.length})</h3>
+            <div id="mod-news-table"></div>
+            <div style="margin-bottom:24px"></div>
+        ` : ''}
+
+        ${announcements.length ? `
+            <h3 style="color:var(--primary);margin-bottom:12px">&#128227; Annonces membres (${announcements.length})</h3>
+            <div id="mod-announcements-table"></div>
+            <div style="margin-bottom:24px"></div>
+        ` : ''}
+
+        ${messages.length ? `
+            <h3 style="color:var(--gray-600);margin-bottom:12px">&#128231; Messages contact (${messages.length})</h3>
+            <div id="mod-messages-table"></div>
+        ` : ''}
+
+        ${!pending.total && !announcements.length && !messages.length ? '<p class="empty-msg">Rien a moderer pour le moment</p>' : ''}
+    `;
+
+    // Render DataTables for each section
+    if (pending.events && pending.events.length) {
+        new DataTable('mod-events-table', {
+            columns: [
+                { key: 'start_date', label: 'Date', type: 'date', render: (v, r) => `<span style="font-size:13px">${formatDate(v||r.created_at)}</span>` },
+                { key: 'title', label: 'Titre', render: v => `<strong>${esc(v)}</strong>` },
+                { key: 'author', label: 'Auteur', render: (v, r) => esc((r.first_name||'')+' '+(r.last_name||'')) },
+            ],
+            data: pending.events.map(e => ({ ...e, author: (e.first_name||'')+' '+(e.last_name||'') })),
+            actions: (e) => `
+                <button onclick="adminAction('publish_event',${e.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>
+                <button onclick="adminAction('delete_event',${e.id})" class="adm-btn adm-btn-danger" title="Supprimer">&#128465;</button>
+            `,
+            pageSize: 25,
+        });
     }
-    if (data.news.length) {
-        html += `<h4 style="color:var(--primary);margin:16px 0 8px">Actualites proposees (${data.news.length})</h4>`;
-        html += data.news.map(n => `
-            <div class="announcement-card">
-                <div class="ann-header">
-                    <span><strong>${esc(n.title)}</strong></span>
-                    <span class="ann-date">${formatDate(n.created_at)}</span>
-                </div>
-                <div class="ann-content">${esc(n.content || n.excerpt || '')}</div>
-                <div class="ann-author">Propose par ${esc(n.first_name||'')} ${esc(n.last_name||'')}</div>
-                <div style="margin-top:12px;display:flex;gap:8px">
-                    <button onclick="adminAction('publish_news',${n.id})" class="btn btn-accent" style="font-size:12px;padding:6px 16px">Publier</button>
-                    <button onclick="adminAction('delete_news',${n.id})" class="btn btn-primary" style="font-size:12px;padding:6px 16px;background:var(--gray-500)">Rejeter</button>
-                </div>
-            </div>`).join('');
+    if (pending.news && pending.news.length) {
+        new DataTable('mod-news-table', {
+            columns: [
+                { key: 'published_at', label: 'Date', type: 'date', render: (v, r) => `<span style="font-size:13px">${formatDate(v||r.created_at)}</span>` },
+                { key: 'title', label: 'Titre', render: v => `<strong>${esc(v)}</strong>` },
+                { key: 'author', label: 'Auteur', render: (v, r) => esc((r.first_name||'')+' '+(r.last_name||'')) },
+            ],
+            data: pending.news.map(n => ({ ...n, author: (n.first_name||'')+' '+(n.last_name||'') })),
+            actions: (n) => `
+                <button onclick="adminAction('publish_news',${n.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>
+                <button onclick="adminAction('delete_news',${n.id})" class="adm-btn adm-btn-danger" title="Supprimer">&#128465;</button>
+            `,
+            pageSize: 25,
+        });
     }
-    if (data.announcements.length) {
-        html += `<h4 style="color:var(--primary);margin:16px 0 8px">Annonces proposees (${data.announcements.length})</h4>`;
-        html += data.announcements.map(a => `
-            <div class="announcement-card">
-                <div class="ann-header">
-                    <span class="ann-cat" style="background:var(--teal)">${esc(a.category)}</span>
-                    <span class="ann-date">${formatDate(a.created_at)}</span>
-                </div>
-                <div class="ann-title">${esc(a.title)}</div>
-                <div class="ann-content">${esc(a.content || '')}</div>
-                <div class="ann-author">Par ${esc(a.first_name||'')} ${esc(a.last_name||'')}</div>
-                <div style="margin-top:12px;display:flex;gap:8px">
-                    <button onclick="adminAction('approve_announcement',${a.id})" class="btn btn-accent" style="font-size:12px;padding:6px 16px">Publier</button>
-                    <button onclick="adminAction('delete_announcement',${a.id})" class="btn btn-primary" style="font-size:12px;padding:6px 16px;background:var(--gray-500)">Rejeter</button>
-                </div>
-            </div>`).join('');
+    if (announcements.length) {
+        new DataTable('mod-announcements-table', {
+            columns: [
+                { key: 'created_at', label: 'Date', type: 'date', render: v => `<span style="font-size:13px">${formatDate(v)}</span>` },
+                { key: 'author', label: 'Auteur', render: (v, r) => `${esc(r.first_name||'')} ${esc(r.last_name||'')}` },
+                { key: 'title', label: 'Titre', render: v => `<strong>${esc(v)}</strong>` },
+                { key: 'category', label: 'Cat.', render: v => `<span class="card-tag">${esc(v||'')}</span>` },
+                { key: 'is_active', label: 'Actif', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
+            ],
+            data: announcements.map(a => ({ ...a, author: (a.first_name||'') + ' ' + (a.last_name||'') })),
+            actions: (a) => `
+                ${!a.is_active ? `<button onclick="adminAction('approve_announcement',${a.id})" class="adm-btn adm-btn-ok">&#10003;</button>` : `<button onclick="adminAction('reject_announcement',${a.id})" class="adm-btn adm-btn-warn">&#10007;</button>`}
+                <button onclick="adminAction('delete_announcement',${a.id})" class="adm-btn adm-btn-danger">&#128465;</button>
+            `,
+            pageSize: 25,
+        });
     }
-    el.innerHTML = html;
+    if (messages.length) {
+        new DataTable('mod-messages-table', {
+            columns: [
+                { key: 'created_at', label: 'Date', type: 'date', render: v => `<span style="font-size:13px">${formatDate(v)}</span>` },
+                { key: 'name', label: 'Nom', render: v => `<strong>${esc(v)}</strong>` },
+                { key: 'email', label: 'Email' },
+                { key: 'subject', label: 'Sujet' },
+                { key: 'is_read', label: 'Lu', render: v => v ? 'Oui' : '<strong style="color:var(--accent)">Non lu</strong>' },
+            ],
+            data: messages,
+            actions: (m) => `
+                ${!m.is_read ? `<button onclick="adminAction('mark_read',${m.id})" class="adm-btn adm-btn-ok" title="Marquer lu">&#10003;</button>` : ''}
+                <button onclick="adminAction('delete_message',${m.id})" class="adm-btn adm-btn-danger">&#128465;</button>
+            `,
+            pageSize: 25,
+        });
+    }
 }
 
 // === CONNEXIONS ===
@@ -685,22 +929,104 @@ async function loadAdminConnexions() {
     });
 }
 
-// === MESSAGES ===
+// === MESSAGES (legacy, now part of unified moderation) ===
 async function loadAdminMessages() {
-    const items = await adminFetch('messages', {});
-    const el = document.getElementById('adm-messages-list');
-    if (!el) return;
-    el.innerHTML = items.map(m => `
-        <div class="announcement-card" style="${m.is_read ? '' : 'border-left:4px solid var(--accent)'}">
-            <div class="ann-header">
-                <span><strong>${esc(m.name)}</strong> &lt;${esc(m.email)}&gt;</span>
-                <span class="ann-date">${formatDate(m.created_at)}</span>
+    loadAdminModeration();
+}
+
+// === PARTENAIRES ADMIN ===
+let _partnersData = [];
+
+async function loadAdminPartners() {
+    try {
+        _partnersData = await adminFetch('partners', {});
+    } catch(e) { _partnersData = []; }
+    if (!document.getElementById('adm-partners-list')) return;
+    if (!_partnersData.length) {
+        document.getElementById('adm-partners-list').innerHTML = '<p class="empty-msg">Aucun partenaire</p>';
+        return;
+    }
+    new DataTable('adm-partners-list', {
+        columns: [
+            { key: 'logo_url', label: 'Logo', render: v => v ? `<img src="${esc(v)}" style="max-height:30px;max-width:50px;object-fit:contain">` : '<span style="color:var(--gray-400)">--</span>' },
+            { key: 'name', label: 'Nom', render: v => `<strong>${esc(v)}</strong>` },
+            { key: 'sector', label: 'Domaine' },
+            { key: 'city', label: 'Ville' },
+            { key: 'website_url', label: 'Site web', render: v => v ? `<a href="${esc(v)}" target="_blank" rel="noopener" style="font-size:11px">${esc(v.replace('https://www.','').replace('https://',''))}</a>` : '-' },
+        ],
+        data: _partnersData,
+        actions: (p, idx) => `
+            <button onclick="editPartner(${p.id})" class="adm-btn" title="Modifier">&#9998;</button>
+            <button onclick="deletePartner(${p.id})" class="adm-btn adm-btn-danger" title="Supprimer">&#128465;</button>
+        `,
+        pageSize: 25,
+    });
+}
+
+function showPartnerForm(partner) {
+    const p = partner || {};
+    const isEdit = !!p.id;
+    const html = `<div class="adm-modal-bg" id="partner-modal"><div class="adm-modal" style="max-width:600px">
+        <h3 style="margin-bottom:20px;color:var(--primary)">${isEdit ? 'Modifier' : 'Nouveau'} partenaire</h3>
+        <form onsubmit="savePartner(event,${isEdit ? p.id : 0})">
+            <div class="form-group"><label>Nom *</label><input id="pt-name" required value="${esc(p.name||'')}"></div>
+            <div class="form-group"><label>Description</label><textarea id="pt-desc" style="min-height:80px">${esc(p.description||'')}</textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group"><label>Domaine d'activite</label><input id="pt-sector" value="${esc(p.sector||'')}"></div>
+                <div class="form-group"><label>Ville</label><input id="pt-city" value="${esc(p.city||'')}"></div>
             </div>
-            ${m.subject ? `<div class="ann-title">${esc(m.subject)}</div>` : ''}
-            <div class="ann-content">${esc(m.message)}</div>
-            <div style="margin-top:12px;display:flex;gap:8px">
-                ${!m.is_read ? `<button onclick="adminAction('mark_read',${m.id})" class="adm-btn adm-btn-ok">Marquer lu</button>` : '<span style="color:var(--gray-400);font-size:12px">Lu</span>'}
-                <button onclick="adminAction('delete_message',${m.id})" class="adm-btn adm-btn-danger">Supprimer</button>
+            <div class="form-group"><label>Adresse</label><input id="pt-address" value="${esc(p.address||'')}"></div>
+            <div class="form-group"><label>Site web</label><input id="pt-website" value="${esc(p.website_url||'')}" placeholder="https://..."></div>
+            <div class="form-group"><label>URL du logo</label><input id="pt-logo" value="${esc(p.logo_url||'')}" placeholder="https://..."></div>
+            <div class="form-group"><label>Contact (email ou telephone)</label><input id="pt-contact" value="${esc(p.contact||'')}"></div>
+            <div class="form-group"><label>Ordre d'affichage</label><input type="number" id="pt-sort" value="${p.sort_order||0}"></div>
+            <div style="display:flex;gap:12px">
+                <button type="submit" class="btn btn-accent" style="flex:1">${isEdit ? 'Enregistrer' : 'Ajouter le partenaire'}</button>
+                <button type="button" class="btn btn-primary" style="flex:1" onclick="closeModal('partner-modal')">Annuler</button>
             </div>
-        </div>`).join('');
+        </form>
+    </div></div>`;
+    openModal(html);
+}
+
+function editPartner(id) {
+    const p = _partnersData.find(x => x.id === id);
+    if (p) showPartnerForm(p);
+}
+
+async function savePartner(evt, id) {
+    evt.preventDefault();
+    const data = {
+        name: document.getElementById('pt-name').value,
+        description: document.getElementById('pt-desc').value,
+        sector: document.getElementById('pt-sector').value,
+        city: document.getElementById('pt-city').value,
+        address: document.getElementById('pt-address').value,
+        website_url: document.getElementById('pt-website').value,
+        contact: document.getElementById('pt-contact').value,
+        logo_url: document.getElementById('pt-logo').value || null,
+        sort_order: parseInt(document.getElementById('pt-sort').value) || 0,
+    };
+    if (id > 0) {
+        data.action = 'update_partner';
+        data.id = id;
+    } else {
+        data.action = 'create_partner';
+    }
+    const res = await adminPost(data);
+    if (res.ok) {
+        closeModal('partner-modal');
+        loadAdminPartners();
+        showToast(id > 0 ? 'Partenaire mis a jour' : 'Partenaire ajoute', 'success');
+    } else {
+        showToast(res.error || 'Erreur', 'error');
+    }
+}
+
+async function deletePartner(id) {
+    const p = _partnersData.find(x => x.id === id);
+    if (!confirm('Supprimer le partenaire ' + (p ? p.name : '#' + id) + ' ?')) return;
+    await adminPost({action: 'delete_partner', id});
+    loadAdminPartners();
+    showToast('Partenaire supprime', 'success');
 }

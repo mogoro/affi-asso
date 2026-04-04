@@ -5,6 +5,23 @@ const API = window.location.origin;
 const PAGES = ['accueil','identite','annuaire','agenda','evenements','publications','replays','quizz','ecoles','adhesion','contact','membres'];
 let _homeLoaded = false;
 
+// === READING PROGRESS BAR ===
+window.addEventListener('scroll', function() {
+    const bar = document.getElementById('reading-progress');
+    if (!bar) return;
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = h > 0 ? (window.scrollY / h * 100) + '%' : '0';
+}, { passive: true });
+
+// === LARGE FONT TOGGLE ===
+function toggleLargeFont() {
+    document.body.classList.toggle('large-font');
+    localStorage.setItem('affi_large_font', document.body.classList.contains('large-font'));
+}
+(function() {
+    if (localStorage.getItem('affi_large_font') === 'true') document.body.classList.add('large-font');
+})();
+
 // === ROUTER ===
 const LOCKED_PAGES = ['evenements', 'replays', 'quizz', 'publications'];
 const LOCKED_TITLES = {
@@ -20,6 +37,9 @@ function isLoggedIn() {
 
 function navigate(page) {
     if (!PAGES.includes(page)) page = 'accueil';
+    // Fermer toutes les popups ouvertes
+    document.querySelectorAll('.event-detail-overlay').forEach(o => o.remove());
+    document.querySelectorAll('.adm-modal-bg').forEach(o => o.remove());
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const el = document.getElementById('page-' + page);
     if (el) el.classList.add('active');
@@ -44,7 +64,7 @@ function navigate(page) {
     if (page === 'ecoles') { loadStages(); if (typeof loadEcoles === 'function') loadEcoles(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
-    if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); _homeLoaded = true; } lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
+    if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); loadReseauBouge(); loadPartnerBanner(); _homeLoaded = true; } lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
     // Si connecte et on va sur membres, afficher directement l'espace membre
     if (page === 'membres' && isLoggedIn() && typeof showMemberArea === 'function') {
@@ -73,7 +93,7 @@ function renderLockedPage(page) {
                 <h2>Contenu reserve aux adherents</h2>
                 <p>Connectez-vous ou adherez a l'AFFI pour acceder a cette rubrique.</p>
                 <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
-                    <a class="btn btn-accent" href="#membres" onclick="navigate('membres')">Se connecter</a>
+                    <a class="btn btn-accent" href="#" onclick="event.preventDefault();showLoginPopup()">Se connecter</a>
                     <a class="btn btn-primary" href="#adhesion" onclick="navigate('adhesion')">Adherer a l'AFFI</a>
                 </div>
             </div>
@@ -107,7 +127,7 @@ function updateNavbarState() {
                 </div>
             </a>`;
     } else {
-        userArea.innerHTML = `<a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>`;
+        userArea.innerHTML = `<a class="nav-member-btn" href="#" onclick="event.preventDefault();showLoginPopup()">Connexion</a>`;
     }
 
     // Quand connecte: "Adherer" -> "Tableau de bord"
@@ -147,17 +167,39 @@ async function onNavSearch(q) {
     if (q.length < 2) { el.style.display = 'none'; return; }
     _navSearchTimer = setTimeout(async () => {
         try {
-            const res = await fetch(`${API}/api/members?action=public_annuaire&search=${encodeURIComponent(q)}`);
-            const members = await res.json();
-            if (!members.length) { el.innerHTML = '<div class="nsr-item" style="color:var(--gray-400)">Aucun resultat</div>'; el.style.display = 'block'; return; }
-            el.innerHTML = members.slice(0, 6).map(m => {
-                const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
-                const name = isLoggedIn() ? `${m.first_name} ${m.last_name}` : initials;
-                return `<div class="nsr-item" onclick="navigate('annuaire')">
-                    <div class="nsr-avatar">${initials}</div>
-                    <div><strong>${esc(name)}</strong><br><span style="font-size:12px;color:var(--gray-400)">${esc(m.company||'')} · ${esc(m.sector||'')}</span></div>
-                </div>`;
-            }).join('');
+            const [evRes, memRes, newsRes] = await Promise.all([
+                fetch(`${API}/api/events?search=${encodeURIComponent(q)}&limit=5`).then(r=>r.json()).catch(()=>[]),
+                fetch(`${API}/api/members?action=public_annuaire&search=${encodeURIComponent(q)}`).then(r=>r.json()).catch(()=>[]),
+                fetch(`${API}/api/news?search=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).catch(()=>[]),
+            ]);
+            let html = '';
+            if (evRes.length) {
+                html += '<div style="padding:6px 14px;font-size:10px;font-weight:800;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;background:var(--gray-50)">Evenements</div>';
+                html += evRes.slice(0,4).map(e => `<div class="nsr-item" onclick="navigate('agenda');setTimeout(()=>showEventDetail(${e.id}),300)">
+                    <div class="nsr-avatar" style="background:var(--accent);font-size:14px">&#128197;</div>
+                    <div><strong>${esc(e.title)}</strong><br><span style="font-size:12px;color:var(--gray-400)">${formatDate(e.start_date)} · ${esc(e.event_type||'')} · ${esc(e.location||'')}</span></div>
+                </div>`).join('');
+            }
+            if (memRes.length) {
+                html += '<div style="padding:6px 14px;font-size:10px;font-weight:800;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;background:var(--gray-50)">Membres</div>';
+                html += memRes.slice(0,3).map(m => {
+                    const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
+                    const name = isLoggedIn() ? `${m.first_name} ${m.last_name}` : initials;
+                    return `<div class="nsr-item" onclick="navigate('annuaire')">
+                        <div class="nsr-avatar">${initials}</div>
+                        <div><strong>${esc(name)}</strong><br><span style="font-size:12px;color:var(--gray-400)">${esc(m.company||'')} · ${esc(m.sector||'')}</span></div>
+                    </div>`;
+                }).join('');
+            }
+            if (newsRes.length) {
+                html += '<div style="padding:6px 14px;font-size:10px;font-weight:800;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;background:var(--gray-50)">Actualites</div>';
+                html += newsRes.slice(0,3).map(n => `<div class="nsr-item" onclick="navigate('publications')">
+                    <div class="nsr-avatar" style="background:var(--teal);font-size:14px">&#128240;</div>
+                    <div><strong>${esc(n.title)}</strong><br><span style="font-size:12px;color:var(--gray-400)">${formatDate(n.published_at)}</span></div>
+                </div>`).join('');
+            }
+            if (!html) html = '<div class="nsr-item" style="color:var(--gray-400)">Aucun resultat pour "' + esc(q) + '"</div>';
+            el.innerHTML = html;
             el.style.display = 'block';
         } catch(e) { el.style.display = 'none'; }
     }, 300);
@@ -169,6 +211,11 @@ function updateNavSub(page) {
     const links = document.getElementById('nav-sub-links');
     if (!sub || !links) return;
     const subs = {
+        accueil: [
+            {label:"Actualites",action:"document.getElementById('news-carousel-wrapper')?.scrollIntoView({behavior:'smooth',block:'start'})"},
+            {label:"Agenda",action:"document.getElementById('home-events')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'})"},
+            {label:"Partenaires",action:"document.getElementById('partenaires-unified')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'})"},
+        ],
         identite: [
             {label:"L'association",action:"scrollToSection('ident-association')"},
             {label:"Ses actions",action:"scrollToSection('ident-actions')"},
@@ -177,15 +224,32 @@ function updateNavSub(page) {
             {label:"Organigramme",action:"scrollToSection('ident-organigramme')"},
             {label:"Carte",action:"scrollToSection('ident-cartographie')"},
         ],
+        annuaire: [
+            {label:"Annuaire experts",action:"window.scrollTo({top:0,behavior:'smooth'})"},
+        ],
         agenda: [
-            {label:"Agenda",action:"navigate('agenda')"},
-            {label:"Evenements",action:"navigate('evenements')"},
-            {label:"Replays",action:"navigate('replays')"},
-            {label:"Quizz du Rail",action:"navigate('quizz')"},
+            {label:"Calendrier",action:"navigate('agenda')"},
+            {label:"Formations",action:"navigate('agenda');setTimeout(()=>document.getElementById('courses-list')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'}),300)"},
             {label:"Publications",action:"navigate('publications')"},
-        ]
+            {label:"Quizz",action:"navigate('quizz')"},
+        ],
+        ecoles: [
+            {label:"Espace Etudiants",action:"window.scrollTo({top:0,behavior:'smooth'})"},
+            {label:"Stages",action:"document.getElementById('stages-list')?.closest('section')?.scrollIntoView({behavior:'smooth',block:'start'})"},
+        ],
+        adhesion: [
+            {label:"Tarifs",action:"window.scrollTo({top:0,behavior:'smooth'})"},
+            {label:"Formulaire",action:"document.querySelector('.form-card')?.scrollIntoView({behavior:'smooth',block:'start'})"},
+        ],
+        contact: [
+            {label:"Coordonnees",action:"window.scrollTo({top:0,behavior:'smooth'})"},
+            {label:"Formulaire",action:"document.querySelector('form')?.scrollIntoView({behavior:'smooth',block:'start'})"},
+        ],
+        membres: [
+            {label:"Espace membre",action:"window.scrollTo({top:0,behavior:'smooth'})"},
+        ],
     };
-    const items = subs[page];
+    const items = subs[page] || (['publications','quizz','replays'].includes(page) ? subs.agenda : null);
     if (items) {
         links.innerHTML = items.map(i => `<a class="nav-sub-link" onclick="${i.action}">${i.label}</a>`).join('');
         sub.style.display = '';
@@ -223,7 +287,79 @@ document.addEventListener('DOMContentLoaded', () => {
     initSlider();
     initCookieBanner();
     setTimeout(initScrollAnimations, 500);
+    loadAdBanner();
 });
+
+// === LOGIN POPUP ===
+function showLoginPopup() {
+    // Remove existing popup if any
+    document.querySelector('.login-popup-overlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'event-detail-overlay login-popup-overlay';
+    overlay.onclick = function(e) { if (e.target === this) this.remove(); };
+    overlay.innerHTML = `
+        <div class="event-detail-modal" style="max-width:420px">
+            <div style="padding:36px">
+                <div style="text-align:center;margin-bottom:24px">
+                    <img src="/images/logo-affi.png" alt="AFFI" style="height:40px;margin-bottom:12px">
+                    <h2 style="font-size:22px;font-weight:900;color:var(--primary);margin-bottom:4px">Connexion</h2>
+                    <p style="color:var(--gray-500);font-size:14px">Accedez a votre espace membre AFFI</p>
+                </div>
+                <form onsubmit="doPopupLogin(event)">
+                    <div class="form-group"><label>Email</label><input type="email" id="popup-login-email" required placeholder="votre@email.com" style="width:100%;padding:12px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:15px"></div>
+                    <div class="form-group"><label>Mot de passe</label><input type="password" id="popup-login-password" required placeholder="Votre mot de passe" style="width:100%;padding:12px 16px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:15px"></div>
+                    <div id="popup-login-error" style="display:none;margin-bottom:12px;padding:10px;background:#fef2f2;color:#b91c1c;border-radius:6px;text-align:center;font-weight:600;font-size:13px"></div>
+                    <button type="submit" class="btn btn-accent" id="popup-login-btn" style="width:100%;font-size:16px;padding:14px;margin-bottom:12px">Se connecter</button>
+                </form>
+                <div style="text-align:center;font-size:13px;color:var(--gray-500)">
+                    <a href="#" onclick="event.preventDefault();this.closest('.login-popup-overlay').remove();navigate('membres');setTimeout(()=>showResetForm&&showResetForm(),300)" style="color:var(--accent);font-weight:700">Mot de passe oublie ?</a>
+                    &middot; <a href="#adhesion" onclick="this.closest('.login-popup-overlay').remove();navigate('adhesion')" style="font-weight:700">Adherer</a>
+                </div>
+                <button onclick="this.closest('.login-popup-overlay').remove()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;color:var(--gray-400);cursor:pointer">&times;</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    setTimeout(() => document.getElementById('popup-login-email')?.focus(), 100);
+}
+
+async function doPopupLogin(evt) {
+    evt.preventDefault();
+    const email = document.getElementById('popup-login-email').value;
+    const password = document.getElementById('popup-login-password').value;
+    const errEl = document.getElementById('popup-login-error');
+    const btn = document.getElementById('popup-login-btn');
+    btn.textContent = 'Connexion...';
+    btn.disabled = true;
+    try {
+        const res = await fetch(API + '/api/auth', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'login', email, password})
+        });
+        const data = await res.json();
+        if (data.token) {
+            authToken = data.token;
+            currentUser = data.user;
+            localStorage.setItem('affi_token', data.token);
+            localStorage.setItem('affi_user', JSON.stringify(data.user));
+            document.querySelector('.login-popup-overlay')?.remove();
+            if (typeof onUserLoggedIn === 'function') onUserLoggedIn();
+            showToast('Bienvenue, ' + (data.user.first_name || '') + ' !', 'success');
+            const currentPage = location.hash.slice(1) || 'accueil';
+            navigate(currentPage);
+        } else {
+            errEl.textContent = data.error || 'Email ou mot de passe incorrect';
+            errEl.style.display = 'block';
+            btn.textContent = 'Se connecter';
+            btn.disabled = false;
+        }
+    } catch(e) {
+        errEl.textContent = 'Erreur de connexion au serveur';
+        errEl.style.display = 'block';
+        btn.textContent = 'Se connecter';
+        btn.disabled = false;
+    }
+}
 
 // === HERO SLIDER ===
 let currentSlide = 0;
@@ -255,16 +391,21 @@ async function loadHome() {
         ]);
         const news = await newsRes.json();
         const events = await eventsRes.json();
+        renderNewsCarousel(news);
         renderHomeNews(news);
         renderHomeEvents(events);
     } catch (e) { console.warn('Home:', e); }
+    // Load anciens bougent
+    loadAnciensBougent();
     // Load jobs and feed on homepage
     if (typeof loadJobs === 'function') loadJobs();
     if (typeof loadFeed === 'function') loadFeed();
+    lockCarriereIfNeeded();
     const fc = document.getElementById('feed-compose');
     if (fc) fc.style.display = (typeof authToken !== 'undefined' && authToken) ? 'block' : 'none';
     const jb = document.getElementById('btn-post-job');
     if (jb) jb.style.display = (typeof authToken !== 'undefined' && authToken) ? 'inline-block' : 'none';
+    if (typeof loadPolls === 'function') loadPolls();
 }
 
 function renderHomeNews(items) {
@@ -292,7 +433,7 @@ function renderHomeEvents(items) {
     const bgs = ['cip-2','cip-3','cip-1','cip-4'];
     const icons = ['\ud83c\udfeb','\ud83d\ude84','\ud83c\udfc6','\ud83e\udd1d'];
     el.innerHTML = items.map((e, i) => `
-        <div class="card">
+        <div class="card" style="cursor:pointer" onclick="showEventDetail(${e.id})">
             <div class="card-img-placeholder ${bgs[i % 4]}">${icons[i % 4]}</div>
             <div class="card-body">
                 <span class="card-date">${formatDate(e.start_date)}</span>
@@ -305,12 +446,317 @@ function renderHomeEvents(items) {
         </div>`).join('');
 }
 
+// === NEWS CAROUSEL ===
+let _homeNewsData = [];
+let newsCarouselPos = 0;
+
+function renderNewsCarousel(items) {
+    _homeNewsData = items;
+    const el = document.getElementById('news-carousel');
+    if (!el) return;
+    if (!items.length) { el.innerHTML = '<p style="color:var(--gray-400);text-align:center;padding:40px;width:100%">Aucune actualite</p>'; return; }
+    const bgs = ['cip-1','cip-2','cip-3','cip-4'];
+    const icons = ['\ud83d\udcf0','\ud83d\udce2','\ud83c\udfc6','\ud83d\udcca'];
+    el.innerHTML = items.map((n, i) => `
+        <div class="news-carousel-card" onclick="showNewsDetail(_homeNewsData[${i}])">
+            <div class="ncc-img">
+                ${n.image_url ? `<img src="${esc(n.image_url)}" class="ncc-img-placeholder" style="object-fit:cover" loading="lazy">` : `<div class="ncc-img-placeholder ${bgs[i % 4]}">${icons[i % 4]}</div>`}
+                <div class="ncc-date">${formatDate(n.published_at)}</div>
+            </div>
+            <div class="ncc-body">
+                <div class="ncc-title">${esc(n.title)}</div>
+                <div class="ncc-excerpt">${esc(n.excerpt || (n.content || '').substring(0, 150))}</div>
+                <span class="ncc-link">EN SAVOIR +</span>
+            </div>
+        </div>`).join('');
+    newsCarouselPos = 0;
+    updateCarouselTransform();
+}
+
+function slideNewsCarousel(dir) {
+    const wrapper = document.getElementById('news-carousel-wrapper');
+    const carousel = document.getElementById('news-carousel');
+    if (!wrapper || !carousel) return;
+    const cards = carousel.querySelectorAll('.news-carousel-card');
+    if (!cards.length) return;
+    const cardWidth = cards[0].offsetWidth + 24;
+    const visibleWidth = wrapper.offsetWidth - 80;
+    const maxScroll = Math.max(0, carousel.scrollWidth - visibleWidth);
+    newsCarouselPos = Math.max(0, Math.min(newsCarouselPos + dir * cardWidth, maxScroll));
+    updateCarouselTransform();
+}
+
+function updateCarouselTransform() {
+    const carousel = document.getElementById('news-carousel');
+    if (carousel) carousel.style.transform = `translateX(-${newsCarouselPos}px)`;
+}
+
+// === NEWS DETAIL MODAL ===
+function showNewsDetail(news) {
+    const overlay = document.createElement('div');
+    overlay.className = 'event-detail-overlay';
+    overlay.onclick = function(e) { if (e.target === this) this.remove(); };
+    const bgs = ['cip-1','cip-2','cip-3','cip-4'];
+    overlay.innerHTML = `
+        <div class="event-detail-modal" style="max-width:700px">
+            <div class="edm-header ${news.image_url ? '' : bgs[Math.floor(Math.random()*4)]}">
+                ${news.image_url ? `<img src="${esc(news.image_url)}" class="edm-header-bg">` : '<div class="edm-header-placeholder">\ud83d\udcf0</div>'}
+                <button class="edm-close" onclick="this.closest('.event-detail-overlay').remove()">&times;</button>
+            </div>
+            <div style="padding:32px">
+                <span class="card-date">${formatDate(news.published_at)}</span>
+                ${news.category ? `<span class="card-tag">${esc(news.category)}</span>` : ''}
+                <h1 style="font-size:26px;font-weight:900;color:var(--primary);margin:16px 0">${esc(news.title)}</h1>
+                <div style="font-size:15px;color:var(--gray-700);line-height:1.8;white-space:pre-line">${esc(news.content || news.excerpt || '')}</div>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+// === EVENT DETAIL MODAL ===
+let userRegisteredEventIds = new Set();
+
+async function showEventDetail(eventId) {
+    let event;
+    try {
+        const res = await fetch(`${API}/api/events?id=${eventId}`);
+        event = await res.json();
+        if (Array.isArray(event)) event = event[0];
+    } catch(e) {
+        event = allEvents.find(ev => ev.id === eventId);
+        if (!event) event = _agendaEvents.find(ev => ev.id === eventId);
+    }
+    if (!event) return;
+
+    const bgs = ['cip-1','cip-2','cip-3','cip-4'];
+    const typeClass = 'ec-type-' + ((event.event_type||'default').toLowerCase().replace(/[^a-z]/g,''));
+    const bgIdx = event.id % 4;
+    const loggedIn = isLoggedIn();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'event-detail-overlay';
+    overlay.onclick = function(e) { if (e.target === this) this.remove(); };
+
+    const formatFullDate = (d) => {
+        if (!d) return '';
+        const dt = new Date(d);
+        const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+        const months = ['janvier','fevrier','mars','avril','mai','juin','juillet','aout','septembre','octobre','novembre','decembre'];
+        return `${days[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+    };
+    const formatTime = (d) => {
+        if (!d) return '';
+        const dt = new Date(d);
+        return `${dt.getHours()}h${String(dt.getMinutes()).padStart(2,'0')}`;
+    };
+
+    const evTitle = esc(event.title);
+    const evDesc = esc(event.description || '');
+    const evLoc = esc(event.location || '');
+    const startDate = event.start_date || '';
+    const endDate = event.end_date || '';
+
+    overlay.innerHTML = `
+        <div class="event-detail-modal">
+            <div class="edm-header ${event.image_url ? '' : bgs[bgIdx]}">
+                ${event.image_url ? `<img src="${esc(event.image_url)}" class="edm-header-bg">` : `<div class="edm-header-placeholder">${event.event_type === 'conference' ? '\ud83c\udfeb' : '\ud83d\udcc5'}</div>`}
+                <button class="edm-close" onclick="this.closest('.event-detail-overlay').remove()">&times;</button>
+            </div>
+            <div class="edm-content">
+                <div class="edm-main">
+                    <span class="ec-type-badge ${typeClass}" style="display:inline-block;margin-bottom:12px">${esc(event.event_type || 'Evenement')}</span>
+                    <h1>${evTitle}</h1>
+                    ${event.location ? `<p class="edm-organizer">Organise par l'AFFI${event.location ? ' \u2014 ' + esc(event.location) : ''}</p>` : ''}
+                    <div class="edm-description">${esc(event.description || 'Pas de description disponible.')}</div>
+                    ${event.tags ? `<div style="margin-top:16px;display:flex;gap:6px;flex-wrap:wrap">${event.tags.split(',').map(t => '<span class="card-tag">'+esc(t.trim())+'</span>').join('')}</div>` : ''}
+                </div>
+                <div class="edm-sidebar">
+                    <div class="edm-sidebar-section">
+                        <div class="edm-icon">\ud83d\udcc5</div>
+                        <div class="edm-label">Date</div>
+                        <div class="edm-value">${formatFullDate(event.start_date)}<br>${formatTime(event.start_date)}${event.end_date ? ' - ' + formatTime(event.end_date) : ''}</div>
+                    </div>
+
+                    ${event.location ? `<div class="edm-sidebar-section">
+                        <div class="edm-icon">\ud83d\udccd</div>
+                        <div class="edm-label">Lieu</div>
+                        <div class="edm-value">${esc(event.location)}${event.address ? '<br>' + esc(event.address) : ''}</div>
+                    </div>` : `<div class="edm-sidebar-section">
+                        <div class="edm-icon">\ud83d\udcbb</div>
+                        <div class="edm-label">Format</div>
+                        <div class="edm-value">En ligne</div>
+                    </div>`}
+
+                    <div class="edm-sidebar-section">
+                        <div class="edm-icon">\ud83d\udc65</div>
+                        <div class="edm-label">Inscriptions</div>
+                        <div class="edm-value">${event.reg_count||0} inscrit${(event.reg_count||0)>1?'s':''} ${event.max_attendees ? '/ '+event.max_attendees+' places' : ''}</div>
+                        ${event.max_attendees ? `<div style="margin-top:6px;height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden"><div style="height:100%;background:${(event.reg_count||0)>=event.max_attendees?'var(--accent)':'var(--green)'};width:${Math.min(100,Math.round(((event.reg_count||0)/event.max_attendees)*100))}%;border-radius:3px"></div></div>` : ''}
+                    </div>
+                    ${loggedIn && event.registrants && event.registrants.length ? `<div class="edm-sidebar-section" style="text-align:left">
+                        <div class="edm-label" style="text-align:center">Participants</div>
+                        <div style="max-height:120px;overflow-y:auto">
+                            ${event.registrants.map(r => `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;color:var(--gray-700)">
+                                <div style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${esc((r.first_name||'?')[0]+(r.last_name||'?')[0])}</div>
+                                <span>${esc(r.first_name)} ${esc(r.last_name||'')}</span>
+                                ${r.company ? `<span style="font-size:10px;color:var(--gray-400)">${esc(r.company)}</span>` : ''}
+                            </div>`).join('')}
+                        </div>
+                    </div>` : ''}
+
+                    <div class="edm-price">${event.price > 0 ? event.price + ' &euro;' : 'Gratuit'}</div>
+
+                    ${loggedIn ? (userRegisteredEventIds.has(event.id)
+                        ? `<button class="edm-btn-register" style="background:var(--green)" onclick="unregisterFromEvent(${event.id});this.closest('.event-detail-overlay').remove()">&#10003; INSCRIT</button>
+                           <button class="edm-btn-decline" onclick="this.closest('.event-detail-overlay').remove()">FERMER</button>`
+                        : `<button class="edm-btn-register" onclick="registerForEvent(${event.id})">S'INSCRIRE</button>
+                           <button class="edm-btn-decline" onclick="this.closest('.event-detail-overlay').remove()">FERMER</button>`)
+                    : `
+                        <button class="edm-btn-register" onclick="showGuestRegistrationForm(${event.id},'${evTitle.replace(/'/g,"\\'")}')">S'INSCRIRE (invite)</button>
+                        <div style="text-align:center;padding:12px;background:rgba(200,16,46,.08);border-radius:8px;font-size:13px;color:var(--accent);font-weight:600">
+                            \ud83d\udd12 <a href="#" onclick="event.preventDefault();this.closest('.event-detail-overlay').remove();showLoginPopup()" style="color:var(--accent)">Connectez-vous</a> pour vous inscrire en tant que membre
+                        </div>
+                    `}
+
+                    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--gray-500)">AJOUTER A MON AGENDA</div>
+                    <div class="edm-calendar-export">
+                        <a href="#" onclick="event.preventDefault();downloadICS('${evTitle.replace(/'/g,"\\'")}','${evDesc.replace(/'/g,"\\'")}','${evLoc.replace(/'/g,"\\'")}','${startDate}','${endDate}')" title="iCal / Outlook">\ud83d\udcc5</a>
+                        <a href="https://calendar.google.com/calendar/r/eventedit?text=${encodeURIComponent(event.title)}&dates=${(event.start_date||'').replace(/[-:]/g,'').replace(' ','T')}/${(event.end_date||event.start_date||'').replace(/[-:]/g,'').replace(' ','T')}&location=${encodeURIComponent(event.location||'')}" target="_blank" rel="noopener" title="Google Calendar">G</a>
+                    </div>
+                    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--gray-500);margin-top:8px">PARTAGER</div>
+                    <div style="display:flex;gap:8px;justify-content:center">
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin+'/#agenda')}&title=${encodeURIComponent(event.title)}" target="_blank" rel="noopener" class="share-btn share-li" title="LinkedIn">in</a>
+                        <a href="mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(event.title + '\\n' + formatFullDate(event.start_date) + '\\n' + (event.location||'En ligne') + '\\n\\n' + (event.description||'').substring(0,300))}" class="share-btn share-em" title="Email">&#9993;</a>
+                        <button class="share-btn share-cp" onclick="navigator.clipboard.writeText(window.location.origin+'/#agenda');showToast('Lien copie !','success')" title="Copier le lien">&#128279;</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+// === EVENT REGISTRATION ===
+async function registerForEvent(eventId) {
+    if (!isLoggedIn() || !authToken) { showLoginPopup(); return; }
+    try {
+        const res = await fetch(`${API}/api/events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+            body: JSON.stringify({ action: 'register', event_id: eventId })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            showToast('Inscription confirmee !', 'success');
+            userRegisteredEventIds.add(eventId);
+            document.querySelector('.event-detail-overlay')?.remove();
+            const page = location.hash.slice(1) || 'accueil';
+            if (page === 'agenda') loadAgenda();
+        } else {
+            showToast(data.error || 'Erreur lors de l\'inscription', 'error');
+        }
+    } catch(e) {
+        showToast('Erreur de connexion', 'error');
+    }
+}
+
+async function unregisterFromEvent(eventId) {
+    if (!isLoggedIn() || !authToken) return;
+    try {
+        const res = await fetch(`${API}/api/events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+            body: JSON.stringify({ action: 'unregister', event_id: eventId })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            userRegisteredEventIds.delete(eventId);
+            showToast('Desinscription confirmee', 'success');
+            const page = location.hash.slice(1) || 'accueil';
+            if (page === 'agenda') loadAgenda();
+        } else {
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch(e) { showToast('Erreur de connexion', 'error'); }
+}
+
+function showGuestRegistrationForm(eventId, eventTitle) {
+    const overlay = document.createElement('div');
+    overlay.className = 'event-detail-overlay';
+    overlay.onclick = function(e) { if (e.target === this) this.remove(); };
+    overlay.innerHTML = `
+        <div class="event-detail-modal" style="max-width:500px">
+            <div style="padding:32px">
+                <h2 style="font-size:22px;font-weight:900;color:var(--primary);margin-bottom:4px">Inscription a l'evenement</h2>
+                <p style="color:var(--gray-500);font-size:14px;margin-bottom:24px">${esc(eventTitle)}</p>
+                <form onsubmit="submitGuestRegistration(event,${eventId})">
+                    <div class="form-group"><label>Nom complet *</label><input id="gr-name" required></div>
+                    <div class="form-group"><label>Email *</label><input type="email" id="gr-email" required></div>
+                    <div class="form-group"><label>Entreprise</label><input id="gr-company"></div>
+                    <div class="form-group"><label>Telephone</label><input id="gr-phone"></div>
+                    <button type="submit" class="btn btn-accent" style="width:100%;font-size:15px;padding:14px">S'inscrire</button>
+                </form>
+                <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--gray-400)">Deja membre ? <a href="#" onclick="event.preventDefault();this.closest('.event-detail-overlay').remove();showLoginPopup()" style="color:var(--accent);font-weight:700">Connectez-vous</a></p>
+                <button onclick="this.closest('.event-detail-overlay').remove()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;color:var(--gray-400);cursor:pointer">&times;</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+async function submitGuestRegistration(evt, eventId) {
+    evt.preventDefault();
+    try {
+        const res = await fetch(`${API}/api/events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'guest_register',
+                event_id: eventId,
+                name: document.getElementById('gr-name').value,
+                email: document.getElementById('gr-email').value,
+                company: document.getElementById('gr-company').value,
+                phone: document.getElementById('gr-phone').value,
+            })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            showToast('Inscription confirmee ! Vous recevrez un email de confirmation.', 'success');
+            document.querySelector('.event-detail-overlay')?.remove();
+        } else {
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch(e) { showToast('Erreur de connexion', 'error'); }
+}
+
+// === NOS ANCIENS BOUGENT ===
+async function loadAnciensBougent() {
+    try {
+        const res = await fetch('/data/anciens_bougent.json');
+        const anciens = await res.json();
+        const el = document.getElementById('anciens-grid');
+        if (!el) return;
+        el.innerHTML = anciens.map(a => `
+            <div class="ancien-card">
+                <div class="ancien-avatar">${esc(a.photo_placeholder)}</div>
+                <div class="ancien-name">${esc(a.title)}</div>
+                <div class="ancien-desc">${esc(a.description)}</div>
+                <a class="ancien-btn" href="#annuaire" onclick="navigate('annuaire')">EN SAVOIR +</a>
+            </div>
+        `).join('');
+    } catch(e) { console.warn('Anciens:', e); }
+}
+
+// === AD BANNER ===
+async function loadAdBanner() {
+    // Placeholder for ad banner loading
+}
+
 // === AGENDA (upcoming events) ===
 let _agendaEvents = [];
 let _calYear, _calMonth;
 
 async function loadAgenda() {
     try {
+        // Charger événements à venir
         const res = await fetch(`${API}/api/events?upcoming=1&limit=50`);
         _agendaEvents = await res.json();
         const now = new Date();
@@ -318,7 +764,38 @@ async function loadAgenda() {
         _calMonth = now.getMonth();
         renderCalendar();
         renderAgendaEvents(_agendaEvents);
+
+        // Charger événements passés (3 derniers)
+        const resPast = await fetch(`${API}/api/events?limit=10`);
+        const allEvents = await resPast.json();
+        const pastEvents = allEvents.filter(e => new Date(e.start_date) < now).slice(0, 3);
+        renderPastAgenda(pastEvents);
     } catch (e) { console.warn('Agenda:', e); }
+}
+
+function renderPastAgenda(events) {
+    const container = document.getElementById('past-events-list');
+    if (!container) return;
+    if (!events.length) { container.innerHTML = ''; return; }
+    const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+    container.innerHTML = events.map(e => {
+        const d = new Date(e.start_date);
+        return `<div class="evt-card evt-card-past" onclick="showEventDetail(${e.id})" style="cursor:pointer;position:relative">
+            <div class="evt-date-col" style="background:linear-gradient(135deg,#6c757d,#adb5bd)">
+                <div class="evt-date-day">${d.getDate()}</div>
+                <div class="evt-date-month">${months[d.getMonth()]||''}</div>
+                <div class="evt-date-year">${d.getFullYear()}</div>
+            </div>
+            <div class="evt-body">
+                <div class="evt-title">${esc(e.title)}</div>
+                <div class="evt-desc">${esc(e.description || '')}</div>
+                <div class="evt-meta">
+                    ${e.location ? `<span>&#128205; ${esc(e.location)}</span>` : ''}
+                    <span style="color:var(--gray-400);font-style:italic">Événement passé</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 let _calCollapsed = false;
@@ -453,7 +930,7 @@ function renderAgendaEvents(events) {
         const day = d.getDate();
         const month = months[d.getMonth()] || '';
         const year = d.getFullYear();
-        return `<div class="evt-card">
+        return `<div class="evt-card" style="cursor:pointer" onclick="showEventDetail(${e.id})">
             <div class="evt-date-col" style="background:${gradients[i % gradients.length]}">
                 <div class="evt-date-day">${day}</div>
                 <div class="evt-date-month">${month}</div>
@@ -502,7 +979,7 @@ function renderFilteredEvents(year) {
 function renderEventCards(events) {
     const bgs = ['cip-1','cip-2','cip-3','cip-4'];
     return events.map((e, i) => `
-        <div class="card">
+        <div class="card" style="cursor:pointer" onclick="showEventDetail(${e.id})">
             <div class="card-img-placeholder ${bgs[i % 4]}">\ud83d\udcc5</div>
             <div class="card-body">
                 <span class="card-date">${formatDate(e.start_date)}${e.end_date && e.end_date !== e.start_date ? ' \u2014 ' + formatDate(e.end_date) : ''}</span>
@@ -514,7 +991,7 @@ function renderEventCards(events) {
                 <div class="card-title">${esc(e.title)}</div>
                 <div class="card-text">${esc(e.description || '')}</div>
                 <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap">
-                    <button onclick="downloadICS('${esc(e.title)}','${esc(e.description||'')}','${esc(e.location||'')}','${e.start_date}','${e.end_date||''}')" class="btn btn-primary" style="font-size:11px;padding:6px 12px">&#128197; Ajouter au calendrier</button>
+                    <button onclick="event.stopPropagation();downloadICS('${esc(e.title)}','${esc(e.description||'')}','${esc(e.location||'')}','${e.start_date}','${e.end_date||''}')" class="btn btn-primary" style="font-size:11px;padding:6px 12px">&#128197; Ajouter au calendrier</button>
                     ${typeof renderShareButtons==='function' ? renderShareButtons(e.title, e.id) : ''}
                 </div>
             </div>
@@ -522,6 +999,9 @@ function renderEventCards(events) {
 }
 
 // === PUBLICATIONS ===
+let _pubsData = [];
+let _pubCatFilter = '';
+
 async function loadPublications() {
     try {
         const res = await fetch(`${API}/api/publications?limit=50`);
@@ -529,17 +1009,95 @@ async function loadPublications() {
         const el = document.getElementById('publications-list');
         if (!el) return;
         if (!pubs.length) { el.innerHTML = '<p style="color:var(--gray-400);text-align:center;padding:40px">Aucune publication</p>'; return; }
-        el.innerHTML = pubs.map(p => `
-            <div class="card">
-                <div class="card-body">
-                    <span class="card-date">${formatDate(p.published_at)}</span>
-                    ${p.category ? `<span class="card-tag">${esc(p.category)}</span>` : ''}
-                    <div class="card-title">${esc(p.title)}</div>
-                    <div class="card-text">${esc(p.excerpt || (p.content || '').substring(0, 220))}</div>
-                    <span class="card-link">Lire la suite</span>
-                </div>
-            </div>`).join('');
+        _pubsData = pubs;
+        _pubCatFilter = '';
+        // Reset filter buttons
+        document.querySelectorAll('#page-publications .course-filter').forEach(b => b.classList.remove('active'));
+        const allBtn = document.querySelector('#page-publications .course-filter');
+        if (allBtn) allBtn.classList.add('active');
+        renderFilteredPubs();
     } catch (e) { console.warn('Pubs:', e); }
+}
+
+function filterPubCat(btn, cat) {
+    document.querySelectorAll('#page-publications .course-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _pubCatFilter = cat;
+    renderFilteredPubs();
+}
+
+function renderFilteredPubs() {
+    const el = document.getElementById('publications-list');
+    if (!el || !_pubsData.length) return;
+    const filtered = _pubCatFilter ? _pubsData.filter(p => (p.category || '') === _pubCatFilter) : _pubsData;
+    if (!filtered.length) { el.innerHTML = '<p class="empty-msg">Aucune publication dans cette categorie</p>'; return; }
+    el.innerHTML = filtered.map((p, i) => {
+        const realIdx = _pubsData.indexOf(p);
+        return `<div class="card" style="cursor:pointer" onclick="${typeof showNewsDetail === 'function' ? 'showNewsDetail(_pubsData[' + realIdx + '])' : ''}">
+            <div class="card-body">
+                <span class="card-date">${formatDate(p.published_at)}</span>
+                ${p.category ? `<span class="card-tag">${esc(p.category)}</span>` : ''}
+                <div class="card-title">${esc(p.title)}</div>
+                <div class="card-text">${esc(p.excerpt || (p.content || '').substring(0, 220))}</div>
+                <span class="card-link">Lire la suite</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// === PARTNER ROTATING BANNER ===
+let _partnerBannerData = [];
+let _partnerBannerIdx = 0;
+let _partnerBannerTimer = null;
+
+async function loadPartnerBanner() {
+    try {
+        const res = await fetch('/data/partenaires.json');
+        const partenaires = await res.json();
+        if (!partenaires.length) return;
+        _partnerBannerData = partenaires;
+        _partnerBannerIdx = Math.floor(Math.random() * partenaires.length);
+        showNextPartner();
+        _partnerBannerTimer = setInterval(showNextPartner, 8000);
+    } catch (e) { console.warn('Partner banner:', e); }
+}
+
+function showNextPartner() {
+    const banner = document.getElementById('partner-banner');
+    const content = document.getElementById('partner-banner-content');
+    if (!banner || !content || !_partnerBannerData.length) return;
+    const p = _partnerBannerData[_partnerBannerIdx % _partnerBannerData.length];
+    _partnerBannerIdx++;
+    const logoKey = typeof PARTENAIRES_LOGOS !== 'undefined' ? Object.keys(PARTENAIRES_LOGOS).find(k => p.name.includes(k)) : null;
+    const logo = logoKey ? PARTENAIRES_LOGOS[logoKey] : '';
+    content.innerHTML = `${logo ? `<img src="${logo}" alt="${esc(p.name)}" style="height:28px;width:auto;object-fit:contain">` : ''}<a href="${esc(p.website || '#')}" target="_blank" rel="noopener">${esc(p.name)}</a><span style="color:var(--gray-400)">${esc(p.sector || '')}</span>${p.city ? `<span style="color:var(--gray-400);font-size:12px">&#128205; ${esc(p.city)}</span>` : ''}`;
+    banner.style.display = 'block';
+}
+
+// === LE RESEAU BOUGE ===
+async function loadReseauBouge() {
+    const el = document.getElementById('reseau-bouge-list');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API}/api/members?action=public_annuaire&limit=8`);
+        const members = await res.json();
+        if (!members.length) { el.innerHTML = '<p class="empty-msg">Aucune mobilite recente</p>'; return; }
+        // Show recently active members with company info as career movements
+        const recent = members.filter(m => m.company).slice(0, 6);
+        if (!recent.length) { el.innerHTML = '<p class="empty-msg">Aucune mobilite recente</p>'; return; }
+        el.innerHTML = recent.map(m => {
+            const initials = ((m.first_name || '?')[0] + (m.last_name || '?')[0]).toUpperCase();
+            return `<div class="card" style="text-align:center;padding:24px">
+                <div style="width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;margin:0 auto 12px">${esc(initials)}</div>
+                <div style="font-weight:700;color:var(--primary);font-size:15px">${esc((m.first_name || '')[0] + '.')} ${esc(m.last_name || '')}</div>
+                ${m.job_title ? `<div style="font-size:13px;color:var(--gray-600);margin-top:4px">${esc(m.job_title)}</div>` : ''}
+                ${m.company ? `<div style="font-size:13px;color:var(--accent);font-weight:600;margin-top:4px">${esc(m.company)}</div>` : ''}
+                ${m.specialty ? `<div style="font-size:12px;color:var(--gray-400);margin-top:4px">${esc(m.specialty)}</div>` : ''}
+            </div>`;
+        }).join('');
+    } catch (e) {
+        el.innerHTML = '<p class="empty-msg">Section reservee aux membres</p>';
+    }
 }
 
 // === ANNUAIRE PUBLIC ===
@@ -581,7 +1139,7 @@ function renderPublicAnnuaire(members) {
                 ${m.sector ? `<span class="ec-tag">${esc(m.sector)}</span>` : ''}
             </div>
             <div class="ec-anon-lock">
-                <span class="locked-badge">&#128274; Connectez-vous pour voir le profil complet</span>
+                <span class="locked-badge" onclick="event.stopPropagation();showLoginPopup()">&#128274; Connectez-vous pour voir le profil complet</span>
             </div>
             <div class="ec-footer">
                 <span class="ec-rgpd">&#128994; Expert verifie</span>
@@ -826,7 +1384,7 @@ function lockCarriereIfNeeded() {
                         <strong>Espace Carriere reserve aux adherents</strong>
                         <p>Connectez-vous pour voir les offres d'emploi, stages et apprentissage.</p>
                     </div>
-                    <a class="btn btn-accent" href="#membres" onclick="navigate('membres')" style="font-size:13px;padding:8px 20px;flex-shrink:0">Se connecter</a>
+                    <a class="btn btn-accent" href="#" onclick="event.preventDefault();showLoginPopup()" style="font-size:13px;padding:8px 20px;flex-shrink:0">Se connecter</a>
                 </div>
             `);
         }
@@ -1209,31 +1767,124 @@ async function submitContact(evt) {
     } catch (e) { alert('Erreur: ' + e.message); }
 }
 
+// === ADHESION WORKFLOW ===
+const ADH_PRICES = { actif: 48, jeune: 32, etudiant: 24, retraite: 32, honneur: 0, partenaire: 0 };
+const ADH_LABELS = { actif: 'Membre actif (+30 ans)', jeune: 'Jeune ingenieur (-30 ans)', etudiant: 'Etudiant', retraite: 'Retraite', honneur: "Membre d'honneur", partenaire: 'Membre partenaire' };
+
 async function submitAdhesion(evt) {
     evt.preventDefault();
     const f = evt.target;
-    const data = {
-        name: f.first_name.value + ' ' + f.last_name.value,
-        email: f.email.value,
-        subject: 'Demande adhesion - ' + f.membership_type.value,
-        message: `Demande d'adhesion AFFI\n\nPrenom: ${f.first_name.value}\nNom: ${f.last_name.value}\nEmail: ${f.email.value}\nTelephone: ${f.phone.value}\nEntreprise: ${f.company.value}\nFonction: ${f.job_title.value}\nSecteur: ${f.sector.value}\nType: ${f.membership_type.value}`
-    };
+    const prenom = f.first_name.value;
+    const nom = f.last_name.value;
+    const email = f.email.value;
+    const phone = f.phone.value;
+    const entreprise = f.company.value;
+    const fonction = f.job_title.value;
+    const secteur = f.sector.value;
+    const type = f.membership_type.value;
+    const prix = ADH_PRICES[type] || 0;
+    const label = ADH_LABELS[type] || type;
+
+    // Save to contact_messages
     try {
-        const res = await fetch(`${API}/api/contact`, {
+        await fetch(`${API}/api/contact`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+                name: prenom + ' ' + nom, email,
+                subject: 'Adhesion ' + label,
+                message: `Adhesion AFFI 2026\nType: ${label} (${prix} EUR)\nPrenom: ${prenom}\nNom: ${nom}\nEmail: ${email}\nTel: ${phone}\nEntreprise: ${entreprise}\nFonction: ${fonction}\nSecteur: ${secteur}`
+            })
         });
-        const result = await res.json();
-        if (result.ok) {
-            document.getElementById('adhesion-success').style.display = 'block';
-            f.reset();
-        } else {
-            alert(result.error || 'Erreur lors de l\'envoi');
-        }
-    } catch (e) {
-        alert('Erreur réseau. Veuillez réessayer.');
-    }
+    } catch(e) {}
+
+    // Show payment choice modal
+    openModal(`<div class="adm-modal-bg" id="modal-adh-payment">
+        <div class="adm-modal" style="max-width:540px;padding:36px;text-align:center">
+            <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px">Adhesion enregistree !</h2>
+            <p style="color:var(--gray-600);margin-bottom:4px">${esc(label)}</p>
+            <p style="font-size:28px;font-weight:900;color:var(--accent);margin-bottom:20px">${prix > 0 ? prix + ' EUR / an' : 'Exonere'}</p>
+            <div style="background:var(--gray-50);border-radius:var(--radius);padding:16px;margin-bottom:20px;text-align:left;font-size:13px;color:var(--gray-500)">
+                <strong style="color:var(--primary)">&#10003; Recapitulatif</strong><br>
+                ${esc(prenom)} ${esc(nom)} &mdash; ${esc(email)}<br>
+                ${entreprise ? esc(entreprise) + ' &mdash; ' : ''}${esc(label)}<br>
+                ${secteur ? 'Secteur : ' + esc(secteur) + '<br>' : ''}
+                Montant : ${prix} EUR
+            </div>
+            ${prix > 0 ? `<p style="font-size:15px;font-weight:700;color:var(--primary);margin-bottom:16px">Choisissez votre mode de paiement :</p>
+            <div style="display:flex;flex-direction:column;gap:12px;max-width:400px;margin:0 auto 20px">
+                <a href="https://www.helloasso.com/associations/affi-association-ferroviaire-francaise-des-ingenieurs-et-cadres/adhesions/affi-cotisation-2026" target="_blank" rel="noopener" class="btn btn-accent" style="font-size:14px;padding:14px 24px">&#128179; Carte bancaire / HelloAsso &mdash; ${prix} EUR</a>
+                <button class="btn btn-primary" onclick="showAdhCheque('${esc(prenom)}','${esc(nom)}','${esc(email)}','${esc(phone)}','${esc(entreprise)}','${esc(fonction)}','${esc(label)}','${prix}')" style="font-size:14px;padding:14px 24px">&#128231; Cheque &mdash; Imprimer le bulletin</button>
+                <button class="btn btn-primary" onclick="showAdhVirement('${esc(label)}','${prix}')" style="font-size:14px;padding:14px 24px;background:var(--teal)">&#127974; Virement bancaire &mdash; Voir IBAN</button>
+            </div>` : '<p style="color:var(--gray-500);margin-bottom:16px">Votre categorie ne requiert pas de cotisation. Nous vous recontactons sous 48h.</p>'}
+            <button onclick="closeModal('modal-adh-payment')" style="background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>
+        </div>
+    </div>`);
+    document.getElementById('adhesion-success').style.display = 'block';
+    f.reset();
+    showToast("Demande d'adhesion envoyee !", 'success');
+}
+
+function showAdhCheque(prenom, nom, email, phone, entreprise, fonction, label, prix) {
+    closeModal('modal-adh-payment');
+    openModal(`<div class="adm-modal-bg" id="modal-adh-cheque">
+        <div class="adm-modal" style="max-width:540px;padding:36px;text-align:center">
+            <div style="font-size:48px;margin-bottom:12px">&#128231;</div>
+            <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px">Paiement par cheque</h2>
+            <p style="color:var(--gray-600);margin-bottom:16px">${esc(label)} &mdash; <strong>${prix} EUR</strong></p>
+            <div id="adh-bulletin-content" style="background:var(--gray-50);border:2px solid var(--primary);border-radius:var(--radius);padding:20px;margin-bottom:16px;text-align:left;font-size:14px;line-height:1.8">
+                <strong style="color:var(--primary)">Bulletin d'adhesion AFFI 2026</strong><br>
+                <strong>Prenom :</strong> ${esc(prenom)}<br>
+                <strong>Nom :</strong> ${esc(nom)}<br>
+                <strong>Email :</strong> ${esc(email)}<br>
+                ${phone ? '<strong>Tel :</strong> ' + esc(phone) + '<br>' : ''}
+                ${entreprise ? '<strong>Entreprise :</strong> ' + esc(entreprise) + '<br>' : ''}
+                ${fonction ? '<strong>Fonction :</strong> ' + esc(fonction) + '<br>' : ''}
+                <strong>Type :</strong> ${esc(label)}<br>
+                <strong>Montant :</strong> ${prix} EUR<br>
+                <hr style="border:none;border-top:1px solid var(--gray-200);margin:8px 0">
+                <strong>Cheque a l'ordre de :</strong> AFFI<br>
+                <strong>Adresse :</strong> AFFI &mdash; 60 rue Anatole France &mdash; 92300 Levallois-Perret
+            </div>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="printAdhesionBulletin()" style="font-size:13px;padding:10px 20px">&#128424; Imprimer le bulletin</button>
+            </div>
+            <p style="margin-top:16px;font-size:12px;color:var(--gray-400)">Votre compte sera active des reception du reglement.</p>
+            <button onclick="closeModal('modal-adh-cheque')" style="margin-top:8px;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>
+        </div>
+    </div>`);
+}
+
+function showAdhVirement(label, prix) {
+    closeModal('modal-adh-payment');
+    openModal(`<div class="adm-modal-bg" id="modal-adh-virement">
+        <div class="adm-modal" style="max-width:540px;padding:36px;text-align:center">
+            <div style="font-size:48px;margin-bottom:12px">&#127974;</div>
+            <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px">Virement bancaire</h2>
+            <p style="color:var(--gray-600);margin-bottom:16px">${esc(label)} &mdash; <strong>${prix} EUR</strong></p>
+            <div style="background:var(--gray-50);border:2px solid var(--primary);border-radius:var(--radius);padding:20px;margin-bottom:16px;text-align:left;font-size:14px;line-height:1.8">
+                <strong style="color:var(--primary)">Coordonnees bancaires AFFI</strong><br>
+                <strong>Banque :</strong> CIC<br>
+                <strong>IBAN :</strong> <span style="font-family:monospace;background:var(--gray-100);padding:2px 8px;border-radius:4px">FR76 3006 6100 0100 0206 2440 168</span><br>
+                <strong>BIC :</strong> CMCIFRPP<br>
+                <strong>Titulaire :</strong> AFFI<br>
+                <hr style="border:none;border-top:1px solid var(--gray-200);margin:8px 0">
+                <strong>Montant :</strong> ${prix} EUR<br>
+                <strong>Reference :</strong> Adhesion AFFI 2026 + votre nom
+            </div>
+            <p style="font-size:12px;color:var(--gray-400)">Votre compte sera active des reception du virement.</p>
+            <button onclick="closeModal('modal-adh-virement')" style="margin-top:12px;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>
+        </div>
+    </div>`);
+}
+
+function printAdhesionBulletin() {
+    const content = document.getElementById('adh-bulletin-content');
+    if (!content) return;
+    const w = window.open('', '_blank');
+    w.document.write('<html><head><title>Bulletin adhesion AFFI 2026</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#333}h2{color:#1a3c6e}strong{color:#1a3c6e}hr{border:none;border-top:1px solid #ddd;margin:12px 0}</style></head><body>' + content.innerHTML + '</body></html>');
+    w.document.close();
+    w.print();
 }
 
 // === COOKIE CONSENT ===

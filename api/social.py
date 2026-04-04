@@ -22,12 +22,18 @@ class handler(BaseHTTPRequestHandler):
                 FROM feed_posts p JOIN members m ON p.author_id = m.id
                 ORDER BY p.created_at DESC LIMIT 30
             """)
-            # Get comments for each post
-            for r in rows:
-                r["comments"] = fetchall("""
+            if rows:
+                post_ids = [r["id"] for r in rows]
+                placeholders = ",".join(["%s"] * len(post_ids))
+                comments = fetchall(f"""
                     SELECT c.*, m.first_name, m.last_name FROM feed_comments c
-                    JOIN members m ON c.author_id = m.id WHERE c.post_id = %s ORDER BY c.created_at
-                """, [r["id"]])
+                    JOIN members m ON c.author_id = m.id WHERE c.post_id IN ({placeholders}) ORDER BY c.created_at
+                """, post_ids)
+                comments_by_post = {}
+                for c in comments:
+                    comments_by_post.setdefault(c["post_id"], []).append(c)
+                for r in rows:
+                    r["comments"] = comments_by_post.get(r["id"], [])
             return self._json(200, rows)
 
         # --- JOBS ---
@@ -164,8 +170,9 @@ class handler(BaseHTTPRequestHandler):
             try:
                 execute("INSERT INTO feed_likes (post_id, member_id) VALUES (%s,%s)", [body["post_id"], user["id"]])
                 execute("UPDATE feed_posts SET likes_count = likes_count + 1 WHERE id=%s", [body["post_id"]])
-            except Exception:
-                pass
+            except Exception as e:
+                if "duplicate" not in str(e).lower() and "unique" not in str(e).lower():
+                    raise
             return self._json(200, {"ok": True})
 
         elif action == "send_message":
@@ -209,11 +216,10 @@ class handler(BaseHTTPRequestHandler):
         # --- POLLS ---
         elif action == "create_poll":
             if not user.get("is_admin"): return self._json(403, {"error": "Admin requis"})
-            execute("""INSERT INTO polls (title, description, is_anonymous, multiple_choice, ends_at, created_by)
-                VALUES (%s,%s,%s,%s,%s,%s)""",
+            poll = execute("""INSERT INTO polls (title, description, is_anonymous, multiple_choice, ends_at, created_by)
+                VALUES (%s,%s,%s,%s,%s,%s) RETURNING id""",
                 [body["title"], body.get("description",""), body.get("is_anonymous",False),
                  body.get("multiple_choice",False), body.get("ends_at"), user["id"]])
-            poll = fetchone("SELECT id FROM polls ORDER BY id DESC LIMIT 1")
             for i, opt in enumerate(body.get("options",[])):
                 execute("INSERT INTO poll_options (poll_id, label, sort_order) VALUES (%s,%s,%s)",
                     [poll["id"], opt, i])

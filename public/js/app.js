@@ -40,7 +40,7 @@ function navigate(page) {
     if (page === 'evenements') loadEvents();
     if (page === 'annuaire') { isLoggedIn() ? loadPublicAnnuaireFull() : loadPublicAnnuaire(); }
     if (page === 'publications') loadPublications();
-    if (page === 'ecoles') { loadStages(); }
+    if (page === 'ecoles') { loadStages(); if (typeof loadEcoles === 'function') loadEcoles(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
     if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
@@ -218,8 +218,12 @@ function initSlider() {
         if (dots[currentSlide]) dots[currentSlide].classList.add('active');
     }
     showSlide(0);
-    setInterval(() => showSlide(currentSlide + 1), 5500);
-    dots.forEach((d, i) => d.addEventListener('click', () => showSlide(i)));
+    let sliderInterval = setInterval(() => showSlide(currentSlide + 1), 5500);
+    dots.forEach((d, i) => d.addEventListener('click', () => {
+        showSlide(i);
+        clearInterval(sliderInterval);
+        sliderInterval = setInterval(() => showSlide(currentSlide + 1), 5500);
+    }));
 }
 
 // === HOME ===
@@ -281,15 +285,135 @@ function renderHomeEvents(items) {
 }
 
 // === AGENDA (upcoming events) ===
+let _agendaEvents = [];
+let _calYear, _calMonth;
+
 async function loadAgenda() {
     try {
-        const res = await fetch(`${API}/api/events?upcoming=1&limit=20`);
-        const events = await res.json();
-        const el = document.getElementById('agenda-list');
-        if (!el) return;
-        if (!events.length) { el.innerHTML = '<p style="color:var(--gray-400);text-align:center;padding:40px">Aucun evenement a venir</p>'; return; }
-        el.innerHTML = renderEventCards(events);
+        const res = await fetch(`${API}/api/events?upcoming=1&limit=50`);
+        _agendaEvents = await res.json();
+        const now = new Date();
+        _calYear = now.getFullYear();
+        _calMonth = now.getMonth();
+        renderCalendar();
+        renderAgendaEvents(_agendaEvents);
     } catch (e) { console.warn('Agenda:', e); }
+}
+
+function renderCalendar() {
+    const el = document.getElementById('agenda-calendar');
+    if (!el) return;
+    const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    const dows = ['LUN','MAR','MER','JEU','VEN','SAM','DIM'];
+    const first = new Date(_calYear, _calMonth, 1);
+    const lastDay = new Date(_calYear, _calMonth + 1, 0).getDate();
+    let startDow = first.getDay() - 1; if (startDow < 0) startDow = 6;
+    const prevLast = new Date(_calYear, _calMonth, 0).getDate();
+    const today = new Date();
+
+    // Which days have events this month
+    const eventDays = new Set();
+    _agendaEvents.forEach(e => {
+        const d = new Date(e.start_date);
+        if (d.getFullYear() === _calYear && d.getMonth() === _calMonth) eventDays.add(d.getDate());
+    });
+
+    let days = '';
+    // Previous month fill
+    for (let i = startDow - 1; i >= 0; i--) {
+        days += `<div class="cal-day cal-other">${prevLast - i}</div>`;
+    }
+    // Current month
+    for (let d = 1; d <= lastDay; d++) {
+        const isToday = d === today.getDate() && _calMonth === today.getMonth() && _calYear === today.getFullYear();
+        const hasEvent = eventDays.has(d);
+        days += `<div class="cal-day${isToday ? ' cal-today' : ''}${hasEvent ? ' cal-has-event' : ''}" onclick="filterAgendaByDay(${d})">${d}</div>`;
+    }
+    // Next month fill
+    const totalCells = startDow + lastDay;
+    const remaining = (7 - totalCells % 7) % 7;
+    for (let i = 1; i <= remaining; i++) {
+        days += `<div class="cal-day cal-other">${i}</div>`;
+    }
+
+    el.innerHTML = `
+        <div class="cal-header">
+            <button class="cal-nav" onclick="changeCalMonth(-1)">&#8249;</button>
+            <h3>${months[_calMonth]} ${_calYear}</h3>
+            <button class="cal-nav" onclick="changeCalMonth(1)">&#8250;</button>
+        </div>
+        <div class="cal-grid">
+            ${dows.map(d => `<div class="cal-dow">${d}</div>`).join('')}
+            ${days}
+        </div>
+    `;
+}
+
+function changeCalMonth(delta) {
+    _calMonth += delta;
+    if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+    if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+    renderCalendar();
+}
+
+function filterAgendaByDay(day) {
+    // Highlight selected day
+    document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('cal-selected'));
+    event.target.classList.add('cal-selected');
+    // Filter events to this day
+    const filtered = _agendaEvents.filter(e => {
+        const d = new Date(e.start_date);
+        return d.getDate() === day && d.getMonth() === _calMonth && d.getFullYear() === _calYear;
+    });
+    if (filtered.length) {
+        renderAgendaEvents(filtered);
+    } else {
+        renderAgendaEvents(_agendaEvents);
+        if (typeof showToast === 'function') showToast('Aucun événement ce jour — affichage de tous les événements', 'info');
+    }
+}
+
+function renderAgendaEvents(events) {
+    const el = document.getElementById('agenda-list');
+    if (!el) return;
+    if (!events.length) { el.innerHTML = '<p style="color:var(--gray-400);text-align:center;padding:40px">Aucun événement à venir</p>'; return; }
+    const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+    const gradients = [
+        'linear-gradient(135deg,#1a3c6e,#2d5a9e)',
+        'linear-gradient(135deg,#0a8f8f,#0abfbf)',
+        'linear-gradient(135deg,#e67e22,#f0a050)',
+        'linear-gradient(135deg,#6c3fa0,#9b6fd0)',
+        'linear-gradient(135deg,#c8102e,#e8354f)',
+    ];
+    el.innerHTML = events.map((e, i) => {
+        const d = new Date(e.start_date);
+        const day = d.getDate();
+        const month = months[d.getMonth()] || '';
+        const year = d.getFullYear();
+        return `<div class="evt-card">
+            <div class="evt-date-col" style="background:${gradients[i % gradients.length]}">
+                <div class="evt-date-day">${day}</div>
+                <div class="evt-date-month">${month}</div>
+                <div class="evt-date-year">${year}</div>
+            </div>
+            <div class="evt-body">
+                <div class="evt-tags">
+                    ${e.event_type ? `<span class="card-tag card-tag-primary">${esc(e.event_type)}</span>` : ''}
+                    ${e.is_members_only ? '<span class="card-tag" style="background:var(--accent);color:#fff">Membres</span>' : ''}
+                </div>
+                <div class="evt-title">${esc(e.title)}</div>
+                <div class="evt-desc">${esc(e.description || '')}</div>
+                <div class="evt-meta">
+                    ${e.location ? `<span>&#128205; ${esc(e.location)}</span>` : ''}
+                    ${e.end_date && e.end_date !== e.start_date ? `<span>&#8594; ${formatDate(e.end_date)}</span>` : ''}
+                </div>
+                <div class="evt-actions">
+                    <button onclick="downloadICS('${esc(e.title).replace(/'/g,"\\'")}','${esc(e.description||'').replace(/'/g,"\\'")}','${esc(e.location||'').replace(/'/g,"\\'")}','${e.start_date}','${e.end_date||''}')" class="btn btn-primary" style="font-size:12px;padding:6px 14px">&#128197; Calendrier</button>
+                    ${typeof renderShareButtons==='function' ? renderShareButtons(e.title, e.id) : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 // === EVENTS (all / archive) ===
@@ -415,7 +539,9 @@ async function loadPublicAnnuaireFull(search, specialty, region, sector) {
     if (region) params.set('region', region);
     if (sector) params.set('sector', sector);
     try {
-        const res = await fetch(`${API}/api/members?${params}`);
+        const res = await fetch(`${API}/api/members?${params}`, {
+            headers: {'Authorization': 'Bearer ' + (typeof authToken !== 'undefined' ? authToken : '')}
+        });
         const members = await res.json();
         const el = document.getElementById('public-annuaire-grid');
         if (!el) return;
@@ -554,6 +680,7 @@ async function showWelcomeDashboard() {
 }
 
 function hideWelcomeDashboard() {
+    if (_particlesRAF) { cancelAnimationFrame(_particlesRAF); _particlesRAF = null; }
     const dash = document.getElementById('welcome-dashboard');
     if (dash) dash.remove();
     const slider = document.querySelector('.hero-slider');
@@ -573,6 +700,7 @@ function animateCounters() {
     });
 }
 
+let _particlesRAF = null;
 function initParticles() {
     const canvas = document.getElementById('wd-particles');
     if (!canvas) return;
@@ -618,7 +746,7 @@ function initParticles() {
                 }
             }
         }
-        requestAnimationFrame(draw);
+        _particlesRAF = requestAnimationFrame(draw);
     }
     draw();
 }
@@ -1022,6 +1150,33 @@ async function submitContact(evt) {
     } catch (e) { alert('Erreur: ' + e.message); }
 }
 
+async function submitAdhesion(evt) {
+    evt.preventDefault();
+    const f = evt.target;
+    const data = {
+        name: f.first_name.value + ' ' + f.last_name.value,
+        email: f.email.value,
+        subject: 'Demande adhesion - ' + f.membership_type.value,
+        message: `Demande d'adhesion AFFI\n\nPrenom: ${f.first_name.value}\nNom: ${f.last_name.value}\nEmail: ${f.email.value}\nTelephone: ${f.phone.value}\nEntreprise: ${f.company.value}\nFonction: ${f.job_title.value}\nSecteur: ${f.sector.value}\nType: ${f.membership_type.value}`
+    };
+    try {
+        const res = await fetch(`${API}/api/contact`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.ok) {
+            document.getElementById('adhesion-success').style.display = 'block';
+            f.reset();
+        } else {
+            alert(result.error || 'Erreur lors de l\'envoi');
+        }
+    } catch (e) {
+        alert('Erreur réseau. Veuillez réessayer.');
+    }
+}
+
 // === COOKIE CONSENT ===
 function initCookieBanner() {
     if (!localStorage.getItem('affi_cookies_accepted')) {
@@ -1029,8 +1184,8 @@ function initCookieBanner() {
         if (el) el.style.display = 'flex';
     }
 }
-function acceptCookies() {
-    localStorage.setItem('affi_cookies_accepted', 'true');
+function acceptCookies(level) {
+    localStorage.setItem('affi_cookies_accepted', level || 'all');
     const el = document.getElementById('cookie-banner');
     if (el) { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }
 }
@@ -1042,7 +1197,7 @@ function showToast(msg, type) {
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = 'toast toast-' + type;
-    toast.innerHTML = msg;
+    toast.textContent = msg;
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('toast-visible'), 10);
     setTimeout(() => { toast.classList.remove('toast-visible'); setTimeout(() => toast.remove(), 300); }, 4000);

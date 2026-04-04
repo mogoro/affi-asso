@@ -7,7 +7,10 @@ from api._shared.db import fetchall
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         qs = parse_qs(urlparse(self.path).query)
-        limit = int(qs.get("limit", ["20"])[0])
+        try:
+            limit = max(1, min(int(qs.get("limit", ["20"])[0]), 200))
+        except (ValueError, TypeError):
+            limit = 20
         cat = qs.get("category", [""])[0]
         if cat:
             rows = fetchall("SELECT * FROM publications WHERE is_published=TRUE AND category=%s ORDER BY published_at DESC LIMIT %s", [cat, limit])

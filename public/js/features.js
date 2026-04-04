@@ -39,11 +39,12 @@ function copyLink(url) {
 
 function renderShareButtons(title, eventId) {
     const url = `https://affi-asso.vercel.app/#evenements`;
+    const safeTitle = esc(title).replace(/'/g, '&#39;');
     return `<div class="share-bar">
         <span class="share-label">Partager :</span>
-        <button onclick="event.stopPropagation();shareLinkedIn('${esc(title)}','${url}')" class="share-btn share-li" title="LinkedIn">in</button>
-        <button onclick="event.stopPropagation();shareTwitter('${esc(title)}','${url}')" class="share-btn share-tw" title="Twitter">𝕏</button>
-        <button onclick="event.stopPropagation();shareEmail('${esc(title)}','${url}')" class="share-btn share-em" title="Email">&#9993;</button>
+        <button onclick="event.stopPropagation();shareLinkedIn('${safeTitle}','${url}')" class="share-btn share-li" title="LinkedIn">in</button>
+        <button onclick="event.stopPropagation();shareTwitter('${safeTitle}','${url}')" class="share-btn share-tw" title="Twitter">𝕏</button>
+        <button onclick="event.stopPropagation();shareEmail('${safeTitle}','${url}')" class="share-btn share-em" title="Email">&#9993;</button>
         <button onclick="event.stopPropagation();copyLink('${url}')" class="share-btn share-cp" title="Copier le lien">&#128279;</button>
     </div>`;
 }
@@ -75,7 +76,8 @@ function toggleDarkMode() {
 
 // === ENDORSEMENTS ===
 function renderEndorseButton(memberId, memberName) {
-    return `<button onclick="event.stopPropagation();showEndorseForm(${memberId},'${esc(memberName)}')" class="ec-btn" style="background:var(--green);color:#fff;font-size:11px">&#10003; Recommander</button>`;
+    const safeName = esc(memberName).replace(/'/g, '&#39;');
+    return `<button onclick="event.stopPropagation();showEndorseForm(${memberId},'${safeName}')" class="ec-btn" style="background:var(--green);color:#fff;font-size:11px">&#10003; Recommander</button>`;
 }
 
 function showEndorseForm(memberId, name) {

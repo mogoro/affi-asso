@@ -8,7 +8,10 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         qs = parse_qs(urlparse(self.path).query)
         upcoming = qs.get("upcoming", [""])[0]
-        limit = int(qs.get("limit", ["20"])[0])
+        try:
+            limit = max(1, min(int(qs.get("limit", ["20"])[0]), 200))
+        except (ValueError, TypeError):
+            limit = 20
         if upcoming:
             rows = fetchall("SELECT * FROM events WHERE is_published=TRUE AND start_date >= NOW() ORDER BY start_date ASC LIMIT %s", [limit])
         else:

@@ -5,25 +5,33 @@ from api._shared.db import execute
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
-        length = int(self.headers.get('Content-Length', 0))
-        body = json.loads(self.rfile.read(length)) if length else {}
-        name = body.get("name", "").strip()
-        email = body.get("email", "").strip()
-        subject = body.get("subject", "").strip()
-        message = body.get("message", "").strip()
-        if not name or not email or not message:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
+        try:
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            name = body.get("name", "").strip()
+            email = body.get("email", "").strip()
+            subject = body.get("subject", "").strip()
+            message = body.get("message", "").strip()
+            if not name or not email or not message:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Champs requis: name, email, message"}).encode())
+                return
+            execute("INSERT INTO contact_messages (name, email, subject, message) VALUES (%s,%s,%s,%s)",
+                    [name, email, subject, message])
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "Champs requis: name, email, message"}).encode())
-            return
-        execute("INSERT INTO contact_messages (name, email, subject, message) VALUES (%s,%s,%s,%s)",
-                [name, email, subject, message])
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(json.dumps({"ok": True, "message": "Message envoye"}).encode("utf-8"))
+            self.wfile.write(json.dumps({"ok": True, "message": "Message envoye"}).encode("utf-8"))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Erreur interne du serveur"}).encode())
 
     def do_OPTIONS(self):
         self.send_response(200)

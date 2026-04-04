@@ -146,7 +146,7 @@ function renderDirectory(members) {
                     ${m.joined_at ? `<span>&#128197; Membre depuis ${formatDate(m.joined_at)}</span>` : ''}
                 </div>
                 <div class="ec-actions">
-                    <button onclick="event.stopPropagation();startConversation(${m.id},'${esc(m.first_name)} ${esc(m.last_name)}')" class="ec-btn ec-btn-msg">&#128172; Message</button>
+                    <button onclick="event.stopPropagation();startConversation(${m.id},'${esc(m.first_name).replace(/'/g,"&#39;")} ${esc(m.last_name).replace(/'/g,"&#39;")}')" class="ec-btn ec-btn-msg">&#128172; Message</button>
                     ${typeof renderEndorseButton==='function' ? renderEndorseButton(m.id, m.first_name+' '+m.last_name) : ''}
                     ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="ec-btn ec-btn-li">in LinkedIn</a>` : ''}
                 </div>
@@ -411,16 +411,17 @@ async function requestReset(evt) {
             body: JSON.stringify({action: 'request_reset', email})
         });
         const data = await res.json();
-        if (data.ok && data.reset_code) {
-            resetToken = data.reset_token;
+        if (data.ok) {
+            resetToken = data.reset_token || '';
             document.getElementById('reset-step1').style.display = 'none';
             document.getElementById('reset-step2').style.display = 'block';
             document.getElementById('reset-code-display').innerHTML =
-                `<strong>Code de reinitialisation :</strong><br>` +
-                `<span style="font-size:32px;font-weight:900;color:var(--primary);letter-spacing:8px">${data.reset_code}</span><br>` +
-                `<span style="font-size:12px;color:var(--gray-500)">Valable 1 heure — pour ${email}</span>`;
+                '<p style="color:var(--green);font-weight:600;margin-bottom:12px">Un code de réinitialisation a été généré. Contactez un administrateur pour l\'obtenir.</p>';
         } else {
-            showResetError(data.message || 'Erreur');
+            document.getElementById('reset-step1').style.display = 'none';
+            document.getElementById('reset-step2').style.display = 'block';
+            document.getElementById('reset-code-display').innerHTML =
+                '<p style="color:var(--green);font-weight:600;margin-bottom:12px">Si ce compte existe, un code de réinitialisation a été généré. Contactez un administrateur.</p>';
         }
     } catch (e) { showResetError('Erreur reseau'); }
 }

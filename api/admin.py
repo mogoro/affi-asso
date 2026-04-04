@@ -1,9 +1,21 @@
 """API /api/admin — Administration complete (membres, evenements, news, publications, annonces, messages, import/export, RGPD)."""
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
-import json, csv, io
+import json, csv, io, traceback
 from api._shared.db import fetchall, fetchone, execute, get_conn
 from api.auth import get_member_from_token, hash_pw
+
+def _safe_int(value, default=0, min_val=None, max_val=None):
+    """Convert value to int safely, with optional clamping."""
+    try:
+        result = int(value)
+    except (ValueError, TypeError):
+        result = default
+    if min_val is not None:
+        result = max(result, min_val)
+    if max_val is not None:
+        result = min(result, max_val)
+    return result
 
 class handler(BaseHTTPRequestHandler):
     def _get_admin(self):
@@ -14,6 +26,7 @@ class handler(BaseHTTPRequestHandler):
         return user
 
     def do_GET(self):
+      try:
         admin = self._get_admin()
         if not admin:
             return self._json(403, {"error": "Acces administrateur requis"})
@@ -36,8 +49,8 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, rows)
 
         elif action == "member_detail":
-            mid = qs.get("id", ["0"])[0]
-            m = fetchone("SELECT * FROM members WHERE id = %s", [int(mid)])
+            mid = _safe_int(qs.get("id", ["0"])[0])
+            m = fetchone("SELECT * FROM members WHERE id = %s", [mid])
             if m and "password_hash" in m:
                 del m["password_hash"]
             return self._json(200, m or {"error": "Membre introuvable"})
@@ -83,7 +96,7 @@ class handler(BaseHTTPRequestHandler):
                 m.first_name, m.last_name, m.email, m.company, m.phone
                 FROM event_registrations r
                 JOIN members m ON r.member_id = m.id
-                WHERE r.event_id = %s ORDER BY r.registered_at DESC""", [int(event_id)])
+                WHERE r.event_id = %s ORDER BY r.registered_at DESC""", [_safe_int(event_id)])
             return self._json(200, rows)
 
         elif action == "messages":
@@ -164,30 +177,12 @@ class handler(BaseHTTPRequestHandler):
             by_month = fetchall("""SELECT TO_CHAR(joined_at, 'YYYY-MM') as month, COUNT(*) as n
                 FROM members WHERE joined_at IS NOT NULL GROUP BY month ORDER BY month DESC LIMIT 12""")
             events_count = fetchone("SELECT COUNT(*) as n FROM events WHERE is_published=TRUE")
-            upcoming = fetchone("SELECT COUNT(*) as n FROM events WHERE event_date >= NOW()")
+            upcoming = fetchone("SELECT COUNT(*) as n FROM events WHERE start_date >= NOW()")
             return self._json(200, {
                 "total": total["n"], "verified": verified["n"], "board": board["n"], "mentors": mentors["n"],
                 "by_sector": by_sector, "by_region": by_region, "by_month": by_month,
                 "events_total": events_count["n"], "events_upcoming": upcoming["n"]
             })
-
-        elif action == "toggle_verified":
-            mid = body.get("id")
-            cur = fetchone("SELECT is_verified FROM members WHERE id=%s", [mid])
-            if cur:
-                execute("UPDATE members SET is_verified = NOT is_verified WHERE id=%s", [mid])
-            return self._json(200, {"ok": True})
-
-        elif action == "event_attend":
-            reg_id = body.get("registration_id")
-            execute("UPDATE event_registrations SET attended=TRUE, attended_at=NOW() WHERE id=%s", [reg_id])
-            return self._json(200, {"ok": True})
-
-        elif action == "send_event_comm":
-            execute("""INSERT INTO event_communications (event_id, subject, body, sent_by, recipient_type)
-                VALUES (%s,%s,%s,%s,%s)""",
-                [body["event_id"], body["subject"], body["body"], user["id"], body.get("recipient_type","registered")])
-            return self._json(200, {"ok": True, "message": "Communication enregistree"})
 
         elif action == "connexions":
             rows = fetchall("""SELECT m.id, m.first_name, m.last_name, m.email, m.company,
@@ -206,12 +201,15 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, rows)
 
         return self._json(400, {"error": "Action inconnue"})
+      except Exception as e:
+        return self._json(500, {"error": "Erreur interne", "detail": str(e)})
 
     def do_POST(self):
+      try:
         admin = self._get_admin()
         if not admin:
             return self._json(403, {"error": "Acces administrateur requis"})
-        length = int(self.headers.get('Content-Length', 0))
+        length = _safe_int(self.headers.get('Content-Length', 0))
         body = json.loads(self.rfile.read(length)) if length else {}
         action = body.get("action", "")
 
@@ -304,8 +302,8 @@ class handler(BaseHTTPRequestHandler):
                          row.get("company"), row.get("job_title"), row.get("sector"),
                          row.get("specialty"), row.get("region"),
                          row.get("membership_type","standard"), row.get("status","active"),
-                         row.get("consent_annuaire","").lower() in ("oui","true","1"),
-                         row.get("consent_newsletter","").lower() in ("oui","true","1")])
+                         str(row.get("consent_annuaire","")).lower() in ("oui","true","1"),
+                         str(row.get("consent_newsletter","")).lower() in ("oui","true","1")])
                     imported += 1
                 except Exception as e:
                     errors.append(f"Ligne {i+1}: {str(e)[:80]}")
@@ -411,7 +409,28 @@ class handler(BaseHTTPRequestHandler):
             execute("DELETE FROM contact_messages WHERE id=%s", [body["id"]])
             return self._json(200, {"ok": True})
 
+        # === TOGGLE / ATTENDANCE / COMM ===
+        elif action == "toggle_verified":
+            mid = body.get("id")
+            cur = fetchone("SELECT is_verified FROM members WHERE id=%s", [mid])
+            if cur:
+                execute("UPDATE members SET is_verified = NOT is_verified WHERE id=%s", [mid])
+            return self._json(200, {"ok": True})
+
+        elif action == "event_attend":
+            reg_id = body.get("registration_id")
+            execute("UPDATE event_registrations SET attended=TRUE, attended_at=NOW() WHERE id=%s", [reg_id])
+            return self._json(200, {"ok": True})
+
+        elif action == "send_event_comm":
+            execute("""INSERT INTO event_communications (event_id, subject, body, sent_by, recipient_type)
+                VALUES (%s,%s,%s,%s,%s)""",
+                [body["event_id"], body["subject"], body["body"], admin["id"], body.get("recipient_type","registered")])
+            return self._json(200, {"ok": True, "message": "Communication enregistree"})
+
         return self._json(400, {"error": "Action inconnue"})
+      except Exception as e:
+        return self._json(500, {"error": "Erreur interne", "detail": str(e)})
 
     def do_OPTIONS(self):
         self.send_response(200)

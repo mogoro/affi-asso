@@ -90,26 +90,27 @@ async function loadAdminMembers(status, search) {
     if (status) params.status = status;
     if (search) params.search = search;
     const members = await adminFetch('members', params);
-    const el = document.getElementById('adm-members-list');
-    if (!el) return;
-    el.innerHTML = `<table class="adm-table"><thead><tr>
-        <th>Nom</th><th>Email</th><th>Entreprise</th><th>Secteur</th><th>Type</th><th>Statut</th><th>Inscrit le</th><th>Actions</th>
-    </tr></thead><tbody>${members.map(m => `<tr>
-        <td><strong>${esc(m.first_name)} ${esc(m.last_name)}</strong></td>
-        <td style="font-size:13px">${esc(m.email)}</td>
-        <td>${esc(m.company||'')}</td>
-        <td><span class="card-tag">${esc(m.sector||'-')}</span></td>
-        <td>${esc(m.membership_type)}</td>
-        <td><span class="adm-badge adm-badge-${m.status}">${m.status}</span></td>
-        <td style="font-size:12px">${formatDate(m.joined_at)}</td>
-        <td class="adm-actions">
+    if (!document.getElementById('adm-members-list')) return;
+    new DataTable('adm-members-list', {
+        columns: [
+            { key: 'name', label: 'Nom', render: (v, r) => `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong>` },
+            { key: 'email', label: 'Email' },
+            { key: 'company', label: 'Entreprise' },
+            { key: 'sector', label: 'Secteur', render: v => v ? `<span class="card-tag">${esc(v)}</span>` : '-' },
+            { key: 'membership_type', label: 'Type' },
+            { key: 'status', label: 'Statut', render: v => `<span class="adm-badge adm-badge-${v}">${v}</span>` },
+            { key: 'joined_at', label: 'Inscrit le', type: 'date', render: v => `<span style="font-size:12px">${formatDate(v)}</span>` },
+        ],
+        data: members.map(m => ({ ...m, name: (m.first_name||'') + ' ' + (m.last_name||'') })),
+        actions: (m) => `
             ${m.status==='pending' ? `<button onclick="adminAction('approve_member',${m.id})" class="adm-btn adm-btn-ok" title="Approuver">&#10003;</button>` : ''}
             ${m.status==='active' ? `<button onclick="adminAction('block_member',${m.id})" class="adm-btn adm-btn-warn" title="Bloquer">&#10007;</button>` : ''}
             ${m.status==='blocked' ? `<button onclick="adminAction('activate_member',${m.id})" class="adm-btn adm-btn-ok" title="Reactiver">&#8635;</button>` : ''}
             <button onclick="editMember(${m.id})" class="adm-btn" title="Modifier">&#9998;</button>
             ${!m.is_admin ? `<button onclick="adminAction('delete_member',${m.id})" class="adm-btn adm-btn-danger" title="Supprimer">&#128465;</button>` : ''}
-        </td>
-    </tr>`).join('')}</tbody></table>`;
+        `,
+        pageSize: 25,
+    });
 }
 
 async function adminAction(action, id) {
@@ -183,22 +184,24 @@ async function saveMemberEdit(evt, id) {
 // === EVENTS ===
 async function loadAdminEvents() {
     const events = await adminFetch('events', {});
-    const el = document.getElementById('adm-events-list');
-    if (!el) return;
-    el.innerHTML = `<table class="adm-table"><thead><tr><th>Date</th><th>Titre</th><th>Type</th><th>Lieu</th><th>Publie</th><th>Actions</th></tr></thead><tbody>
-        ${events.map(e => `<tr>
-            <td style="white-space:nowrap;font-size:13px">${formatDate(e.start_date)}</td>
-            <td><strong>${esc(e.title)}</strong></td>
-            <td><span class="card-tag">${esc(e.event_type||'')}</span></td>
-            <td style="font-size:13px">${esc(e.location||'')}</td>
-            <td>${e.is_published ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>'}</td>
-            <td class="adm-actions">
-                <button onclick="showEventCommForm(${e.id},'${esc(e.title)}')" class="adm-btn" title="Communiquer">&#128231;</button>
-                <button onclick="showEventRegistrations(${e.id},'${esc(e.title)}')" class="adm-btn" title="Inscrits">&#128101;</button>
-                ${!e.is_published ? `<button onclick="adminAction('publish_event',${e.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_event',${e.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
-                <button onclick="adminAction('delete_event',${e.id})" class="adm-btn adm-btn-danger">&#128465;</button>
-            </td>
-        </tr>`).join('')}</tbody></table>`;
+    if (!document.getElementById('adm-events-list')) return;
+    new DataTable('adm-events-list', {
+        columns: [
+            { key: 'start_date', label: 'Date', type: 'date', render: v => `<span style="white-space:nowrap;font-size:13px">${formatDate(v)}</span>` },
+            { key: 'title', label: 'Titre', render: v => `<strong>${esc(v)}</strong>` },
+            { key: 'event_type', label: 'Type', render: v => `<span class="card-tag">${esc(v||'')}</span>` },
+            { key: 'location', label: 'Lieu' },
+            { key: 'is_published', label: 'Publié', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
+        ],
+        data: events,
+        actions: (e) => `
+            <button onclick="showEventCommForm(${e.id},'${esc(e.title).replace(/'/g,"&#39;")}')" class="adm-btn" title="Communiquer">&#128231;</button>
+            <button onclick="showEventRegistrations(${e.id},'${esc(e.title).replace(/'/g,"&#39;")}')" class="adm-btn" title="Inscrits">&#128101;</button>
+            ${!e.is_published ? `<button onclick="adminAction('publish_event',${e.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_event',${e.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
+            <button onclick="adminAction('delete_event',${e.id})" class="adm-btn adm-btn-danger">&#128465;</button>
+        `,
+        pageSize: 25,
+    });
 }
 
 function showEventForm() {
@@ -239,18 +242,20 @@ async function createEvent(evt) {
 // === NEWS ===
 async function loadAdminNews() {
     const items = await adminFetch('news', {});
-    const el = document.getElementById('adm-news-list');
-    if (!el) return;
-    el.innerHTML = `<table class="adm-table"><thead><tr><th>Date</th><th>Titre</th><th>Publie</th><th>Actions</th></tr></thead><tbody>
-        ${items.map(n => `<tr>
-            <td style="font-size:13px">${formatDate(n.published_at)}</td>
-            <td><strong>${esc(n.title)}</strong></td>
-            <td>${n.is_published ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>'}</td>
-            <td class="adm-actions">
-                ${!n.is_published ? `<button onclick="adminAction('publish_news',${n.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_news',${n.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
-                <button onclick="adminAction('delete_news',${n.id})" class="adm-btn adm-btn-danger">&#128465;</button>
-            </td>
-        </tr>`).join('')}</tbody></table>`;
+    if (!document.getElementById('adm-news-list')) return;
+    new DataTable('adm-news-list', {
+        columns: [
+            { key: 'published_at', label: 'Date', type: 'date', render: v => `<span style="font-size:13px">${formatDate(v)}</span>` },
+            { key: 'title', label: 'Titre', render: v => `<strong>${esc(v)}</strong>` },
+            { key: 'is_published', label: 'Publié', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
+        ],
+        data: items,
+        actions: (n) => `
+            ${!n.is_published ? `<button onclick="adminAction('publish_news',${n.id})" class="adm-btn adm-btn-ok" title="Publier">&#10003;</button>` : `<button onclick="adminAction('unpublish_news',${n.id})" class="adm-btn adm-btn-warn" title="Depublier">&#10007;</button>`}
+            <button onclick="adminAction('delete_news',${n.id})" class="adm-btn adm-btn-danger">&#128465;</button>
+        `,
+        pageSize: 25,
+    });
 }
 
 function showNewsForm() {
@@ -276,20 +281,22 @@ async function createNews(evt) {
 // === ANNOUNCEMENTS MODERATION ===
 async function loadAdminAnnouncements() {
     const items = await adminFetch('announcements', {});
-    const el = document.getElementById('adm-announcements-list');
-    if (!el) return;
-    el.innerHTML = `<table class="adm-table"><thead><tr><th>Date</th><th>Auteur</th><th>Titre</th><th>Cat.</th><th>Actif</th><th>Actions</th></tr></thead><tbody>
-        ${items.map(a => `<tr>
-            <td style="font-size:13px">${formatDate(a.created_at)}</td>
-            <td>${esc(a.first_name)} ${esc(a.last_name)}</td>
-            <td><strong>${esc(a.title)}</strong><br><span style="font-size:12px;color:var(--gray-500)">${esc((a.content||'').substring(0,80))}</span></td>
-            <td><span class="card-tag">${esc(a.category)}</span></td>
-            <td>${a.is_active ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>'}</td>
-            <td class="adm-actions">
-                ${!a.is_active ? `<button onclick="adminAction('approve_announcement',${a.id})" class="adm-btn adm-btn-ok" title="Approuver">&#10003;</button>` : `<button onclick="adminAction('reject_announcement',${a.id})" class="adm-btn adm-btn-warn" title="Masquer">&#10007;</button>`}
-                <button onclick="adminAction('delete_announcement',${a.id})" class="adm-btn adm-btn-danger">&#128465;</button>
-            </td>
-        </tr>`).join('')}</tbody></table>`;
+    if (!document.getElementById('adm-announcements-list')) return;
+    new DataTable('adm-announcements-list', {
+        columns: [
+            { key: 'created_at', label: 'Date', type: 'date', render: v => `<span style="font-size:13px">${formatDate(v)}</span>` },
+            { key: 'author', label: 'Auteur', render: (v, r) => `${esc(r.first_name)} ${esc(r.last_name)}` },
+            { key: 'title', label: 'Titre', render: (v, r) => `<strong>${esc(v)}</strong><br><span style="font-size:12px;color:var(--gray-500)">${esc((r.content||'').substring(0,80))}</span>` },
+            { key: 'category', label: 'Cat.', render: v => `<span class="card-tag">${esc(v)}</span>` },
+            { key: 'is_active', label: 'Actif', render: v => v ? '<span style="color:var(--green)">Oui</span>' : '<span style="color:var(--orange)">En attente</span>' },
+        ],
+        data: items.map(a => ({ ...a, author: (a.first_name||'') + ' ' + (a.last_name||'') })),
+        actions: (a) => `
+            ${!a.is_active ? `<button onclick="adminAction('approve_announcement',${a.id})" class="adm-btn adm-btn-ok" title="Approuver">&#10003;</button>` : `<button onclick="adminAction('reject_announcement',${a.id})" class="adm-btn adm-btn-warn" title="Masquer">&#10007;</button>`}
+            <button onclick="adminAction('delete_announcement',${a.id})" class="adm-btn adm-btn-danger">&#128465;</button>
+        `,
+        pageSize: 25,
+    });
 }
 
 // === CREATE MEMBER ===
@@ -302,7 +309,7 @@ function showCreateMemberForm() {
                 <div class="form-group"><label>Nom *</label><input id="cm-ln" required></div>
             </div>
             <div class="form-group"><label>Email *</label><input type="email" id="cm-email" required></div>
-            <div class="form-group"><label>Mot de passe</label><input id="cm-pw" value="affi2026" placeholder="Par defaut: affi2026"></div>
+            <div class="form-group"><label>Mot de passe</label><input id="cm-pw" type="password" placeholder="Mot de passe (8 car. min, 1 maj, 1 min, 1 chiffre)"></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                 <div class="form-group"><label>Entreprise</label><input id="cm-company"></div>
                 <div class="form-group"><label>Fonction</label><input id="cm-job"></div>
@@ -454,7 +461,7 @@ async function doImport() {
 // === EXPORT CSV ===
 function exportMembers() {
     const status = document.getElementById('adm-status-filter')?.value || '';
-    const url = `${API}/api/admin?action=export_csv${status ? '&status=' + status : ''}&token=${authToken}`;
+    const url = `${API}/api/admin?action=export_csv${status ? '&status=' + status : ''}`;
     // Use fetch with auth header
     fetch(url, { headers: { 'Authorization': 'Bearer ' + authToken } })
         .then(r => r.blob())
@@ -470,17 +477,19 @@ function exportMembers() {
 // === LOGS ===
 async function loadAdminLogs() {
     const items = await adminFetch('logs', {});
-    const el = document.getElementById('adm-logs-list');
-    if (!el) return;
-    if (!items.length) { el.innerHTML = '<p class="empty-msg">Aucun log</p>'; return; }
-    el.innerHTML = `<table class="adm-table"><thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Details</th><th>IP</th></tr></thead><tbody>
-        ${items.map(l => `<tr>
-            <td style="font-size:12px;white-space:nowrap">${formatDate(l.created_at)}</td>
-            <td>${l.first_name ? esc(l.first_name) + ' ' + esc(l.last_name) : '#' + (l.user_id||'?')}</td>
-            <td><span class="card-tag">${esc(l.action)}</span></td>
-            <td style="font-size:13px">${esc(l.details||'')}</td>
-            <td style="font-size:12px;color:var(--gray-400)">${esc(l.ip_address||'')}</td>
-        </tr>`).join('')}</tbody></table>`;
+    if (!document.getElementById('adm-logs-list')) return;
+    if (!items.length) { document.getElementById('adm-logs-list').innerHTML = '<p class="empty-msg">Aucun log</p>'; return; }
+    new DataTable('adm-logs-list', {
+        columns: [
+            { key: 'created_at', label: 'Date', type: 'date', render: v => `<span style="font-size:12px;white-space:nowrap">${formatDate(v)}</span>` },
+            { key: 'user_name', label: 'Utilisateur', render: (v, r) => r.first_name ? esc(r.first_name) + ' ' + esc(r.last_name) : '#' + (r.user_id||'?') },
+            { key: 'action', label: 'Action', render: v => `<span class="card-tag">${esc(v)}</span>` },
+            { key: 'details', label: 'Détails' },
+            { key: 'ip_address', label: 'IP', render: v => `<span style="font-size:12px;color:var(--gray-400)">${esc(v||'')}</span>` },
+        ],
+        data: items.map(l => ({ ...l, user_name: l.first_name ? l.first_name + ' ' + l.last_name : '#' + (l.user_id||'?') })),
+        pageSize: 50,
+    });
 }
 
 // === EVENT REGISTRATIONS ===
@@ -575,14 +584,11 @@ async function loadPendingContent() {
 // === CONNEXIONS ===
 async function loadAdminConnexions() {
     const items = await adminFetch('connexions', {});
-    const el = document.getElementById('adm-connexions-list');
-    if (!el) return;
-    if (!items.length) { el.innerHTML = '<p class="empty-msg">Aucune connexion enregistree</p>'; return; }
+    if (!document.getElementById('adm-connexions-list')) return;
+    if (!items.length) { document.getElementById('adm-connexions-list').innerHTML = '<p class="empty-msg">Aucune connexion enregistree</p>'; return; }
 
     const now = new Date();
-    el.innerHTML = `<table class="adm-table"><thead><tr>
-        <th>Membre</th><th>Email</th><th>Entreprise</th><th>Role</th><th>Derniere connexion</th><th>Session active</th>
-    </tr></thead><tbody>${items.map(c => {
+    const enriched = items.map(c => {
         const lastLogin = c.last_login ? new Date(c.last_login) : null;
         const diffMin = lastLogin ? Math.round((now - lastLogin) / 60000) : null;
         let ago = '';
@@ -593,15 +599,20 @@ async function loadAdminConnexions() {
             else ago = `Il y a ${Math.round(diffMin/1440)}j`;
         }
         const hasActiveSession = c.session_start && new Date(c.session_expires) > now;
-        return `<tr>
-            <td><strong>${esc(c.first_name)} ${esc(c.last_name)}</strong>${c.is_admin ? ' <span class="adm-badge adm-badge-active" style="font-size:10px">Admin</span>' : ''}</td>
-            <td style="font-size:13px">${esc(c.email)}</td>
-            <td style="font-size:13px">${esc(c.company||'')}</td>
-            <td><span class="card-tag">${esc(c.role||'member')}</span></td>
-            <td style="font-size:13px">${formatDate(c.last_login)}<br><span style="font-size:11px;color:var(--gray-400)">${ago}</span></td>
-            <td>${hasActiveSession ? '<span style="color:var(--green);font-weight:700">&#128994; Active</span>' : '<span style="color:var(--gray-400)">&#9898; Inactive</span>'}</td>
-        </tr>`;
-    }).join('')}</tbody></table>`;
+        return { ...c, name: (c.first_name||'') + ' ' + (c.last_name||''), ago, hasActiveSession };
+    });
+    new DataTable('adm-connexions-list', {
+        columns: [
+            { key: 'name', label: 'Membre', render: (v, r) => `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong>${r.is_admin ? ' <span class="adm-badge adm-badge-active" style="font-size:10px">Admin</span>' : ''}` },
+            { key: 'email', label: 'Email' },
+            { key: 'company', label: 'Entreprise' },
+            { key: 'role', label: 'Rôle', render: v => `<span class="card-tag">${esc(v||'member')}</span>` },
+            { key: 'last_login', label: 'Dernière connexion', type: 'date', render: (v, r) => `<span style="font-size:13px">${formatDate(v)}</span><br><span style="font-size:11px;color:var(--gray-400)">${r.ago}</span>` },
+            { key: 'hasActiveSession', label: 'Session', render: v => v ? '<span style="color:var(--green);font-weight:700">&#128994; Active</span>' : '<span style="color:var(--gray-400)">&#9898; Inactive</span>' },
+        ],
+        data: enriched,
+        pageSize: 50,
+    });
 }
 
 // === MESSAGES ===

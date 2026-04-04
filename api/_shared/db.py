@@ -1,5 +1,6 @@
 """Connexion Neon PostgreSQL pour AFFI."""
 import os, logging
+from decimal import Decimal
 try:
     import psycopg2
     import psycopg2.extras
@@ -26,7 +27,7 @@ def fetchall(sql, params=None):
                 for k, v in r.items():
                     if hasattr(v, 'isoformat'):
                         r[k] = v.isoformat()
-                    elif isinstance(v, __import__('decimal').Decimal):
+                    elif isinstance(v, Decimal):
                         r[k] = float(v)
             return rows
     finally:
@@ -42,7 +43,7 @@ def fetchone(sql, params=None):
                 for k, v in row.items():
                     if hasattr(v, 'isoformat'):
                         row[k] = v.isoformat()
-                    elif isinstance(v, __import__('decimal').Decimal):
+                    elif isinstance(v, Decimal):
                         row[k] = float(v)
             return row
     finally:
@@ -51,7 +52,7 @@ def fetchone(sql, params=None):
 def execute(sql, params=None):
     conn = get_conn()
     try:
-        with conn.cursor() as cur:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(sql, params or [])
             conn.commit()
             try:

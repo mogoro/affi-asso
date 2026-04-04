@@ -7,10 +7,29 @@
 <link rel="stylesheet" href="/css/styles.css">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
+<meta name="description" content="AFFI - Association Ferroviaire Française des Ingénieurs et Cadres. Première association française rassemblant les professionnels du secteur ferroviaire depuis 1996.">
+<meta name="keywords" content="AFFI, association, ferroviaire, ingénieurs, railway, France, SNCF, RATP, infrastructure">
+<link rel="icon" type="image/png" href="/images/logo-affi.png">
+<link rel="apple-touch-icon" href="/images/logo-affi.png">
+<link rel="canonical" href="https://affi-asso.vercel.app/">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="AFFI - Association Ferroviaire Française des Ingénieurs">
+<meta property="og:description" content="Première association française rassemblant les ingénieurs et cadres du secteur ferroviaire depuis 1996.">
+<meta property="og:image" content="https://affi-asso.vercel.app/images/logo-affi.png">
+<meta property="og:url" content="https://affi-asso.vercel.app/">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AFFI - Association Ferroviaire Française des Ingénieurs">
+<!-- Structured Data -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"AFFI - Association Ferroviaire Française des Ingénieurs","url":"https://affi-asso.vercel.app","logo":"https://affi-asso.vercel.app/images/logo-affi.png","foundingDate":"1996-04-15","address":{"@type":"PostalAddress","streetAddress":"60 rue Anatole France","addressLocality":"Levallois-Perret","postalCode":"92300","addressCountry":"FR"}}
+</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 </head>
 <body>
+<a href="#page-accueil" class="skip-link">Aller au contenu principal</a>
 
 <!-- NAVBAR PRO -->
 <nav class="navbar">
@@ -27,22 +46,22 @@
         </div>
 
         <div class="nav-links" id="nav-links">
-            <a class="nav-link active" data-page="accueil" onclick="navigate('accueil')">
+            <a class="nav-link active" data-page="accueil" onclick="navigate('accueil');document.getElementById('nav-links').classList.remove('open')">
                 <span class="nav-link-icon">&#127968;</span><span class="nav-link-text">Accueil</span>
             </a>
-            <a class="nav-link" data-page="identite" onclick="navigate('identite')">
+            <a class="nav-link" data-page="identite" onclick="navigate('identite');document.getElementById('nav-links').classList.remove('open')">
                 <span class="nav-link-icon">&#127963;</span><span class="nav-link-text">L'AFFI</span>
             </a>
-            <a class="nav-link" data-page="annuaire" onclick="navigate('annuaire')">
+            <a class="nav-link" data-page="annuaire" onclick="navigate('annuaire');document.getElementById('nav-links').classList.remove('open')">
                 <span class="nav-link-icon">&#128101;</span><span class="nav-link-text">Reseau</span>
             </a>
-            <a class="nav-link" data-page="agenda" onclick="navigate('agenda')">
+            <a class="nav-link" data-page="agenda" onclick="navigate('agenda');document.getElementById('nav-links').classList.remove('open')">
                 <span class="nav-link-icon">&#128197;</span><span class="nav-link-text">Activites</span>
             </a>
-            <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles')">
+            <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles');document.getElementById('nav-links').classList.remove('open')">
                 <span class="nav-link-icon">&#127891;</span><span class="nav-link-text">Etudiants</span>
             </a>
-            <a class="nav-link" data-page="adhesion" onclick="navigate('adhesion')">
+            <a class="nav-link" data-page="adhesion" onclick="navigate('adhesion');document.getElementById('nav-links').classList.remove('open')">
                 <span class="nav-link-icon">&#10133;</span><span class="nav-link-text">Adherer</span>
             </a>
         </div>
@@ -55,7 +74,7 @@
             <div class="nav-user" id="nav-user-area">
                 <a class="nav-member-btn" href="#membres" onclick="navigate('membres')">Connexion</a>
             </div>
-            <button class="nav-hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
+            <button class="nav-hamburger" aria-label="Menu de navigation" aria-expanded="false" onclick="this.setAttribute('aria-expanded',document.getElementById('nav-links').classList.toggle('open'))">&#9776;</button>
         </div>
     </div>
     <!-- Sub-nav contextuel (s'affiche selon la page) -->
@@ -473,9 +492,12 @@
         <div class="container">
             <div class="section-line section-line-center"></div>
             <h2 class="section-title section-title-center">Agenda</h2>
-            <p class="section-sub section-sub-center">Prochains evenements, conferences et rendez-vous</p>
-            <div class="cards-grid" id="agenda-list">
-                <div class="card"><div class="card-body text-center" style="padding:48px;color:var(--gray-400)">Chargement...</div></div>
+            <p class="section-sub section-sub-center">Prochains événements, conférences et rendez-vous</p>
+            <div class="agenda-layout">
+                <div class="agenda-calendar" id="agenda-calendar"></div>
+                <div class="agenda-events" id="agenda-list">
+                    <p style="color:var(--gray-400);text-align:center;padding:40px">Chargement...</p>
+                </div>
             </div>
         </div>
     </section>
@@ -687,7 +709,7 @@
             </div>
             <div class="form-card">
                 <h3 style="text-align:center;margin-bottom:28px;color:var(--primary);font-size:22px;font-weight:800">Formulaire d'adhesion</h3>
-                <form onsubmit="event.preventDefault();document.getElementById('adhesion-success').style.display='block'">
+                <form onsubmit="submitAdhesion(event)">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
                         <div class="form-group"><label>Prenom</label><input type="text" name="first_name" required></div>
                         <div class="form-group"><label>Nom</label><input type="text" name="last_name" required></div>
@@ -1222,17 +1244,17 @@
             <div>
                 <h4>Partenaires</h4>
                 <ul class="footer-links">
-                    <li><a href="#">SNCF</a></li>
-                    <li><a href="#">RATP</a></li>
-                    <li><a href="#">Alstom</a></li>
-                    <li><a href="#">Arcadis</a></li>
-                    <li><a href="#">Certifer</a></li>
-                    <li><a href="#">FIF</a></li>
-                    <li><a href="#">Vossloh</a></li>
+                    <li><a href="https://www.sncf.com" target="_blank" rel="noopener">SNCF</a></li>
+                    <li><a href="https://www.ratp.fr" target="_blank" rel="noopener">RATP</a></li>
+                    <li><a href="https://www.alstom.com" target="_blank" rel="noopener">Alstom</a></li>
+                    <li><a href="https://www.arcadis.com" target="_blank" rel="noopener">Arcadis</a></li>
+                    <li><a href="https://www.certifer.fr" target="_blank" rel="noopener">Certifer</a></li>
+                    <li><a href="https://www.ffrp.net" target="_blank" rel="noopener">FIF</a></li>
+                    <li><a href="https://www.vossloh.com" target="_blank" rel="noopener">Vossloh</a></li>
                 </ul>
             </div>
         </div>
-        <div class="footer-bar">&copy; 2026 AFFI — Tous droits reserves &middot; <a href="#" style="color:rgba(255,255,255,.4)">Mentions legales</a> &middot; <a href="#" style="color:rgba(255,255,255,.4)">Confidentialite</a></div>
+        <div class="footer-bar">&copy; 2026 AFFI — Tous droits reserves &middot; <a href="#contact" onclick="navigate('contact')" style="color:rgba(255,255,255,.4)">Mentions légales</a> &middot; <a href="#contact" onclick="navigate('contact')" style="color:rgba(255,255,255,.4)">Confidentialité</a></div>
     </div>
 </footer>
 
@@ -1244,8 +1266,8 @@
             <p>Ce site utilise des cookies strictement necessaires a son fonctionnement (session de connexion). Aucun cookie publicitaire ou de tracking n'est utilise. Vos donnees sont protegees conformement au RGPD. <a href="#contact" onclick="navigate('contact');acceptCookies()">En savoir plus</a></p>
         </div>
         <div class="cookie-actions">
-            <button onclick="acceptCookies()" class="btn btn-accent" style="font-size:13px;padding:10px 24px">J'accepte</button>
-            <button onclick="acceptCookies()" class="btn btn-primary" style="font-size:13px;padding:10px 24px;background:var(--gray-500)">Necessaires uniquement</button>
+            <button onclick="acceptCookies('all')" class="btn btn-accent" style="font-size:13px;padding:10px 24px">J'accepte</button>
+            <button onclick="acceptCookies('necessary')" class="btn btn-primary" style="font-size:13px;padding:10px 24px;background:var(--gray-500)">Nécessaires uniquement</button>
         </div>
     </div>
 </div>
@@ -1253,11 +1275,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/features.js"></script>
-<script src="/js/app.js"></script>
-<script src="/js/members.js"></script>
-<script src="/js/admin.js"></script>
-<script src="/js/social.js"></script>
-<script src="/js/map.js"></script>
+<script src="/js/features.js" defer></script>
+<script src="/js/datatable.js" defer></script>
+<script src="/js/app.js" defer></script>
+<script src="/js/members.js" defer></script>
+<script src="/js/admin.js" defer></script>
+<script src="/js/social.js" defer></script>
+<script src="/js/map.js" defer></script>
 </body>
 </html>

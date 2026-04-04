@@ -7,7 +7,10 @@ from api._shared.db import fetchall
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         qs = parse_qs(urlparse(self.path).query)
-        limit = int(qs.get("limit", ["10"])[0])
+        try:
+            limit = max(1, min(int(qs.get("limit", ["10"])[0]), 200))
+        except (ValueError, TypeError):
+            limit = 20
         rows = fetchall("SELECT * FROM news WHERE is_published=TRUE ORDER BY published_at DESC LIMIT %s", [limit])
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")

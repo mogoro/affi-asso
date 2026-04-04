@@ -2,8 +2,23 @@
  * AFFI Map & Courses
  */
 let mapInstance = null;
+let _leafletLoaded = false;
+function loadLeaflet() {
+    return new Promise((resolve) => {
+        if (_leafletLoaded || window.L) { _leafletLoaded = true; resolve(); return; }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = () => { _leafletLoaded = true; resolve(); };
+        document.body.appendChild(script);
+    });
+}
 
 async function loadMap(mode) {
+    await loadLeaflet();
     const container = document.getElementById('map-container');
     try {
         mode = mode || 'member';

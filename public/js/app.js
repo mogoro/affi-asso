@@ -3,6 +3,7 @@
  */
 const API = window.location.origin;
 const PAGES = ['accueil','identite','annuaire','agenda','evenements','publications','replays','quizz','ecoles','adhesion','contact','membres'];
+let _homeLoaded = false;
 
 // === ROUTER ===
 const LOCKED_PAGES = ['evenements', 'replays', 'quizz', 'publications'];
@@ -43,7 +44,7 @@ function navigate(page) {
     if (page === 'ecoles') { loadStages(); if (typeof loadEcoles === 'function') loadEcoles(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
-    if (page === 'accueil') { loadHome(); loadPartenaires(); lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
+    if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); _homeLoaded = true; } lockCarriereIfNeeded(); if (typeof loadPolls === 'function') loadPolls(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); }
     if (page === 'identite') { setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); }
     // Si connecte et on va sur membres, afficher directement l'espace membre
     if (page === 'membres' && isLoggedIn() && typeof showMemberArea === 'function') {

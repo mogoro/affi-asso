@@ -1,38 +1,71 @@
-"""POST /api/email — Email sending service via Resend API."""
+"""POST /api/email — Email sending via SMTP ou Resend API."""
 from http.server import BaseHTTPRequestHandler
-import json, os
+import json, os, smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 try:
     from urllib.request import Request, urlopen
 except ImportError:
     pass
 
+# SMTP config (prioritaire)
+SMTP_HOST = os.environ.get("SMTP_HOST", "")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+# Resend fallback
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
-FROM_EMAIL = os.environ.get("FROM_EMAIL", "AFFI <noreply@ingenieur-ferroviaire.net>")
+# From
+FROM_EMAIL = os.environ.get("FROM_EMAIL", SMTP_USER or "AFFI <noreply@ingenieur-ferroviaire.net>")
 
 def send_email(to, subject, html_body):
-    """Send an email via Resend API."""
-    if not RESEND_API_KEY:
-        # Fallback: log to console if no API key
-        print(f"[EMAIL] To: {to}, Subject: {subject}")
-        return {"ok": True, "message": "Email logged (no API key configured)"}
+    """Envoie un email via SMTP (prioritaire) ou Resend API (fallback)."""
+    recipients = [to] if isinstance(to, str) else to
 
-    data = json.dumps({
-        "from": FROM_EMAIL,
-        "to": [to] if isinstance(to, str) else to,
-        "subject": subject,
-        "html": html_body,
-    }).encode()
+    # Méthode 1: SMTP
+    if SMTP_HOST and SMTP_USER and SMTP_PASSWORD:
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = FROM_EMAIL
+            msg['To'] = ', '.join(recipients)
+            msg.attach(MIMEText(html_body, 'html', 'utf-8'))
 
-    req = Request("https://api.resend.com/emails", data=data, method="POST")
-    req.add_header("Authorization", f"Bearer {RESEND_API_KEY}")
-    req.add_header("Content-Type", "application/json")
+            if SMTP_PORT == 465:
+                server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10)
+            else:
+                server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+                server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.send_message(msg)
+            server.quit()
+            print(f"[EMAIL SMTP] Envoyé à {to}: {subject}")
+            return {"ok": True, "method": "smtp"}
+        except Exception as e:
+            print(f"[EMAIL SMTP ERROR] {e}")
+            # Fall through to Resend if SMTP fails
 
-    try:
-        with urlopen(req) as resp:
-            return json.loads(resp.read())
-    except Exception as e:
-        print(f"[EMAIL ERROR] {e}")
-        return {"error": str(e)}
+    # Méthode 2: Resend API
+    if RESEND_API_KEY:
+        try:
+            data = json.dumps({
+                "from": FROM_EMAIL,
+                "to": recipients,
+                "subject": subject,
+                "html": html_body,
+            }).encode()
+            req = Request("https://api.resend.com/emails", data=data, method="POST")
+            req.add_header("Authorization", f"Bearer {RESEND_API_KEY}")
+            req.add_header("Content-Type", "application/json")
+            with urlopen(req) as resp:
+                return json.loads(resp.read())
+        except Exception as e:
+            print(f"[EMAIL RESEND ERROR] {e}")
+            return {"error": str(e)}
+
+    # Aucun service configuré
+    print(f"[EMAIL LOG] To: {to}, Subject: {subject}")
+    return {"ok": True, "message": "Email logged (aucun service email configure)"}
 
 def make_html_email(title, body_html):
     """Wrap email content in a nice HTML template."""

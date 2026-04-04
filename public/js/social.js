@@ -122,7 +122,7 @@ async function applyJob(jobId) {
 }
 
 function showJobForm() {
-    const html = `<div class="adm-modal-bg" id="job-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="job-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:20px;color:var(--primary)">Publier une offre</h3>
         <form onsubmit="postJob(event)">
             <div class="form-group"><label>Titre du poste *</label><input name="title" required></div>
@@ -154,7 +154,7 @@ function showJobForm() {
             <button type="submit" class="btn btn-accent" style="width:100%">Publier l'offre</button>
         </form>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 async function postJob(evt) {
@@ -164,7 +164,7 @@ async function postJob(evt) {
         body: JSON.stringify({action:'post_job', title:f.title.value, company:f.company.value, location:f.location.value,
             contract_type:f.contract_type.value, salary_range:f.salary_range.value, description:f.description.value,
             sector:f.sector.value, is_freelance:f.is_freelance.checked})});
-    document.getElementById('job-modal')?.remove();
+    closeModal('job-modal');
     f.reset();
     loadJobs();
 }
@@ -244,7 +244,7 @@ async function showNewMessageForm() {
         const res = await fetch(`${API}/api/members?action=directory`, {headers:{'Authorization':'Bearer '+authToken}});
         const members = await res.json();
         const others = members.filter(m => m.id !== currentUser.id);
-        const html = `<div class="adm-modal-bg" id="newmsg-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+        const html = `<div class="adm-modal-bg" id="newmsg-modal" ><div class="adm-modal">
             <h3 style="margin-bottom:16px;color:var(--primary)">Nouveau message</h3>
             <div class="form-group"><label>Destinataire</label>
                 <select id="nm-to" style="width:100%;padding:10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit">
@@ -257,7 +257,7 @@ async function showNewMessageForm() {
             </div>
             <button onclick="sendNewMessage()" class="btn btn-accent" style="width:100%">Envoyer</button>
         </div></div>`;
-        document.body.insertAdjacentHTML('beforeend', html);
+        openModal(html);
     } catch (e) { alert('Erreur: ' + e.message); }
 }
 
@@ -267,7 +267,7 @@ async function sendNewMessage() {
     if (!toId || !content) return alert('Selectionnez un destinataire et ecrivez un message');
     await fetch(`${API}/api/social`, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'send_message', to_member_id: parseInt(toId), content})});
-    document.getElementById('newmsg-modal')?.remove();
+    closeModal('newmsg-modal');
     loadConversations();
     const sel = document.getElementById('nm-to');
     const name = sel.options[sel.selectedIndex].text.split(' — ')[0];

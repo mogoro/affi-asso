@@ -1228,6 +1228,41 @@ function acceptCookies(level) {
     if (el) { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }
 }
 
+// === MODAL HELPERS (prevent body scroll + stable positioning) ===
+function openModal(html) {
+    document.body.style.overflow = 'hidden';
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    // Restore scroll only if no other modals are open
+    if (!document.querySelector('.adm-modal-bg')) {
+        document.body.style.overflow = '';
+    }
+}
+// Auto-close + restore scroll when clicking backdrop
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('adm-modal-bg')) {
+        e.target.remove();
+        if (!document.querySelector('.adm-modal-bg')) {
+            document.body.style.overflow = '';
+        }
+    }
+});
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.querySelector('.adm-modal-bg');
+        if (modal) {
+            modal.remove();
+            if (!document.querySelector('.adm-modal-bg')) {
+                document.body.style.overflow = '';
+            }
+        }
+    }
+});
+
 // === TOAST NOTIFICATIONS ===
 function showToast(msg, type) {
     type = type || 'info';

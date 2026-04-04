@@ -125,7 +125,7 @@ async function adminAction(action, id) {
 async function editMember(id) {
     const m = await adminFetch('member_detail', {id: String(id)});
     if (!m || m.error) return alert('Membre introuvable');
-    const html = `<div class="adm-modal-bg" id="member-modal" onclick="if(event.target===this)this.remove()">
+    const html = `<div class="adm-modal-bg" id="member-modal" >
         <div class="adm-modal">
             <h3 style="margin-bottom:20px;color:var(--primary)">Modifier le membre #${m.id}</h3>
             <form onsubmit="saveMemberEdit(event,${m.id})">
@@ -155,12 +155,12 @@ async function editMember(id) {
                 </select></div>
                 <div style="display:flex;gap:12px;margin-top:16px">
                     <button type="submit" class="btn btn-accent" style="flex:1">Enregistrer</button>
-                    <button type="button" class="btn btn-primary" style="flex:1" onclick="document.getElementById('member-modal').remove()">Annuler</button>
+                    <button type="button" class="btn btn-primary" style="flex:1" onclick="closeModal('member-modal')">Annuler</button>
                 </div>
             </form>
         </div>
     </div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 async function saveMemberEdit(evt, id) {
@@ -177,7 +177,7 @@ async function saveMemberEdit(evt, id) {
         membership_type: document.getElementById('em-type').value,
         status: document.getElementById('em-status').value,
     });
-    document.getElementById('member-modal')?.remove();
+    closeModal('member-modal');
     loadAdminMembers();
 }
 
@@ -205,7 +205,7 @@ async function loadAdminEvents() {
 }
 
 function showEventForm() {
-    const html = `<div class="adm-modal-bg" id="event-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="event-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:20px;color:var(--primary)">Nouvel evenement</h3>
         <form onsubmit="createEvent(event)">
             <div class="form-group"><label>Titre</label><input id="ne-title" required></div>
@@ -221,7 +221,7 @@ function showEventForm() {
             <button type="submit" class="btn btn-accent" style="width:100%">Creer</button>
         </form>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 async function createEvent(evt) {
@@ -235,7 +235,7 @@ async function createEvent(evt) {
         end_date: document.getElementById('ne-end').value || null,
         description: document.getElementById('ne-desc').value,
     });
-    document.getElementById('event-modal')?.remove();
+    closeModal('event-modal');
     loadAdminEvents();
 }
 
@@ -259,7 +259,7 @@ async function loadAdminNews() {
 }
 
 function showNewsForm() {
-    const html = `<div class="adm-modal-bg" id="news-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="news-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:20px;color:var(--primary)">Nouvelle actualite</h3>
         <form onsubmit="createNews(event)">
             <div class="form-group"><label>Titre</label><input id="nn-title" required></div>
@@ -268,13 +268,13 @@ function showNewsForm() {
             <button type="submit" class="btn btn-accent" style="width:100%">Publier</button>
         </form>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 async function createNews(evt) {
     evt.preventDefault();
     await adminPost({action:'create_news', title:document.getElementById('nn-title').value, excerpt:document.getElementById('nn-excerpt').value, content:document.getElementById('nn-content').value});
-    document.getElementById('news-modal')?.remove();
+    closeModal('news-modal');
     loadAdminNews();
 }
 
@@ -301,7 +301,7 @@ async function loadAdminAnnouncements() {
 
 // === CREATE MEMBER ===
 function showCreateMemberForm() {
-    const html = `<div class="adm-modal-bg" id="create-member-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="create-member-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:20px;color:var(--primary)">Creer un nouveau membre</h3>
         <form onsubmit="createMember(event)">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -352,7 +352,7 @@ function showCreateMemberForm() {
             <button type="submit" class="btn btn-accent" style="width:100%">Creer le membre</button>
         </form>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 async function createMember(evt) {
@@ -378,7 +378,7 @@ async function createMember(evt) {
     });
     if (res.ok) {
         alert(res.message);
-        document.getElementById('create-member-modal')?.remove();
+        closeModal('create-member-modal');
         loadAdminMembers();
     } else {
         alert(res.error || 'Erreur');
@@ -387,7 +387,7 @@ async function createMember(evt) {
 
 // === IMPORT CSV ===
 function showImportForm() {
-    const html = `<div class="adm-modal-bg" id="import-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="import-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:20px;color:var(--primary)">Import de membres (CSV)</h3>
         <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Format attendu : fichier CSV avec colonnes <strong>email, first_name, last_name, company, job_title, sector, specialty, region, consent_annuaire (Oui/Non), consent_newsletter (Oui/Non)</strong>. Le mot de passe par defaut est "affi2026".</p>
         <div class="form-group">
@@ -401,7 +401,7 @@ function showImportForm() {
         </div>
         <div id="import-result" style="display:none;margin-top:16px;padding:12px;border-radius:var(--radius);font-size:13px"></div>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 let importRows = [];
@@ -495,7 +495,7 @@ async function loadAdminLogs() {
 // === EVENT REGISTRATIONS ===
 async function showEventRegistrations(eventId, title) {
     const regs = await adminFetch('event_registrations', {event_id: String(eventId)});
-    const html = `<div class="adm-modal-bg" id="regs-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="regs-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:16px;color:var(--primary)">Inscrits — ${esc(title)}</h3>
         ${regs.length ? `
             <p style="margin-bottom:12px;font-size:13px;color:var(--gray-500)">${regs.length} inscrit(s)</p>
@@ -510,9 +510,9 @@ async function showEventRegistrations(eventId, title) {
             </tr>`).join('')}
             </tbody></table>
         ` : '<p class="empty-msg">Aucun inscrit pour cet evenement</p>'}
-        <button onclick="document.getElementById('regs-modal').remove()" class="btn btn-primary" style="margin-top:16px;width:100%">Fermer</button>
+        <button onclick="closeModal('regs-modal')" class="btn btn-primary" style="margin-top:16px;width:100%">Fermer</button>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 // === PENDING CONTENT (MODERATION) ===

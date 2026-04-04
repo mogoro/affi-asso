@@ -83,7 +83,7 @@ function renderEndorseButton(memberId, memberName) {
 function showEndorseForm(memberId, name) {
     const skills = ['Signalisation & ERTMS','Infrastructure','Materiel roulant','Maintenance',
         'Numerique & IA','Ingenierie & Conseil','Genie civil','Telecoms','Energie','Management'];
-    const html = `<div class="adm-modal-bg" id="endorse-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="endorse-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:16px;color:var(--primary)">Recommander ${esc(name)}</h3>
         <div class="form-group"><label>Competence</label>
             <div class="endorse-skills">${skills.map(s =>
@@ -92,7 +92,7 @@ function showEndorseForm(memberId, name) {
         </div>
         <button onclick="submitEndorse(${memberId})" class="btn btn-accent" style="width:100%;margin-top:12px">Valider la recommandation</button>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 async function submitEndorse(memberId) {
@@ -100,7 +100,7 @@ async function submitEndorse(memberId) {
     if (!skill) return alert('Selectionnez une competence');
     await fetch(`${API}/api/social`, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'endorse', member_id: memberId, skill})});
-    document.getElementById('endorse-modal')?.remove();
+    closeModal('endorse-modal');
     if (typeof showToast === 'function') showToast('Recommandation envoyee !', 'success');
 }
 
@@ -201,7 +201,7 @@ async function loadStatsDashboard() {
 
 // === EVENT COMMUNICATION (admin) ===
 function showEventCommForm(eventId, title) {
-    const html = `<div class="adm-modal-bg" id="comm-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="comm-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:16px;color:var(--primary)">Communiquer — ${esc(title)}</h3>
         <div class="form-group"><label>Objet</label><input type="text" id="comm-subject" value="[AFFI] ${esc(title)}"></div>
         <div class="form-group"><label>Message</label><textarea id="comm-body" style="min-height:120px" placeholder="Contenu du message..."></textarea></div>
@@ -211,7 +211,7 @@ function showEventCommForm(eventId, title) {
         </select></div>
         <button onclick="sendEventComm(${eventId})" class="btn btn-accent" style="width:100%">Envoyer</button>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 async function sendEventComm(eventId) {
@@ -221,7 +221,7 @@ async function sendEventComm(eventId) {
     if (!subject || !body) return alert('Remplissez tous les champs');
     await fetch(`${API}/api/admin`, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'send_event_comm', event_id: eventId, subject, body, recipient_type: type})});
-    document.getElementById('comm-modal')?.remove();
+    closeModal('comm-modal');
     if (typeof showToast === 'function') showToast('Communication enregistree !', 'success');
 }
 
@@ -234,7 +234,7 @@ async function markAttended(regId) {
 
 // === CREATE POLL (admin) ===
 function showCreatePollForm() {
-    const html = `<div class="adm-modal-bg" id="poll-modal" onclick="if(event.target===this)this.remove()"><div class="adm-modal">
+    const html = `<div class="adm-modal-bg" id="poll-modal" ><div class="adm-modal">
         <h3 style="margin-bottom:16px;color:var(--primary)">Creer un sondage</h3>
         <div class="form-group"><label>Question</label><input type="text" id="poll-title" placeholder="Ex: Quel theme pour le prochain colloque ?"></div>
         <div class="form-group"><label>Description (optionnel)</label><textarea id="poll-desc" style="min-height:60px"></textarea></div>
@@ -252,7 +252,7 @@ function showCreatePollForm() {
         </div>
         <button onclick="submitPoll()" class="btn btn-accent" style="width:100%">Publier le sondage</button>
     </div></div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    openModal(html);
 }
 
 async function submitPoll() {
@@ -263,7 +263,7 @@ async function submitPoll() {
         body: JSON.stringify({action:'create_poll', title, description: document.getElementById('poll-desc').value,
             options: opts, is_anonymous: document.getElementById('poll-anon').checked,
             multiple_choice: document.getElementById('poll-multi').checked})});
-    document.getElementById('poll-modal')?.remove();
+    closeModal('poll-modal');
     loadPolls();
     if (typeof showToast === 'function') showToast('Sondage publie !', 'success');
 }

@@ -108,7 +108,7 @@ function navigate(page) {
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
     if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); loadReseauBouge(); loadPartnerBanner(); _homeLoaded = true; } lockCarriereIfNeeded(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); initScrollSpy(); }
-    if (page === 'identite') { loadOrganigramme(); setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); initScrollSpy(); }
+    if (page === 'identite') { loadOrganigramme(); loadIdentitePartners(); setTimeout(() => { if (typeof loadMap === 'function') loadMap(); }, 300); initScrollSpy(); }
     // Si connecte et on va sur membres, afficher directement l'espace membre
     if (page === 'membres' && isLoggedIn() && typeof showMemberArea === 'function') {
         showMemberArea();
@@ -1453,11 +1453,10 @@ let _partnerBannerTimer = null;
 
 async function loadPartnerBanner() {
     try {
-        const cached = sessionStorage.getItem('affi_partenaires');
-        const partenaires = cached ? JSON.parse(cached) : await (async () => { const r = await fetch('/data/partenaires.json'); const d = await r.json(); try { sessionStorage.setItem('affi_partenaires', JSON.stringify(d)); } catch(e) {} return d; })();
-        if (!partenaires.length) return;
-        _partnerBannerData = partenaires;
-        _partnerBannerIdx = Math.floor(Math.random() * partenaires.length);
+        const partners = await fetchPartnersAPI();
+        if (!partners || !partners.length) return;
+        _partnerBannerData = partners;
+        _partnerBannerIdx = Math.floor(Math.random() * partners.length);
         showNextPartner();
         _partnerBannerTimer = setInterval(showNextPartner, 8000);
     } catch (e) { console.warn('Partner banner:', e); }
@@ -1469,9 +1468,8 @@ function showNextPartner() {
     if (!banner || !content || !_partnerBannerData.length) return;
     const p = _partnerBannerData[_partnerBannerIdx % _partnerBannerData.length];
     _partnerBannerIdx++;
-    const logoKey = typeof PARTENAIRES_LOGOS !== 'undefined' ? Object.keys(PARTENAIRES_LOGOS).find(k => p.name.includes(k)) : null;
-    const logo = logoKey ? PARTENAIRES_LOGOS[logoKey] : '';
-    content.innerHTML = `${logo ? `<img src="${logo}" alt="${esc(p.name)}" style="height:28px;width:auto;object-fit:contain">` : ''}<a href="${esc(p.website || '#')}" target="_blank" rel="noopener">${esc(p.name)}</a><span style="color:var(--gray-400)">${esc(p.sector || '')}</span>${p.city ? `<span style="color:var(--gray-400);font-size:12px">&#128205; ${esc(p.city)}</span>` : ''}`;
+    const logo = p.logo_url || '';
+    content.innerHTML = `${logo ? `<img src="${esc(logo)}" alt="${esc(p.name)}" style="height:28px;width:auto;object-fit:contain">` : ''}<a href="${esc(p.website_url || '#')}" target="_blank" rel="noopener">${esc(p.name)}</a><span style="color:var(--gray-400)">${esc(p.description || '')}</span>`;
     banner.style.display = 'block';
 }
 
@@ -1772,21 +1770,7 @@ function initParticles() {
 // === LOCK CARRIERE ===
 function lockCarriereIfNeeded() { /* Section Carriere supprimee */ }
 
-// === PARTENAIRES ===
-const PARTENAIRES_LOGOS = {
-    'Alstom': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/alstom',
-    'Arcadis': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/arcadis',
-    'BEA-TT': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/bea-tt',
-    'Certifer': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/certifer',
-    'EPSF': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/epsf',
-    'FIF': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/fif',
-    'Framafer': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/framafer',
-    'RATP': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/ratp',
-    'SNCF Reseau': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/sncf',
-    'Vossloh': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/vossloh',
-    'UIC': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/uic',
-    'Universite de l\'Ingenierie': 'https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/udi',
-};
+// === PARTENAIRES (dynamic from API) ===
 
 // === ORGANIGRAMME DYNAMIQUE ===
 async function loadOrganigramme() {
@@ -1888,28 +1872,47 @@ function _renderOrgLevel4(items) {
     </div>`;
 }
 
+let _cachedPartners = null;
+async function fetchPartnersAPI() {
+    if (_cachedPartners) return _cachedPartners;
+    const res = await fetch(`${API}/api/members?action=partners`);
+    const partners = await res.json();
+    _cachedPartners = partners;
+    return partners;
+}
+
+function renderPartnersGrid(partners, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!partners || !partners.length) {
+        el.innerHTML = '<p class="empty-msg">Aucun partenaire</p>';
+        return;
+    }
+    el.innerHTML = `<div class="partners-grid">
+        ${partners.map(p => `
+            <a href="${esc(p.website_url || '#')}" target="_blank" rel="noopener" class="partner-tile" title="${esc(p.name)}">
+                ${p.logo_url ? `<img src="${esc(p.logo_url)}" alt="${esc(p.name)}" class="partner-tile-logo" loading="lazy">` : `<span class="partner-tile-text">${esc(p.name)}</span>`}
+            </a>
+        `).join('')}
+    </div>`;
+}
+
 async function loadPartenaires() {
     try {
-        const cached = sessionStorage.getItem('affi_partenaires');
-        const partenaires = cached ? JSON.parse(cached) : await (async () => { const r = await fetch('/data/partenaires.json'); const d = await r.json(); try { sessionStorage.setItem('affi_partenaires', JSON.stringify(d)); } catch(e) {} return d; })();
-        const el = document.getElementById('partenaires-unified');
-        if (!el) return;
-        el.innerHTML = `<div class="partenaires-unified-grid">
-            ${partenaires.map(p => {
-                const logoKey = Object.keys(PARTENAIRES_LOGOS).find(k => p.name.includes(k));
-                const logo = logoKey ? PARTENAIRES_LOGOS[logoKey] : '';
-                return `<a href="${esc(p.website)}" target="_blank" rel="noopener" class="pu-card">
-                    <div class="pu-logo">${logo ? `<img src="${logo}" alt="${esc(p.name)}">` : `<span style="font-size:24px;font-weight:800;color:var(--primary)">${esc(p.name.substring(0,3))}</span>`}</div>
-                    <div class="pu-body">
-                        <div class="pu-name">${esc(p.name)}</div>
-                        <div class="pu-sector">${esc(p.sector)}</div>
-                        <div class="pu-desc">${esc(p.description)}</div>
-                        <div class="pu-loc">&#128205; ${esc(p.city)}</div>
-                    </div>
-                </a>`;
-            }).join('')}
-        </div>`;
-    } catch (e) { console.warn('Partenaires:', e); }
+        const partners = await fetchPartnersAPI();
+        renderPartnersGrid(partners, 'partenaires-unified');
+    } catch(e) {
+        console.warn('Partenaires:', e);
+    }
+}
+
+async function loadIdentitePartners() {
+    try {
+        const partners = await fetchPartnersAPI();
+        renderPartnersGrid(partners, 'identite-partners');
+    } catch(e) {
+        console.warn('Identite partners:', e);
+    }
 }
 
 // === ECOLES & PARTENAIRES ACADEMIQUES ===

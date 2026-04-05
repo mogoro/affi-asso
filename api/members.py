@@ -42,6 +42,10 @@ class handler(BaseHTTPRequestHandler):
             """, params)
             return self._json(200, rows)
 
+        elif action == "partners":
+            rows = fetchall("SELECT id, name, logo_url, website_url, description, sort_order FROM partners WHERE is_active=TRUE ORDER BY sort_order ASC, name ASC")
+            return self._json(200, rows)
+
         elif action == "board":
             rows = fetchall("""SELECT b.id, b.role, b.title, b.sort_order, b.category, b.level,
                 m.first_name, m.last_name, m.company, m.photo_url

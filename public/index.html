@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775414070" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775414070">
+<link rel="preload" href="/css/styles.css?v=1775415263" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775415263">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -333,19 +333,7 @@
             <div id="organigramme-content"><p class="empty-msg">Chargement...</p></div>
             <h3 style="text-align:center;margin:40px 0 16px;color:var(--primary);font-size:18px;font-weight:700">Les Membres Partenaires de l'AFFI</h3>
             <p style="text-align:center;max-width:700px;margin:0 auto 24px;color:var(--gray-500);font-size:14px">Au-dela de l'adhesion personnelle de ses membres, l'AFFI beneficie de l'appui de grands industriels et operateurs qui contribuent financierement a son fonctionnement.</p>
-            <div class="partners-grid" style="max-width:900px;margin:0 auto">
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/sncf" alt="SNCF" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/ratp" alt="RATP" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/alstom" alt="Alstom" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/arcadis" alt="Arcadis" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/bea-tt" alt="BEA-TT" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/certifer" alt="Certifer" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/epsf" alt="EPSF" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/fif" alt="FIF" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/framafer" alt="Framafer" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/udi" alt="Universite de l'Ingenierie" class="partner-logo" loading="lazy"></div>
-                <div class="partner-card"><img src="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/logos/vossloh" alt="Vossloh" class="partner-logo" loading="lazy"></div>
-            </div>
+            <div id="identite-partners" style="max-width:900px;margin:0 auto"><p class="empty-msg">Chargement...</p></div>
         </div>
     </section>
 
@@ -1075,7 +1063,6 @@
                             <div class="card-body">
                                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
                                     <h3 class="prof-section-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Mon Profil</h3>
-                                    <button class="btn btn-primary" onclick="importLinkedIn()" style="font-size:12px;padding:8px 16px;background:#0077b5">&#128279; Importer LinkedIn</button>
                                 </div>
                                 <form onsubmit="saveProfile(event)">
                                     <div class="form-group">
@@ -1084,7 +1071,7 @@
                                             <div id="prof-photo-preview" style="width:56px;height:56px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
                                                 <span style="color:#fff;font-weight:800;font-size:18px" id="prof-photo-initials"></span>
                                             </div>
-                                            <label class="btn btn-primary" style="font-size:12px;padding:8px 16px;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Choisir une photo <input type="file" accept="image/*" onchange="previewProfilePhoto(this)" style="display:none"></label>
+                                            <label style="font-size:12px;padding:8px 16px;cursor:pointer;border-radius:6px;color:#fff;font-weight:600;display:inline-flex;align-items:center;background:var(--primary)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Choisir une photo <input type="file" accept="image/*" onchange="previewProfilePhoto(this)" style="display:none"></label>
                                         </div>
                                         <input type="hidden" id="prof-photo_url">
                                     </div>
@@ -1145,10 +1132,6 @@
                                             <input type="checkbox" id="prof-consent_annuaire" style="width:18px;height:18px">
                                             <label for="prof-consent_annuaire" style="margin:0;cursor:pointer;font-size:14px">J'accepte que mon profil soit visible dans l'annuaire public</label>
                                         </div>
-                                        <div class="form-group" style="display:flex;align-items:center;gap:12px;margin-bottom:0">
-                                            <input type="checkbox" id="prof-consent_newsletter" style="width:18px;height:18px">
-                                            <label for="prof-consent_newsletter" style="margin:0;cursor:pointer;font-size:14px">J'accepte de recevoir la newsletter AFFI</label>
-                                        </div>
                                     </div>
                                     <div class="form-group"><label>Bio / Presentation</label><textarea id="prof-bio" style="min-height:80px"></textarea></div>
                                     <div class="form-group"><label>Centres d'intérêt ferroviaires</label><input id="prof-interests" placeholder="Ex: ERTMS, maintenance prédictive, hydrogène..."></div>
@@ -1162,9 +1145,6 @@
                                         <button type="button" onclick="exportMyData()" class="btn btn-primary" style="font-size:12px;padding:8px 16px;background:var(--teal)">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                             Exporter mes données (RGPD)
-                                        </button>
-                                        <button type="button" onclick="generateMemberQR()" class="btn btn-primary" style="font-size:12px;padding:8px 16px;background:var(--teal)">
-                                            QR Carte de visite
                                         </button>
                                     </div>
                                 </form>
@@ -1398,12 +1378,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/members.js?v=1775414070" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775414070" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775414070" defer></script>
+<script src="/js/members.js?v=1775415263" defer fetchpriority="high"></script>
+<script src="/js/app.js?v=1775415263" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775415263" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/social.js?v=1775414070','/js/datatable.js?v=1775414070','/js/admin.js?v=1775414070','/js/map.js?v=1775414070'];
+    var scripts = ['/js/social.js?v=1775415263','/js/datatable.js?v=1775415263','/js/admin.js?v=1775415263','/js/map.js?v=1775415263'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

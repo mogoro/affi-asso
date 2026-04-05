@@ -26,6 +26,7 @@ function switchAdminSection(id) {
     if (id === 'adm-partners') loadAdminPartners();
     if (id === 'adm-board') loadAdminBoard();
     if (id === 'adm-cotisations') loadAdminCotisations();
+    if (id === 'adm-challenge') loadAdminChallenge();
 }
 
 async function adminFetch(action, params) {
@@ -1280,4 +1281,75 @@ function exportCotisationsCSV() {
         a.click();
         URL.revokeObjectURL(a.href);
     });
+}
+
+// === CHALLENGE RIC ADMIN ===
+async function loadAdminChallenge() {
+    const el = document.getElementById('adm-challenge-content');
+    if (!el) return;
+    try {
+        const [subjects, teams] = await Promise.all([
+            adminFetch('challenge_subjects', {}),
+            adminFetch('challenge_teams', {})
+        ]);
+        el.innerHTML = `
+            <h4 style="color:var(--accent);margin-bottom:12px">Sujets proposes (${subjects.length})</h4>
+            <div id="adm-challenge-subjects-table"></div>
+            <div style="margin:24px 0"></div>
+            <h4 style="color:var(--teal);margin-bottom:12px">Candidatures equipes (${teams.length})</h4>
+            <div id="adm-challenge-teams-table"></div>
+        `;
+        if (subjects.length) {
+            new DataTable('adm-challenge-subjects-table', {
+                columns: [
+                    { key: 'created_at', label: 'Date', type: 'date', render: v => `<span style="font-size:13px">${formatDate(v)}</span>` },
+                    { key: 'title', label: 'Titre', render: v => `<strong>${esc(v)}</strong>` },
+                    { key: 'company', label: 'Entreprise' },
+                    { key: 'contact_name', label: 'Contact' },
+                    { key: 'status', label: 'Statut', render: v => {
+                        const colors = {draft:'var(--gray-400)',pending:'var(--orange)',open:'var(--green)',rejected:'var(--accent)'};
+                        return `<span style="color:${colors[v]||'var(--gray-500)'};font-weight:700">${esc(v)}</span>`;
+                    }},
+                    { key: 'year', label: 'Annee' },
+                ],
+                data: subjects,
+                actions: (s) => `
+                    ${s.status !== 'open' ? `<button onclick="adminChallengeAction('approve_subject',${s.id})" class="adm-btn adm-btn-ok" title="Approuver">&#10003;</button>` : ''}
+                    ${s.status !== 'rejected' ? `<button onclick="adminChallengeAction('reject_subject',${s.id})" class="adm-btn adm-btn-danger" title="Rejeter">&#10007;</button>` : ''}
+                `,
+                pageSize: 25,
+            });
+        }
+        if (teams.length) {
+            new DataTable('adm-challenge-teams-table', {
+                columns: [
+                    { key: 'created_at', label: 'Date', type: 'date', render: v => `<span style="font-size:13px">${formatDate(v)}</span>` },
+                    { key: 'team_name', label: 'Equipe', render: v => `<strong>${esc(v)}</strong>` },
+                    { key: 'subject_title', label: 'Sujet' },
+                    { key: 'school', label: 'Ecole' },
+                    { key: 'status', label: 'Statut', render: v => {
+                        const colors = {pending:'var(--orange)',approved:'var(--green)',rejected:'var(--accent)'};
+                        return `<span style="color:${colors[v]||'var(--gray-500)'};font-weight:700">${esc(v)}</span>`;
+                    }},
+                ],
+                data: teams,
+                actions: (t) => `
+                    ${t.status !== 'approved' ? `<button onclick="adminChallengeAction('approve_team',${t.id})" class="adm-btn adm-btn-ok" title="Approuver">&#10003;</button>` : ''}
+                    ${t.status !== 'rejected' ? `<button onclick="adminChallengeAction('reject_team',${t.id})" class="adm-btn adm-btn-danger" title="Rejeter">&#10007;</button>` : ''}
+                `,
+                pageSize: 25,
+            });
+        }
+    } catch(e) {
+        el.innerHTML = '<p class="empty-msg">Erreur de chargement</p>';
+        console.warn('Admin Challenge:', e);
+    }
+}
+
+async function adminChallengeAction(action, id) {
+    try {
+        await adminPost({action, id});
+        loadAdminChallenge();
+        showToast('Action effectuee', 'success');
+    } catch(e) { alert('Erreur'); }
 }

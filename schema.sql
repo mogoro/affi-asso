@@ -575,5 +575,74 @@ ALTER TABLE members ADD CONSTRAINT chk_bio_length
 -- Organigramme: ajout categorie et niveau hierarchique
 ALTER TABLE board_members ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'bureau';
 ALTER TABLE board_members ADD COLUMN IF NOT EXISTS level INT DEFAULT 2;
+
+-- Disponibilite dans l'annuaire (#34)
+ALTER TABLE members ADD COLUMN IF NOT EXISTS availability VARCHAR(50) DEFAULT '';
 -- category: 'bureau', 'bureau-other', 'administrateur'
 -- level: 1=president, 2=vp/sg/tresorier, 3=autres membres bureau, 4=administrateurs
+
+-- ============================================================
+-- Challenge Innovation Ferroviaire (RIC)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS challenge_subjects (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(300) NOT NULL,
+    description TEXT,
+    company VARCHAR(200),
+    contact_email VARCHAR(255),
+    contact_name VARCHAR(200),
+    skills_needed TEXT,
+    status VARCHAR(20) DEFAULT 'draft',
+    year INT DEFAULT EXTRACT(YEAR FROM NOW()),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS challenge_teams (
+    id SERIAL PRIMARY KEY,
+    subject_id INT REFERENCES challenge_subjects(id),
+    team_name VARCHAR(200) NOT NULL,
+    school VARCHAR(200),
+    motivation TEXT,
+    status VARCHAR(20) DEFAULT 'pending',
+    year INT DEFAULT EXTRACT(YEAR FROM NOW()),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS challenge_team_members (
+    id SERIAL PRIMARY KEY,
+    team_id INT REFERENCES challenge_teams(id) ON DELETE CASCADE,
+    name VARCHAR(200) NOT NULL,
+    email VARCHAR(255),
+    role VARCHAR(100),
+    cv_url TEXT
+);
+
+CREATE TABLE IF NOT EXISTS challenge_evaluations (
+    id SERIAL PRIMARY KEY,
+    team_id INT REFERENCES challenge_teams(id),
+    evaluator_id INT REFERENCES members(id),
+    score_innovation INT,
+    score_feasibility INT,
+    score_presentation INT,
+    score_teamwork INT,
+    comments TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS challenge_results (
+    id SERIAL PRIMARY KEY,
+    team_id INT REFERENCES challenge_teams(id),
+    rank INT,
+    prize VARCHAR(200),
+    summary TEXT,
+    year INT DEFAULT EXTRACT(YEAR FROM NOW()),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Index Challenge RIC
+CREATE INDEX IF NOT EXISTS idx_challenge_subjects_year ON challenge_subjects(year, status);
+CREATE INDEX IF NOT EXISTS idx_challenge_teams_subject ON challenge_teams(subject_id);
+CREATE INDEX IF NOT EXISTS idx_challenge_teams_year ON challenge_teams(year);
+CREATE INDEX IF NOT EXISTS idx_challenge_evaluations_team ON challenge_evaluations(team_id);
+CREATE INDEX IF NOT EXISTS idx_challenge_results_year ON challenge_results(year);

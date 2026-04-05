@@ -192,6 +192,23 @@ class handler(BaseHTTPRequestHandler):
                 "events_total": events_count["n"], "events_upcoming": upcoming["n"]
             })
 
+        elif action == "challenge_subjects":
+            rows = fetchall("SELECT * FROM challenge_subjects ORDER BY created_at DESC")
+            return self._json(200, rows)
+
+        elif action == "challenge_teams":
+            subject_id = qs.get("subject_id", [""])[0]
+            if subject_id:
+                rows = fetchall("""SELECT t.*, s.title as subject_title,
+                    (SELECT json_agg(json_build_object('name',tm.name,'email',tm.email,'role',tm.role))
+                     FROM challenge_team_members tm WHERE tm.team_id=t.id) as members
+                    FROM challenge_teams t JOIN challenge_subjects s ON t.subject_id=s.id
+                    WHERE t.subject_id=%s ORDER BY t.created_at""", [int(subject_id)])
+            else:
+                rows = fetchall("""SELECT t.*, s.title as subject_title FROM challenge_teams t
+                    JOIN challenge_subjects s ON t.subject_id=s.id ORDER BY t.created_at DESC LIMIT 100""")
+            return self._json(200, rows)
+
         elif action == "connexions":
             rows = fetchall("""SELECT m.id, m.first_name, m.last_name, m.email, m.company,
                     m.last_login, m.role, m.is_admin,
@@ -517,6 +534,27 @@ class handler(BaseHTTPRequestHandler):
         elif action == "mark_subscription_paid":
             execute("UPDATE subscriptions SET status='paid', paid_at=NOW() WHERE id=%s", [body["id"]])
             return self._json(200, {"ok": True})
+
+        # === CHALLENGE RIC ===
+        elif action == "approve_subject":
+            execute("UPDATE challenge_subjects SET status='open' WHERE id=%s", [body["id"]])
+            self._log(admin["id"], "approve_subject", f"#{body['id']}")
+            return self._json(200, {"ok": True, "message": "Sujet approuve et ouvert"})
+
+        elif action == "reject_subject":
+            execute("UPDATE challenge_subjects SET status='rejected' WHERE id=%s", [body["id"]])
+            self._log(admin["id"], "reject_subject", f"#{body['id']}")
+            return self._json(200, {"ok": True, "message": "Sujet rejete"})
+
+        elif action == "approve_team":
+            execute("UPDATE challenge_teams SET status='approved' WHERE id=%s", [body["id"]])
+            self._log(admin["id"], "approve_team", f"#{body['id']}")
+            return self._json(200, {"ok": True, "message": "Equipe approuvee"})
+
+        elif action == "reject_team":
+            execute("UPDATE challenge_teams SET status='rejected' WHERE id=%s", [body["id"]])
+            self._log(admin["id"], "reject_team", f"#{body['id']}")
+            return self._json(200, {"ok": True, "message": "Equipe rejetee"})
 
         return self._json(400, {"error": "Action inconnue"})
       except Exception as e:

@@ -61,7 +61,7 @@ function navigate(page) {
     if (page === 'evenements') loadEvents();
     if (page === 'annuaire') { isLoggedIn() ? loadPublicAnnuaireFull() : loadPublicAnnuaire(); }
     if (page === 'publications') loadPublications();
-    if (page === 'ecoles') { loadStages(); if (typeof loadEcoles === 'function') loadEcoles(); }
+    if (page === 'ecoles') { loadStages(); if (typeof loadEcoles === 'function') loadEcoles(); loadChallengeSubjects(); }
     if (page === 'replays') loadReplays();
     if (page === 'quizz') loadQuizz();
     if (page === 'accueil') { if (!_homeLoaded) { loadHome(); loadPartenaires(); loadReseauBouge(); loadPartnerBanner(); _homeLoaded = true; } lockCarriereIfNeeded(); if (isLoggedIn()) showWelcomeDashboard(); else hideWelcomeDashboard(); initScrollSpy(); }
@@ -2414,6 +2414,80 @@ function resizeImage(file, maxWidth, maxHeight, callback) {
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+}
+
+// === CHALLENGE RIC ===
+async function loadChallengeSubjects() {
+    try {
+        const res = await fetch(`${API}/api/members?action=challenge_subjects`);
+        const subjects = await res.json();
+        // Fill select for students
+        const sel = document.getElementById('ct-subject');
+        if (sel) {
+            sel.innerHTML = '<option value="">Choisir un sujet...</option>' +
+                subjects.map(s => `<option value="${s.id}">${esc(s.title)} — ${esc(s.company||'')}</option>`).join('');
+        }
+        // Show subjects list
+        const el = document.getElementById('challenge-subjects-list');
+        if (el && subjects.length) {
+            el.innerHTML = subjects.map(s => `<div class="card" style="margin-bottom:12px"><div class="card-body" style="padding:16px">
+                <div style="display:flex;justify-content:space-between;align-items:start">
+                    <div>
+                        <div style="font-size:16px;font-weight:800;color:var(--gray-900)">${esc(s.title)}</div>
+                        <div style="font-size:13px;color:var(--primary);font-weight:600">${esc(s.company||'')}</div>
+                    </div>
+                    <span class="adm-badge adm-badge-${s.status === 'open' ? 'active' : 'pending'}">${s.status === 'open' ? 'Ouvert' : 'En attente'}</span>
+                </div>
+                <p style="font-size:13px;color:var(--gray-600);margin:8px 0;line-height:1.6">${esc((s.description||'').substring(0,200))}${(s.description||'').length>200?'...':''}</p>
+                ${s.skills_needed ? `<div style="font-size:12px;color:var(--gray-500)"><strong>Competences :</strong> ${esc(s.skills_needed)}</div>` : ''}
+            </div></div>`).join('');
+        } else if (el) {
+            el.innerHTML = '<p class="empty-msg">Aucun sujet publie pour le moment</p>';
+        }
+    } catch(e) { console.warn('Challenge:', e); }
+}
+
+async function submitChallengeSubject(evt) {
+    evt.preventDefault();
+    if (!isLoggedIn()) { showLoginPopup(); return; }
+    try {
+        await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+            body: JSON.stringify({action:'submit_subject',
+                title: document.getElementById('cs-title').value,
+                description: document.getElementById('cs-desc').value,
+                company: document.getElementById('cs-company').value,
+                contact_name: document.getElementById('cs-contact').value,
+                contact_email: document.getElementById('cs-email').value,
+                skills_needed: document.getElementById('cs-skills').value
+            })});
+        evt.target.reset();
+        showToast('Sujet soumis — en attente de validation', 'success');
+        loadChallengeSubjects();
+    } catch(e) { alert('Erreur'); }
+}
+
+async function submitChallengeTeam(evt) {
+    evt.preventDefault();
+    if (!isLoggedIn()) { showLoginPopup(); return; }
+    const members = [];
+    for (let i = 1; i <= 4; i++) {
+        const name = document.getElementById('ct-m'+i+'-name')?.value;
+        const email = document.getElementById('ct-m'+i+'-email')?.value;
+        if (name) members.push({name, email});
+    }
+    if (!members.length) { alert('Au moins un membre requis'); return; }
+    try {
+        await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+            body: JSON.stringify({action:'apply_team',
+                subject_id: parseInt(document.getElementById('ct-subject').value),
+                team_name: document.getElementById('ct-team').value,
+                school: document.getElementById('ct-school').value,
+                motivation: document.getElementById('ct-motivation').value,
+                members
+            })});
+        evt.target.reset();
+        showToast('Candidature soumise !', 'success');
+    } catch(e) { alert('Erreur'); }
 }
 
 // === HELPERS ===

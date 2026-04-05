@@ -81,7 +81,7 @@ class handler(BaseHTTPRequestHandler):
             rows = fetchall(f"""
                 SELECT id, first_name, last_name, company, job_title, sector, photo_url, bio,
                        membership_type, is_board, specialty, is_mentor, region, linkedin_url,
-                       consent_annuaire, joined_at, interests, phone_visible, phone
+                       consent_annuaire, joined_at, interests, phone_visible, phone, availability
                 FROM members WHERE {where}
                 ORDER BY last_name ASC LIMIT 200
             """, params)
@@ -95,7 +95,7 @@ class handler(BaseHTTPRequestHandler):
                 SELECT id, email, first_name, last_name, phone, company, job_title, sector,
                        bio, photo_url, membership_type, status, is_admin, is_board,
                        linkedin_url, cv_text, cv_updated_at, joined_at, specialty, is_mentor,
-                       region, role, consent_annuaire, consent_newsletter, interests, phone_visible
+                       region, role, consent_annuaire, consent_newsletter, interests, phone_visible, availability
                 FROM members WHERE id = %s
             """, [user["id"]])
             return self._json(200, full)
@@ -112,6 +112,24 @@ class handler(BaseHTTPRequestHandler):
                 WHERE a.is_active = TRUE
                 ORDER BY a.created_at DESC LIMIT 50
             """)
+            return self._json(200, rows)
+
+        elif action == "challenge_subjects":
+            year = qs.get("year", [str(__import__('datetime').datetime.now().year)])[0]
+            rows = fetchall("SELECT * FROM challenge_subjects WHERE year=%s AND status IN ('published','open') ORDER BY created_at DESC", [int(year)])
+            return self._json(200, rows)
+
+        elif action == "challenge_teams":
+            subject_id = qs.get("subject_id", [""])[0]
+            if subject_id:
+                rows = fetchall("""SELECT t.*, s.title as subject_title,
+                    (SELECT json_agg(json_build_object('name',tm.name,'email',tm.email,'role',tm.role))
+                     FROM challenge_team_members tm WHERE tm.team_id=t.id) as members
+                    FROM challenge_teams t JOIN challenge_subjects s ON t.subject_id=s.id
+                    WHERE t.subject_id=%s ORDER BY t.created_at""", [int(subject_id)])
+            else:
+                rows = fetchall("""SELECT t.*, s.title as subject_title FROM challenge_teams t
+                    JOIN challenge_subjects s ON t.subject_id=s.id ORDER BY t.created_at DESC LIMIT 50""")
             return self._json(200, rows)
 
         elif action == "stats":
@@ -142,7 +160,7 @@ class handler(BaseHTTPRequestHandler):
 
         if action == "update_profile":
             fields = {}
-            for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url","specialty","is_mentor","region","consent_annuaire","consent_newsletter","interests","phone_visible"):
+            for k in ("first_name","last_name","phone","company","job_title","sector","bio","photo_url","linkedin_url","specialty","is_mentor","region","consent_annuaire","consent_newsletter","interests","phone_visible","availability"):
                 if k in body:
                     fields[k] = body[k]
             # MAJ consent_date si consentement change
@@ -217,6 +235,39 @@ class handler(BaseHTTPRequestHandler):
                 [title, body.get("excerpt"), body.get("content"), is_published, user["id"]])
             msg = "Actualite publiee" if is_published else "Actualite proposee — en attente de validation"
             return self._json(200, {"ok": True, "message": msg, "published": is_published})
+
+        elif action == "submit_subject":
+            # Company submits a challenge subject
+            execute("""INSERT INTO challenge_subjects (title, description, company, contact_email, contact_name, skills_needed, status)
+                VALUES (%s,%s,%s,%s,%s,%s,'pending')""",
+                [body.get("title"), body.get("description"), body.get("company"),
+                 body.get("contact_email"), body.get("contact_name"), body.get("skills_needed")])
+            return self._json(200, {"ok": True, "message": "Sujet soumis — en attente de validation"})
+
+        elif action == "apply_team":
+            # Student team applies
+            team_name = body.get("team_name")
+            subject_id = body.get("subject_id")
+            if not team_name or not subject_id:
+                return self._json(400, {"error": "Nom d'équipe et sujet requis"})
+            execute("""INSERT INTO challenge_teams (subject_id, team_name, school, motivation, status)
+                VALUES (%s,%s,%s,%s,'pending')""",
+                [subject_id, team_name, body.get("school"), body.get("motivation")])
+            # Get team ID
+            team = fetchone("SELECT id FROM challenge_teams ORDER BY id DESC LIMIT 1")
+            # Add team members
+            for m in body.get("members", []):
+                execute("INSERT INTO challenge_team_members (team_id, name, email, role) VALUES (%s,%s,%s,%s)",
+                    [team["id"], m.get("name"), m.get("email"), m.get("role","")])
+            return self._json(200, {"ok": True, "message": "Candidature soumise"})
+
+        elif action == "evaluate_team":
+            # Expert evaluates
+            execute("""INSERT INTO challenge_evaluations (team_id, evaluator_id, score_innovation, score_feasibility, score_presentation, score_teamwork, comments)
+                VALUES (%s,%s,%s,%s,%s,%s,%s)""",
+                [body.get("team_id"), user["id"], body.get("score_innovation",0), body.get("score_feasibility",0),
+                 body.get("score_presentation",0), body.get("score_teamwork",0), body.get("comments","")])
+            return self._json(200, {"ok": True, "message": "Évaluation enregistrée"})
 
         elif action == "my_proposals":
             events = fetchall("""SELECT id, title, event_type, start_date, is_published, created_at

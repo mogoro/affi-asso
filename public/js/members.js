@@ -246,6 +246,7 @@ function showMemberCard(id) {
         <div class="dir-card-badges">
             ${m.is_board ? '<span class="dir-badge dir-badge-board">Bureau AFFI</span>' : ''}
             ${m.is_mentor ? '<span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}
+            ${m.availability ? `<span class="dir-tag" style="background:${{'en-poste':'var(--green)','ouvert':'#f59e0b','recherche':'var(--accent)','freelance':'var(--teal)'}[m.availability]||'var(--gray-400)'};color:#fff">${esc({'en-poste':'En poste','ouvert':'Ouvert aux opportunites','recherche':'En recherche active','freelance':'Freelance'}[m.availability]||m.availability)}</span>` : ''}
             ${m.membership_type ? `<span class="dir-tag">${esc(m.membership_type)}</span>` : ''}
             ${m.consent_annuaire ? '<span class="dir-tag" style="background:var(--green);color:#fff">Profil public</span>' : ''}
         </div>
@@ -332,6 +333,8 @@ async function loadProfile() {
         if (mentorCb) mentorCb.checked = !!p.is_mentor;
         const phoneVisCb = document.getElementById('prof-phone_visible');
         if (phoneVisCb) phoneVisCb.checked = !!p.phone_visible;
+        const availSel = document.getElementById('prof-availability');
+        if (availSel) availSel.value = p.availability || '';
         const consentAnn = document.getElementById('prof-consent_annuaire');
         if (consentAnn) consentAnn.checked = !!p.consent_annuaire;
         const consentNl = document.getElementById('prof-consent_newsletter');
@@ -348,6 +351,7 @@ async function loadProfile() {
         if (cvEl) cvEl.value = p.cv_text || '';
         const cvDate = document.getElementById('cv-date');
         if (cvDate) cvDate.textContent = p.cv_updated_at ? 'Derniere MAJ: ' + formatDate(p.cv_updated_at) : '';
+        refreshFormationsList();
     } catch (e) { console.warn('Profile:', e); }
 }
 
@@ -363,6 +367,8 @@ async function saveProfile(evt) {
     if (mentorCb) data.is_mentor = mentorCb.checked;
     const phoneVisCb = document.getElementById('prof-phone_visible');
     if (phoneVisCb) data.phone_visible = phoneVisCb.checked;
+    const availSel = document.getElementById('prof-availability');
+    if (availSel) data.availability = availSel.value;
     const consentAnn = document.getElementById('prof-consent_annuaire');
     if (consentAnn) data.consent_annuaire = consentAnn.checked;
     const consentNl = document.getElementById('prof-consent_newsletter');
@@ -393,6 +399,62 @@ async function saveCv(evt) {
         document.getElementById('cv-success').style.display = 'block';
         setTimeout(() => document.getElementById('cv-success').style.display = 'none', 3000);
     } catch (e) { alert('Erreur: ' + e.message); }
+}
+
+// === FORMATIONS TRACKING (#37) ===
+function addFormation() {
+    const title = prompt('Titre de la formation :');
+    if (!title) return;
+    const date = prompt('Date (ex: Mars 2026) :');
+    const org = prompt('Organisme :');
+    const cvEl = document.getElementById('prof-cv');
+    if (cvEl) {
+        const existing = cvEl.value;
+        cvEl.value = (existing ? existing + '\n\n' : '') + `FORMATION: ${title}\nDate: ${date || 'Non precisee'}\nOrganisme: ${org || 'Non precise'}`;
+    }
+    refreshFormationsList();
+    if (typeof showToast === 'function') showToast('Formation ajoutee au CV', 'success');
+}
+
+function refreshFormationsList() {
+    const el = document.getElementById('prof-formations-list');
+    if (!el) return;
+    const cvEl = document.getElementById('prof-cv');
+    if (!cvEl || !cvEl.value) { el.innerHTML = '<em>Aucune formation enregistree</em>'; return; }
+    const lines = cvEl.value.split('\n');
+    const formations = [];
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('FORMATION:')) {
+            const title = lines[i].replace('FORMATION:', '').trim();
+            const date = (lines[i+1] && lines[i+1].startsWith('Date:')) ? lines[i+1].replace('Date:', '').trim() : '';
+            const org = (lines[i+2] && lines[i+2].startsWith('Organisme:')) ? lines[i+2].replace('Organisme:', '').trim() : '';
+            formations.push({title, date, org});
+        }
+    }
+    if (!formations.length) { el.innerHTML = '<em>Aucune formation enregistree</em>'; return; }
+    el.innerHTML = formations.map(f => `<div style="padding:6px 0;border-bottom:1px solid var(--gray-100)"><strong>${esc(f.title)}</strong>${f.date ? ' — ' + esc(f.date) : ''}${f.org ? ' <span style="color:var(--gray-400)">(' + esc(f.org) + ')</span>' : ''}</div>`).join('');
+}
+
+// === QR CARTE DE VISITE (#35) ===
+function generateMemberQR() {
+    if (!currentUser) return;
+    const data = `BEGIN:VCARD\nVERSION:3.0\nFN:${currentUser.first_name} ${currentUser.last_name}\nORG:${currentUser.company||'AFFI'}\nTITLE:${currentUser.job_title||''}\nEMAIL:${currentUser.email}\nURL:https://affi-asso.vercel.app/#annuaire\nEND:VCARD`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data)}`;
+
+    const html = `<div class="adm-modal-bg" id="qr-modal">
+        <div class="adm-modal" style="max-width:360px;text-align:center">
+            <button class="auth-close" onclick="closeModal('qr-modal')">&times;</button>
+            <div style="padding:28px">
+                <h3 style="color:var(--primary);margin-bottom:16px">Ma carte de visite</h3>
+                <img src="${qrUrl}" alt="QR Code" style="width:200px;height:200px;border-radius:8px;border:2px solid var(--gray-200)">
+                <p style="margin-top:12px;font-size:15px;font-weight:800;color:var(--gray-900)">${esc(currentUser.first_name)} ${esc(currentUser.last_name)}</p>
+                <p style="font-size:13px;color:var(--gray-500)">${esc(currentUser.job_title||'')}${currentUser.company ? ' · ' + esc(currentUser.company) : ''}</p>
+                <p style="margin-top:16px;font-size:12px;color:var(--gray-400)">Scannez ce QR code pour ajouter ce contact</p>
+                <a href="${qrUrl}" download="carte-affi.png" class="btn btn-primary" style="font-size:12px;padding:8px 16px;margin-top:12px;display:inline-block">Telecharger le QR</a>
+            </div>
+        </div>
+    </div>`;
+    openModal(html);
 }
 
 // === LINKEDIN IMPORT ===

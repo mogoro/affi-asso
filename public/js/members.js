@@ -889,7 +889,7 @@ async function exportMyData() {
 }
 
 // === ESPACE BUREAU ===
-let _bureauView = 'wiki';
+let _bureauView = 'actions';
 let _autoSaveTimer = null;
 let _lastSavedContent = '';
 
@@ -897,124 +897,193 @@ function switchBureauView(btn, view) {
     document.querySelectorAll('#mtab-bureau .course-filter').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     _bureauView = view;
-    loadBureauSpace();
+    // Show/hide containers without reloading
+    const actEl = document.getElementById('bureau-actions-container');
+    const crEl = document.getElementById('bureau-cr-container');
+    if (actEl) actEl.style.display = view === 'actions' ? 'block' : 'none';
+    if (crEl) crEl.style.display = view === 'wiki' ? 'block' : 'none';
 }
 
 function loadBureauSpace() {
-    if (_bureauView === 'actions') loadBureauActionsBoard();
-    else if (_bureauView === 'wiki') loadBureauWikiFullscreen();
+    const el = document.getElementById('bureau-content');
+    if (!el) return;
+    el.innerHTML = `
+        <div id="bureau-actions-container" ${_bureauView === 'actions' ? '' : 'style="display:none"'}></div>
+        <div id="bureau-cr-container" ${_bureauView === 'wiki' ? '' : 'style="display:none"'}></div>
+    `;
+    loadBureauKanban();
+    loadBureauCRTable();
 }
 
 // =============================================
-// ACTIONS BOARD (read-only display)
+// KANBAN with Drag & Drop
 // =============================================
-async function loadBureauActionsBoard() {
-    const el = document.getElementById('bureau-content');
+async function loadBureauKanban() {
+    const el = document.getElementById('bureau-actions-container');
     if (!el) return;
     try {
         const res = await fetch(`${API}/api/members?action=bureau_actions`, {headers:{'Authorization':'Bearer '+authToken}});
         const actions = await res.json();
         if (!Array.isArray(actions)) { el.innerHTML = '<p class="empty-msg">Erreur</p>'; return; }
+        window._bureauActions = actions;
 
-        const open = actions.filter(a => a.status === 'open');
-        const progress = actions.filter(a => a.status === 'in_progress');
-        const done = actions.filter(a => a.status === 'done').slice(0, 15);
+        const cols = [
+            { status: 'open', label: 'A faire', color: 'var(--accent)' },
+            { status: 'in_progress', label: 'En cours', color: 'var(--orange)' },
+            { status: 'done', label: 'Terminees', color: 'var(--green)' }
+        ];
 
         el.innerHTML = `
-            <div style="margin-bottom:12px">
-                <h3 style="color:var(--primary);font-weight:800;margin:0 0 4px">Tableau des actions</h3>
-                <p style="font-size:12px;color:var(--gray-500);margin:0">${open.length} a faire · ${progress.length} en cours · ${done.length} terminees</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Suivi des actions</h3>
+                <button onclick="showNewActionForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle action</button>
             </div>
             <div class="bureau-kanban">
-                <div class="bureau-kanban-col">
-                    <div class="bureau-kanban-header" style="border-color:var(--accent)">A faire <span class="bureau-kanban-count">${open.length}</span></div>
-                    ${open.map(a => _actionCard(a)).join('') || '<p class="empty-msg" style="padding:16px;font-size:12px">--</p>'}
-                </div>
-                <div class="bureau-kanban-col">
-                    <div class="bureau-kanban-header" style="border-color:var(--orange)">En cours <span class="bureau-kanban-count">${progress.length}</span></div>
-                    ${progress.map(a => _actionCard(a)).join('') || '<p class="empty-msg" style="padding:16px;font-size:12px">--</p>'}
-                </div>
-                <div class="bureau-kanban-col">
-                    <div class="bureau-kanban-header" style="border-color:var(--green)">Terminees <span class="bureau-kanban-count">${done.length}</span></div>
-                    ${done.map(a => _actionCard(a)).join('') || '<p class="empty-msg" style="padding:16px;font-size:12px">--</p>'}
-                </div>
+                ${cols.map(c => {
+                    const items = actions.filter(a => a.status === c.status);
+                    return `<div class="bureau-kanban-col" data-status="${c.status}"
+                        ondragover="event.preventDefault();this.classList.add('kanban-drag-over')"
+                        ondragleave="this.classList.remove('kanban-drag-over')"
+                        ondrop="dropAction(event,'${c.status}');this.classList.remove('kanban-drag-over')">
+                        <div class="bureau-kanban-header" style="border-color:${c.color}">${c.label} <span class="bureau-kanban-count">${items.length}</span></div>
+                        ${items.map(a => _kanbanCard(a)).join('') || '<p class="empty-msg" style="padding:20px;font-size:12px">—</p>'}
+                    </div>`;
+                }).join('')}
             </div>`;
-    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur</p>'; }
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur : ' + e.message + '</p>'; }
 }
 
-function _actionCard(a) {
+function _kanbanCard(a) {
     const overdue = a.due_date && new Date(a.due_date) < new Date() && a.status !== 'done';
-    const who = a.first_name ? a.first_name + ' ' + (a.last_name||'')[0] + '.' : 'Non assigne';
-    return `<div class="bureau-action-card ${overdue?'bureau-action-overdue':''}">
+    const who = a.first_name ? a.first_name + ' ' + (a.last_name||'') : 'Non assigne';
+    const tip = `${a.title}\nResponsable : ${who}${a.due_date ? '\nEcheance : ' + a.due_date.substring(0,10) : ''}`;
+    return `<div class="bureau-action-card ${overdue?'bureau-action-overdue':''}" draggable="true"
+        ondragstart="event.dataTransfer.setData('text/plain','${a.id}')" title="${esc(tip)}" data-aid="${a.id}">
         <div class="bureau-action-title">${esc(a.title)}</div>
-        <div class="bureau-action-footer">
-            <span class="bureau-action-assignee">${esc(who)}</span>
-            ${a.due_date ? `<span class="${overdue?'bureau-overdue':''}">${formatDate(a.due_date)}</span>` : ''}
-        </div>
-        <div class="bureau-action-btns">
-            ${a.status==='open'?`<button onclick="moveBureauAction(${a.id},'in_progress')" class="bureau-sm-btn" title="Demarrer">&#9654;</button>`:''}
-            ${a.status==='in_progress'?`<button onclick="moveBureauAction(${a.id},'done')" class="bureau-sm-btn bureau-sm-ok" title="Terminer">&#10003;</button>`:''}
-            ${a.status==='done'?`<button onclick="moveBureauAction(${a.id},'open')" class="bureau-sm-btn" title="Rouvrir">&#8634;</button>`:''}
-        </div>
+        ${a.due_date ? `<div class="bureau-action-footer"><span class="${overdue?'bureau-overdue':''}" style="font-size:11px">${formatDate(a.due_date)}</span></div>` : ''}
     </div>`;
 }
 
-async function moveBureauAction(id, status) {
+async function dropAction(event, newStatus) {
+    event.preventDefault();
+    const actionId = event.dataTransfer.getData('text/plain');
+    if (!actionId) return;
     await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-        body: JSON.stringify({action:'bureau_update_action', id, status})});
-    loadBureauActionsBoard();
+        body: JSON.stringify({action:'bureau_update_action', id: parseInt(actionId), status: newStatus})});
+    loadBureauKanban();
+}
+
+function showNewActionForm() {
+    const html = `<div class="adm-modal-bg" id="action-modal">
+        <div class="adm-modal" style="max-width:460px">
+            <button class="auth-close" onclick="closeModal('action-modal')">&times;</button>
+            <div style="padding:24px">
+                <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle action</h3>
+                <div class="form-group"><label>Titre *</label><input id="ba-title" required placeholder="Ex: Envoyer les convocations"></div>
+                <div class="form-group"><label>Description</label><textarea id="ba-desc" style="min-height:60px"></textarea></div>
+                <div class="form-group"><label>Echeance</label><input type="date" id="ba-due"></div>
+                <button onclick="saveBureauAction()" class="btn btn-accent" style="width:100%">Creer</button>
+            </div>
+        </div>
+    </div>`;
+    openModal(html);
+}
+
+async function saveBureauAction() {
+    const title = document.getElementById('ba-title')?.value;
+    if (!title) return;
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_create_action', title,
+            description: document.getElementById('ba-desc')?.value || '',
+            due_date: document.getElementById('ba-due')?.value || null})});
+    closeModal('action-modal');
+    showToast('Action creee', 'success');
+    loadBureauKanban();
 }
 
 // =============================================
-// WIKI CR — FULL SCREEN PERSISTENT EDITOR
+// CR TABLE (DataTable Excel-style)
 // =============================================
-async function loadBureauWikiFullscreen() {
-    const el = document.getElementById('bureau-content');
+async function loadBureauCRTable() {
+    const el = document.getElementById('bureau-cr-container');
     if (!el) return;
     try {
         const res = await fetch(`${API}/api/members?action=bureau_meetings`, {headers:{'Authorization':'Bearer '+authToken}});
         const meetings = await res.json();
         if (!Array.isArray(meetings)) { el.innerHTML = '<p class="empty-msg">Erreur</p>'; return; }
-
         window._wikiMeetings = {};
         meetings.forEach(m => window._wikiMeetings[m.id] = m);
 
-        const months = ['jan','fev','mar','avr','mai','jun','jul','aou','sep','oct','nov','dec'];
-
-        // Full-screen wiki layout
         el.innerHTML = `
-            <div class="wiki-full">
-                <div class="wiki-sidebar">
-                    <div class="wiki-sidebar-header">
-                        <strong>Réunions</strong>
-                        <button onclick="showNewMeetingForm()" class="bureau-sm-btn" title="Nouvelle réunion" style="font-size:16px">+</button>
-                    </div>
-                    ${meetings.length ? meetings.map((m, i) => {
-                        const d = new Date(m.meeting_date);
-                        const hasCR = m.minutes && m.minutes.trim().length > 0;
-                        return `<button class="wiki-tab ${i===0?'wiki-tab-active':''}" onclick="openWikiMeeting(${m.id})" data-wid="${m.id}">
-                            <div class="wiki-tab-date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div>
-                            <div class="wiki-tab-title">${esc(m.title)}</div>
-                            ${hasCR ? '<div class="wiki-tab-status wiki-tab-has-cr">CR rédigé</div>' : '<div class="wiki-tab-status">Pas de CR</div>'}
-                        </button>`;
-                    }).join('') : '<p style="padding:16px;font-size:12px;color:var(--gray-400)">Aucune reunion</p>'}
-                </div>
-                <div class="wiki-editor-area" id="wiki-editor-area">
-                    <div class="wiki-empty"><p style="font-size:14px;color:var(--gray-500)">Cliquez sur une réunion pour consulter le compte-rendu</p></div>
-                </div>
-            </div>`;
-    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur : ' + e.message + '</p>'; }
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Comptes-rendus</h3>
+                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle reunion</button>
+            </div>
+            <div id="bureau-cr-table"></div>
+        `;
+
+        new DataTable('bureau-cr-table', {
+            columns: [
+                { key: 'meeting_date', label: 'Date', type: 'date', render: v => formatDate(v) },
+                { key: 'title', label: 'Titre', render: (v) => `<strong>${esc(v)}</strong>` },
+                { key: 'location', label: 'Lieu', render: v => esc(v || '—') },
+                { key: 'cr_status', label: 'CR', sortable: false, render: (v, r) => {
+                    return r.minutes && r.minutes.trim() ? '<span class="adm-badge adm-badge-active">Redige</span>' : '<span class="adm-badge adm-badge-pending">A rediger</span>';
+                }},
+            ],
+            data: meetings.map(m => ({...m, cr_status: m.minutes ? 'done' : 'pending'})),
+            actions: (m) => `
+                <button onclick="openCREditor(${m.id})" class="adm-btn" title="Modifier le CR">&#9998;</button>
+                <button onclick="sendCRByEmail(${m.id})" class="adm-btn" title="Envoyer par email">&#9993;</button>
+                <button onclick="archiveMeeting(${m.id})" class="adm-btn adm-btn-warn" title="Archiver">&#128451;</button>
+                <button onclick="deleteMeeting(${m.id})" class="adm-btn adm-btn-danger" title="Supprimer">&#128465;</button>
+            `,
+            pageSize: 15,
+        });
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur</p>'; }
 }
 
-function openWikiMeeting(id) {
-    document.querySelectorAll('.wiki-tab').forEach(t => t.classList.remove('wiki-tab-active'));
-    document.querySelector(`.wiki-tab[data-wid="${id}"]`)?.classList.add('wiki-tab-active');
-    const m = window._wikiMeetings?.[id];
+function openCREditor(meetingId) {
+    const m = window._wikiMeetings?.[meetingId];
     if (!m) return;
-    _openWikiPage(m, 'read');
+    _openWikiPage(m, 'edit');
 }
 
-let _wikiMode = 'read'; // 'read' or 'edit'
+async function sendCRByEmail(meetingId) {
+    const m = window._wikiMeetings?.[meetingId];
+    if (!m || !m.minutes) { showToast('Aucun CR a envoyer', 'info'); return; }
+    if (!confirm('Envoyer le CR de "' + m.title + '" par email ?')) return;
+    try {
+        await fetch(`${API}/api/email`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+            body: JSON.stringify({action:'send', to: currentUser.email,
+                subject: '[AFFI Bureau] CR — ' + m.title,
+                html: '<div style="font-family:sans-serif;max-width:700px;margin:0 auto;padding:20px">' + m.minutes + '</div>'
+            })});
+        showToast('CR envoye par email', 'success');
+    } catch(e) { showToast('Erreur envoi', 'error'); }
+}
+
+async function archiveMeeting(meetingId) {
+    if (!confirm('Archiver cette reunion ?')) return;
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, status: 'archived'})});
+    showToast('Reunion archivee', 'success');
+    loadBureauCRTable();
+}
+
+async function deleteMeeting(meetingId) {
+    if (!confirm('Supprimer definitivement cette reunion ?')) return;
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, status: 'deleted'})});
+    showToast('Reunion supprimee', 'success');
+    loadBureauCRTable();
+}
+
+// =============================================
+// FULLSCREEN WIKI EDITOR (OneNote-style)
+// =============================================
+let _currentWikiMeetingId = null;
+let _wikiMode = 'read';
 
 function _openWikiPage(m, mode) {
     _wikiMode = mode || 'read';
@@ -1350,11 +1419,9 @@ function closeWikiFullscreen() {
         overlay.remove();
     }
     document.body.style.overflow = '';
-    // Refresh wiki list
-    loadBureauWikiFullscreen();
+    // Refresh CR table
+    loadBureauCRTable();
 }
-
-let _currentWikiMeetingId = null;
 
 function _startAutoSaveWYSIWYG(meetingId) {
     _currentWikiMeetingId = meetingId;
@@ -1462,5 +1529,5 @@ async function saveBureauMeeting() {
             agenda: document.getElementById('bm-agenda')?.value || ''})});
     closeModal('meeting-modal');
     showToast('Réunion créée', 'success');
-    loadBureauWikiFullscreen();
+    loadBureauCRTable();
 }

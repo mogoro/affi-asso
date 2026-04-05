@@ -111,9 +111,10 @@ class handler(BaseHTTPRequestHandler):
             return self._json(200, rows)
 
         elif action == "subscriptions":
-            rows = fetchall("""SELECT s.*, m.first_name, m.last_name, m.email
+            year = qs.get("year", [str(__import__('datetime').datetime.now().year)])[0]
+            rows = fetchall("""SELECT s.*, m.first_name, m.last_name, m.email, m.company, m.membership_type
                 FROM subscriptions s JOIN members m ON s.member_id = m.id
-                ORDER BY s.created_at DESC LIMIT 200""")
+                WHERE s.year = %s ORDER BY m.last_name""", [int(year)])
             return self._json(200, rows)
 
         elif action == "dashboard":
@@ -503,6 +504,19 @@ class handler(BaseHTTPRequestHandler):
                 VALUES (%s,%s,%s,%s,%s)""",
                 [body["event_id"], body["subject"], body["body"], admin["id"], body.get("recipient_type","registered")])
             return self._json(200, {"ok": True, "message": "Communication enregistree"})
+
+        # === SUBSCRIPTIONS ===
+        elif action == "create_subscription":
+            execute("""INSERT INTO subscriptions (member_id, year, amount, payment_method, status)
+                VALUES (%s, %s, %s, %s, %s) ON CONFLICT (member_id, year) DO UPDATE
+                SET amount=EXCLUDED.amount, payment_method=EXCLUDED.payment_method, status=EXCLUDED.status""",
+                [body["member_id"], body.get("year", __import__('datetime').datetime.now().year),
+                 body.get("amount", 0), body.get("payment_method", ""), body.get("status", "pending")])
+            return self._json(200, {"ok": True})
+
+        elif action == "mark_subscription_paid":
+            execute("UPDATE subscriptions SET status='paid', paid_at=NOW() WHERE id=%s", [body["id"]])
+            return self._json(200, {"ok": True})
 
         return self._json(400, {"error": "Action inconnue"})
       except Exception as e:

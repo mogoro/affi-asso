@@ -539,7 +539,8 @@ function showLoginPopup() {
                     </div>
                     <div class="auth-field">
                         <label class="auth-label" for="auth-new-pw">Nouveau mot de passe</label>
-                        <input type="password" id="auth-new-pw" class="auth-input" required minlength="8" placeholder="Min. 8 caractères">
+                        <input type="password" id="auth-new-pw" class="auth-input" required minlength="8" placeholder="Min. 8 caractères" oninput="updatePwStrength(this.value)">
+                        <div id="pw-strength" style="margin-top:4px;font-size:12px;font-weight:700"></div>
                     </div>
                     <div class="auth-field">
                         <label class="auth-label" for="auth-new-pw2">Confirmer le mot de passe</label>
@@ -582,6 +583,27 @@ function showAuthStep(step) {
         if (step === 'reset') document.getElementById('auth-reset-email')?.focus();
         if (step === 'code') document.getElementById('auth-code')?.focus();
     }, 100);
+}
+
+function checkPasswordStrength(pw) {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[a-z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const levels = ['', 'Très faible', 'Faible', 'Moyen', 'Bon', 'Fort', 'Excellent'];
+    const colors = ['', '#e53e3e', '#e53e3e', '#dd6b20', '#38a169', '#38a169', '#2f855a'];
+    return { score, label: levels[score] || '', color: colors[score] || '' };
+}
+
+function updatePwStrength(pw) {
+    const el = document.getElementById('pw-strength');
+    if (!el) return;
+    if (!pw) { el.innerHTML = ''; return; }
+    const s = checkPasswordStrength(pw);
+    el.innerHTML = `<div style="display:flex;gap:4px;align-items:center;margin-bottom:2px">${[1,2,3,4,5].map(i => `<div style="height:4px;flex:1;border-radius:2px;background:${i <= s.score ? s.color : '#e2e8f0'}"></div>`).join('')}</div><span style="color:${s.color}">${s.label}</span>`;
 }
 
 function toggleAuthPw() {

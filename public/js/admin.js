@@ -25,6 +25,7 @@ function switchAdminSection(id) {
     if (id === 'adm-pubs') loadAdminPubs();
     if (id === 'adm-partners') loadAdminPartners();
     if (id === 'adm-board') loadAdminBoard();
+    if (id === 'adm-cotisations') loadAdminCotisations();
 }
 
 async function adminFetch(action, params) {
@@ -149,11 +150,8 @@ async function editMember(id) {
     const cotisationStatus = cotisationLabels[m.status] || m.status;
     const cotisationColor = cotisationColors[m.status] || 'var(--gray-500)';
 
-    // Subscriptions history (if available)
-    const subs = m.subscriptions || [];
-    const subsHtml = subs.length
-        ? subs.map(s => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--gray-100);font-size:12px"><span>${s.year || formatDate(s.created_at)}</span><span class="adm-badge adm-badge-${s.status||'active'}">${s.status||'paye'}</span></div>`).join('')
-        : '<span style="font-size:12px;color:var(--gray-400)">Aucun historique</span>';
+    // Subscriptions history placeholder (loaded async)
+    const subsHtml = `<div id="member-subs-${m.id}"><span style="color:var(--gray-400);font-size:12px">Chargement...</span></div>`;
 
     const html = `<div class="adm-modal-bg" id="member-modal" >
         <div class="adm-modal" style="max-width:700px">
@@ -213,6 +211,17 @@ async function editMember(id) {
         </div>
     </div>`;
     openModal(html);
+
+    // Load subscription history async
+    adminFetch('subscriptions', {}).then(subs => {
+        const mySubs = subs.filter(s => s.member_id === m.id);
+        const el = document.getElementById('member-subs-' + m.id);
+        if (!el) return;
+        if (!mySubs.length) { el.innerHTML = '<span style="font-size:12px;color:var(--gray-400)">Aucune cotisation enregistrée</span>'; return; }
+        el.innerHTML = mySubs.map(s => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
+            <span>${s.year}</span><span>${s.amount} €</span><span class="adm-badge adm-badge-${s.status === 'paid' ? 'active' : 'pending'}">${s.status === 'paid' ? 'Payée' : 'En attente'}</span>
+        </div>`).join('');
+    });
 }
 
 async function markCotisationAJour(memberId) {
@@ -225,6 +234,48 @@ async function markCotisationAJour(memberId) {
     } else {
         showToast(res.error || 'Erreur', 'error');
     }
+}
+
+async function loadAdminCotisations() {
+    const year = new Date().getFullYear();
+    const subs = await adminFetch('subscriptions', {year: String(year)});
+    const members = await adminFetch('members', {});
+    const el = document.getElementById('adm-cotisations-content');
+    if (!el) return;
+
+    const paid = subs.filter(s => s.status === 'paid').length;
+    const pending = subs.filter(s => s.status === 'pending').length;
+    const activeMembers = members.filter(m => m.status === 'active').length;
+    const noCotis = activeMembers - subs.length;
+
+    el.innerHTML = `
+        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px;font-size:13px"><span style="color:var(--green);font-size:16px">&#9679;</span><strong>${paid}</strong> payées</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:13px"><span style="color:var(--orange);font-size:16px">&#9679;</span><strong>${pending}</strong> en attente</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:13px"><span style="color:var(--accent);font-size:16px">&#9679;</span><strong>${noCotis}</strong> sans cotisation</div>
+            <div style="margin-left:auto"><strong>${year}</strong></div>
+        </div>
+        <div id="adm-cotisations-table"></div>
+    `;
+
+    new DataTable('adm-cotisations-table', {
+        columns: [
+            { key: 'name', label: 'Membre', render: (v, r) => `<strong>${esc(r.first_name)} ${esc(r.last_name)}</strong><br><span style="font-size:11px;color:var(--gray-500)">${esc(r.email)}</span>` },
+            { key: 'company', label: 'Entreprise' },
+            { key: 'membership_type', label: 'Type', render: v => `<span class="card-tag">${esc(v||'')}</span>` },
+            { key: 'amount', label: 'Montant', type: 'number', render: v => v ? v + ' €' : '-' },
+            { key: 'payment_method', label: 'Paiement' },
+            { key: 'status', label: 'Statut', render: v => {
+                if (v === 'paid') return '<span class="adm-badge adm-badge-active">Payée</span>';
+                if (v === 'pending') return '<span class="adm-badge adm-badge-pending">En attente</span>';
+                return '<span class="adm-badge adm-badge-blocked">Impayée</span>';
+            }},
+            { key: 'paid_at', label: 'Payé le', type: 'date', render: v => v ? formatDate(v) : '-' },
+        ],
+        data: subs.map(s => ({...s, name: (s.first_name||'')+' '+(s.last_name||'')})),
+        actions: (s) => s.status !== 'paid' ? `<button onclick="adminPost({action:'mark_subscription_paid',id:${s.id}}).then(()=>loadAdminCotisations())" class="adm-btn adm-btn-ok" title="Marquer payée">&#10003;</button>` : '',
+        pageSize: 50,
+    });
 }
 
 async function saveMemberEdit(evt, id) {
@@ -1211,4 +1262,22 @@ async function sendRGPDConsentAll() {
         } catch(e) {}
     }
     showToast(`${sent}/${needConsent.length} emails RGPD envoyés`, 'success');
+}
+
+function exportCotisationsCSV() {
+    adminFetch('subscriptions', {}).then(subs => {
+        const headers = ['Année','Nom','Prénom','Email','Entreprise','Type','Montant','Méthode','Statut','Date paiement'];
+        const rows = subs.map(s => [
+            s.year, s.last_name, s.first_name, s.email, s.company||'',
+            s.membership_type||'', s.amount||0, s.payment_method||'', s.status||'',
+            s.paid_at ? s.paid_at.slice(0,10) : ''
+        ]);
+        const csv = [headers.join(';'), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(';'))].join('\n');
+        const blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `affi_cotisations_${new Date().getFullYear()}.csv`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    });
 }

@@ -1,0 +1,15 @@
+name: Event Reminders
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send reminders
+        run: |
+          curl -s -X POST "${{ secrets.SITE_URL }}/api/events" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_TOKEN }}" \
+            -d '{"action":"send_reminders"}'

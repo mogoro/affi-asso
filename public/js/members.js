@@ -798,3 +798,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (typeof updateNavbarState === 'function') updateNavbarState();
 });
+
+// === RGPD EXPORT ===
+async function exportMyData() {
+    try {
+        const res = await fetch(`${API}/api/members?action=profile`, {headers:{'Authorization':'Bearer '+authToken}});
+        const profile = await res.json();
+        // Remove sensitive fields
+        delete profile.password_hash;
+        const data = {
+            export_date: new Date().toISOString(),
+            rgpd_notice: "Export de vos données personnelles conformément au RGPD (Art. 15 & 20)",
+            profile: profile,
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `affi_mes_donnees_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        if (typeof showToast === 'function') showToast('Données exportées', 'success');
+    } catch(e) { alert('Erreur export'); }
+}

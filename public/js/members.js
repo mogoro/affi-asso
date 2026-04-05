@@ -1020,8 +1020,6 @@ function openWikiMeeting(id) {
 function _openFullscreenEditor(m) {
     const content = m.minutes || '';
     _lastSavedContent = content;
-
-    // Remove existing overlay if any
     document.getElementById('wiki-fullscreen')?.remove();
 
     const overlay = document.createElement('div');
@@ -1037,54 +1035,96 @@ function _openFullscreenEditor(m) {
                 </div>
             </div>
             <div class="wiki-fs-toolbar-right">
-                <span id="wiki-save-status" class="wiki-save-status" style="color:var(--green)">&#10003; Sauvegardé</span>
+                <span id="wiki-save-status" class="wiki-save-status" style="color:#fff;opacity:.7">&#10003; Sauvegardé</span>
                 <button onclick="wikiCreateActionFromCR(${m.id})" class="wiki-fs-btn">+ Action</button>
                 <button onclick="wikiExtractAllActions(${m.id})" class="wiki-fs-btn wiki-fs-btn-accent">Extraire actions</button>
             </div>
         </div>
+        <div class="on-format-bar">
+            <button onclick="onFmt('bold')" class="on-fmt-btn" title="Gras (Ctrl+B)"><strong>G</strong></button>
+            <button onclick="onFmt('italic')" class="on-fmt-btn" title="Italique (Ctrl+I)"><em>I</em></button>
+            <button onclick="onFmt('underline')" class="on-fmt-btn" title="Souligné (Ctrl+U)"><u>S</u></button>
+            <span class="on-fmt-sep"></span>
+            <button onclick="onFmtBlock('h2')" class="on-fmt-btn" title="Titre">T1</button>
+            <button onclick="onFmtBlock('h3')" class="on-fmt-btn" title="Sous-titre">T2</button>
+            <button onclick="onFmtBlock('h4')" class="on-fmt-btn" title="Petit titre">T3</button>
+            <span class="on-fmt-sep"></span>
+            <button onclick="onFmt('insertUnorderedList')" class="on-fmt-btn" title="Liste à puces">&#8226;</button>
+            <button onclick="onFmt('insertOrderedList')" class="on-fmt-btn" title="Liste numérotée">1.</button>
+            <button onclick="onInsertCheckbox()" class="on-fmt-btn" title="Case à cocher">&#9744;</button>
+            <span class="on-fmt-sep"></span>
+            <button onclick="onFmt('formatBlock','blockquote')" class="on-fmt-btn" title="Citation">&#10077;</button>
+            <button onclick="document.execCommand('insertHorizontalRule')" class="on-fmt-btn" title="Séparateur">―</button>
+            <span class="on-fmt-sep"></span>
+            <button onclick="onFmt('removeFormat')" class="on-fmt-btn" title="Retirer le formatage">&#10060;</button>
+        </div>
         ${m.agenda ? `<div class="wiki-fs-agenda"><strong>OJ :</strong> ${esc(m.agenda)}</div>` : ''}
-        <div class="wiki-fs-editor">
-            <div class="wiki-fs-edit-pane">
-                <div class="wiki-fs-pane-label">ÉDITEUR</div>
-                <textarea id="wiki-textarea" class="wiki-fs-textarea" spellcheck="true" placeholder="# Compte-rendu\n\n## Participants\n- \n\n## Décisions\n- [x] Décision validée\n- [ ] Point en suspens\n\n## Actions\n- [ ] Action — **Responsable** — Échéance">${esc(content)}</textarea>
-            </div>
-            <div class="wiki-fs-preview-pane">
-                <div class="wiki-fs-pane-label">APERÇU</div>
-                <div id="wiki-preview" class="wiki-fs-preview"></div>
-            </div>
+        <div class="on-editor-wrap">
+            <div id="on-editor" class="on-editor" contenteditable="true" spellcheck="true">${content || _getDefaultTemplate(m)}</div>
         </div>
-        <div class="wiki-fs-footer">
-            # Titre · ## Sous-titre · **gras** · *italique* · - liste · - [x] fait · - [ ] à faire · > citation · --- séparateur · \`code\`
-        </div>
+        <div class="wiki-fs-footer">Ctrl+B gras · Ctrl+I italique · Ctrl+U souligné · Auto-sauvegarde activée</div>
     `;
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
 
-    // Focus textarea
-    setTimeout(() => {
-        document.getElementById('wiki-textarea')?.focus();
-    }, 100);
+    // Focus editor
+    setTimeout(() => document.getElementById('on-editor')?.focus(), 100);
+    _startAutoSaveWYSIWYG(m.id);
 
-    _startAutoSave(m.id);
-
-    // Close on Escape
+    // Close on Escape (but only if not in a text selection)
     overlay._escHandler = function(e) {
-        if (e.key === 'Escape') closeWikiFullscreen();
+        if (e.key === 'Escape' && !window.getSelection().toString()) closeWikiFullscreen();
     };
     document.addEventListener('keydown', overlay._escHandler);
 }
 
+function _getDefaultTemplate(m) {
+    return `<h2 style="color:var(--primary)">Compte-rendu — ${esc(m.title)}</h2>
+<h3>Participants</h3>
+<ul><li>&nbsp;</li></ul>
+<h3>Décisions prises</h3>
+<ul><li>&nbsp;</li></ul>
+<h3>Actions à mener</h3>
+<ul><li>&nbsp;</li></ul>
+<h3>Points divers</h3>
+<p>&nbsp;</p>
+<hr>
+<p style="font-size:12px;color:gray"><em>Rédigé le ${new Date().toLocaleDateString('fr-FR')}</em></p>`;
+}
+
+function onFmt(cmd, value) {
+    document.execCommand(cmd, false, value || null);
+    document.getElementById('on-editor')?.focus();
+}
+
+function onFmtBlock(tag) {
+    document.execCommand('formatBlock', false, '<' + tag + '>');
+    document.getElementById('on-editor')?.focus();
+}
+
+function onInsertCheckbox() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer';
+    label.innerHTML = '<input type="checkbox" style="width:18px;height:18px"> <span>Action à définir</span>';
+    range.insertNode(label);
+    range.collapse(false);
+    document.getElementById('on-editor')?.focus();
+}
+
 function closeWikiFullscreen() {
     // Force save before closing
-    const ta = document.getElementById('wiki-textarea');
-    if (ta && ta.value !== _lastSavedContent) {
+    const ta = document.getElementById('on-editor');
+    if (ta && ta.innerHTML !== _lastSavedContent) {
         // Trigger immediate save
         const meetingId = _currentWikiMeetingId;
         if (meetingId) {
             fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-                body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: ta.value, status: ta.value.trim() ? 'done' : 'planned'})
+                body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: ta.innerHTML, status: ta.innerHTML.trim() ? 'done' : 'planned'})
             });
-            if (window._wikiMeetings) window._wikiMeetings[meetingId].minutes = ta.value;
+            if (window._wikiMeetings) window._wikiMeetings[meetingId].minutes = ta.innerHTML;
         }
     }
     if (_autoSaveTimer) { clearInterval(_autoSaveTimer); _autoSaveTimer = null; }
@@ -1100,92 +1140,79 @@ function closeWikiFullscreen() {
 
 let _currentWikiMeetingId = null;
 
-function _startAutoSave(meetingId) {
+function _startAutoSaveWYSIWYG(meetingId) {
     _currentWikiMeetingId = meetingId;
     if (_autoSaveTimer) clearInterval(_autoSaveTimer);
 
-    const textarea = document.getElementById('wiki-textarea');
-    const preview = document.getElementById('wiki-preview');
-    if (!textarea) return;
+    const editor = document.getElementById('on-editor');
+    if (!editor) return;
 
-    // Initial preview
-    if (preview && typeof renderMarkdown === 'function') {
-        preview.innerHTML = renderMarkdown(textarea.value) || '<p style="color:var(--gray-400);font-style:italic">L\'apercu apparaitra ici...</p>';
-    }
-
-    // Live preview on input
-    textarea.addEventListener('input', function() {
-        if (preview && typeof renderMarkdown === 'function') {
-            preview.innerHTML = renderMarkdown(this.value);
-        }
-        // Mark as modified
+    // Track changes
+    editor.addEventListener('input', function() {
         const status = document.getElementById('wiki-save-status');
-        if (status && this.value !== _lastSavedContent) {
-            status.innerHTML = '<span style="color:var(--orange)">&#9679; Modifie</span>';
+        if (status && this.innerHTML !== _lastSavedContent) {
+            status.innerHTML = '<span style="color:var(--orange)">&#9679; Modifié</span>';
         }
     });
 
     // Auto-save every 5 seconds
     _autoSaveTimer = setInterval(async () => {
-        const ta = document.getElementById('wiki-textarea');
-        if (!ta || ta.value === _lastSavedContent) return;
+        const ed = document.getElementById('on-editor');
+        if (!ed || ed.innerHTML === _lastSavedContent) return;
 
-        const content = ta.value;
+        const content = ed.innerHTML;
         try {
             await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
                 body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: content, status: content.trim() ? 'done' : 'planned'})});
             _lastSavedContent = content;
             if (window._wikiMeetings) window._wikiMeetings[meetingId].minutes = content;
             const status = document.getElementById('wiki-save-status');
-            if (status) status.innerHTML = '&#10003; Sauvegarde';
-            // Update tab badge
+            if (status) status.innerHTML = '&#10003; Sauvegardé';
             const tab = document.querySelector(`.wiki-tab[data-wid="${meetingId}"] .wiki-tab-status`);
-            if (tab && content.trim()) { tab.textContent = 'CR redige'; tab.className = 'wiki-tab-status wiki-tab-has-cr'; }
+            if (tab && content.trim()) { tab.textContent = 'CR rédigé'; tab.className = 'wiki-tab-status wiki-tab-has-cr'; }
         } catch(e) {
             const status = document.getElementById('wiki-save-status');
-            if (status) status.innerHTML = '<span style="color:var(--accent)">&#9888; Erreur sauvegarde</span>';
+            if (status) status.innerHTML = '<span style="color:var(--accent)">&#9888; Erreur</span>';
         }
     }, 5000);
 }
 
 function wikiCreateActionFromCR(meetingId) {
-    // Prompt for action details
     const title = prompt('Titre de l\'action :');
     if (!title) return;
-    const assignee = prompt('Assigner a (prenom ou laisser vide) :');
-
-    // Find member ID by first name if provided
-    let assignedTo = null;
-    // For now just create without assignment -- admin can assign later
 
     fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'bureau_create_action', title, meeting_id: meetingId})
     }).then(() => {
-        showToast('Action creee : ' + title, 'success');
-        // Add as checkbox in the CR
-        const ta = document.getElementById('wiki-textarea');
-        if (ta) {
-            ta.value += '\n- [ ] ' + title + (assignee ? ' -- **' + assignee + '**' : '');
-            ta.dispatchEvent(new Event('input'));
+        showToast('Action créée : ' + title, 'success');
+        // Add as checkbox in the WYSIWYG editor
+        const ed = document.getElementById('on-editor');
+        if (ed) {
+            const label = document.createElement('label');
+            label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer';
+            label.innerHTML = '<input type="checkbox" style="width:18px;height:18px"> <span>' + esc(title) + '</span>';
+            ed.appendChild(label);
         }
     });
 }
 
 async function wikiExtractAllActions(meetingId) {
-    const ta = document.getElementById('wiki-textarea');
-    if (!ta) return;
-    const lines = ta.value.match(/^- \[ \] .+$/gm) || [];
-    if (!lines.length) { showToast('Aucune action trouvee (format : - [ ] Action)', 'info'); return; }
-
+    const ed = document.getElementById('on-editor');
+    if (!ed) return;
+    // Find unchecked checkboxes
+    const checkboxes = ed.querySelectorAll('input[type="checkbox"]:not(:checked)');
+    if (!checkboxes.length) { showToast('Aucune action non cochée trouvée', 'info'); return; }
     let created = 0;
-    for (const line of lines) {
-        const clean = line.replace(/^- \[ \] /, '').replace(/\*\*/g, '').trim();
-        const parts = clean.split('--').map(s => s.trim());
-        await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-            body: JSON.stringify({action:'bureau_create_action', title: parts[0], meeting_id: meetingId})});
-        created++;
+    for (const cb of checkboxes) {
+        const label = cb.closest('label');
+        const text = label ? label.textContent.trim() : cb.parentElement?.textContent?.trim() || '';
+        if (text) {
+            await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+                body: JSON.stringify({action:'bureau_create_action', title: text, meeting_id: meetingId})});
+            created++;
+        }
     }
-    showToast(created + ' action(s) creee(s) dans le tableau', 'success');
+    showToast(created + ' action(s) créée(s)', 'success');
 }
 
 function showNewMeetingForm() {

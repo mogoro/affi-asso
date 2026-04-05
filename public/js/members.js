@@ -184,85 +184,96 @@ function renderDirectory(members) {
     const el = document.getElementById('directory-grid');
     if (!el) return;
     if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:40px">Aucun membre trouvé</p>'; return; }
-
-    const grouped = {};
-    members.forEach(m => {
-        const letter = (m.last_name || '?')[0].toUpperCase();
-        if (!grouped[letter]) grouped[letter] = [];
-        grouped[letter].push(m);
-    });
-
-    // Store for detail view
     window._dirMembers = {};
     members.forEach(m => window._dirMembers[m.id] = m);
 
-    let listHtml = `<div class="dir-count">${members.length} membres</div>`;
-    Object.keys(grouped).sort().forEach(letter => {
-        listHtml += `<div class="dir-letter">${letter}</div>`;
-        grouped[letter].forEach(m => {
-            const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
-            listHtml += `<div class="dir-row" onclick="showMemberCard(${m.id})" data-mid="${m.id}">
-                <div class="dir-avatar">${m.photo_url && m.photo_url.startsWith('http') ? `<img src="${esc(m.photo_url)}" alt="">` : initials}</div>
-                <div class="dir-info">
-                    <div class="dir-name">${esc(m.first_name)} <strong>${esc(m.last_name)}</strong>${m.is_board ? ' <span class="dir-badge dir-badge-board">Bureau</span>' : ''}${m.is_mentor ? ' <span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}</div>
-                    <div class="dir-meta">${esc(m.company || '')}${m.sector ? ' · ' + esc(m.sector) : ''}</div>
-                </div>
-            </div>`;
-        });
-    });
+    // Alphabet letters present
+    const letters = [...new Set(members.map(m => (m.last_name||'?')[0].toUpperCase()))].sort();
 
-    el.innerHTML = `<div class="dir-layout">
-        <div class="dir-left">${listHtml}</div>
-        <div class="dir-right" id="dir-card-panel">
-            <div class="dir-card-empty">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <p>Cliquez sur un membre pour voir sa fiche</p>
-            </div>
+    el.innerHTML = `
+        <div class="dir-alpha-bar">${letters.map(l => `<a class="dir-alpha-link" href="#" onclick="event.preventDefault();document.getElementById('dir-letter-${l}')?.scrollIntoView({behavior:'smooth',block:'start'})">${l}</a>`).join('')}</div>
+        <div class="dir-results">
+            <div class="dir-results-count">${members.length} membre${members.length>1?'s':''}</div>
+            ${renderMemberList(members)}
         </div>
-    </div>`;
+    `;
 }
 
-function showMemberCard(id) {
+function renderMemberList(members) {
+    const grouped = {};
+    members.forEach(m => {
+        const l = (m.last_name||'?')[0].toUpperCase();
+        if (!grouped[l]) grouped[l] = [];
+        grouped[l].push(m);
+    });
+    let html = '';
+    Object.keys(grouped).sort().forEach(letter => {
+        html += `<div class="dir-letter-anchor" id="dir-letter-${letter}">${letter}</div>`;
+        html += grouped[letter].map(m => {
+            const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
+            const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
+            const availColors = {'en-poste':'var(--green)','ouvert':'var(--orange)','recherche':'var(--accent)','freelance':'var(--teal)'};
+            const availLabels = {'en-poste':'En poste','ouvert':'Ouvert','recherche':'En recherche','freelance':'Freelance'};
+            return `<div class="dir-member-card" onclick="showMemberModal(${m.id})">
+                <div class="dir-mc-avatar">${hasPhoto ? `<img src="${esc(m.photo_url)}" alt="">` : initials}${m.availability && availColors[m.availability] ? `<span class="dir-mc-avail-dot" style="background:${availColors[m.availability]}" title="${availLabels[m.availability]||''}"></span>` : ''}</div>
+                <div class="dir-mc-info">
+                    <div class="dir-mc-name">${esc(m.first_name)} <strong>${esc(m.last_name)}</strong>${m.is_board ? ' <span class="dir-badge dir-badge-board">Bureau</span>' : ''}${m.is_mentor ? ' <span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}</div>
+                    <div class="dir-mc-title">${esc(m.job_title || '')}</div>
+                    <div class="dir-mc-company">${esc(m.company || '')}${m.region ? ' · ' + esc(m.region) : ''}</div>
+                </div>
+                <div class="dir-mc-tags">
+                    ${m.sector ? `<span class="dir-mc-tag">${esc(m.sector)}</span>` : ''}
+                    ${m.specialty ? `<span class="dir-mc-tag">${esc(m.specialty)}</span>` : ''}
+                </div>
+                <div class="dir-mc-actions">
+                    ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dir-mc-li" title="LinkedIn">in</a>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    });
+    return html;
+}
+
+function showMemberModal(id) {
     const m = window._dirMembers?.[id];
     if (!m) return;
-    // Highlight selected row
-    document.querySelectorAll('.dir-row').forEach(r => r.classList.remove('dir-row-active'));
-    document.querySelector(`.dir-row[data-mid="${id}"]`)?.classList.add('dir-row-active');
-
-    const panel = document.getElementById('dir-card-panel');
-    if (!panel) return;
     const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
     const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
+    const availLabels = {'en-poste':'En poste','ouvert':'Ouvert aux opportunités','recherche':'En recherche active','freelance':'Disponible en freelance'};
+    const availColors = {'en-poste':'var(--green)','ouvert':'var(--orange)','recherche':'var(--accent)','freelance':'var(--teal)'};
 
-    panel.innerHTML = `<div class="dir-card">
-        <div class="dir-card-header">
-            <div class="dir-card-avatar">${hasPhoto ? `<img src="${esc(m.photo_url)}" alt="">` : initials}</div>
-            <div>
-                <h3 class="dir-card-name">${esc(m.first_name)} ${esc(m.last_name)}</h3>
-                <p class="dir-card-job">${esc(m.job_title || 'Membre AFFI')}</p>
-                <p class="dir-card-company">${esc(m.company || '')}</p>
+    const html = `<div class="adm-modal-bg" id="member-detail-modal">
+        <div class="adm-modal" style="max-width:560px;padding:0;overflow:hidden">
+            <div class="dir-modal-header">
+                <div class="dir-modal-avatar">${hasPhoto ? `<img src="${esc(m.photo_url)}" alt="">` : `<span>${initials}</span>`}</div>
+                <div class="dir-modal-info">
+                    <h2 class="dir-modal-name">${esc(m.first_name)} ${esc(m.last_name)}</h2>
+                    <p class="dir-modal-job">${esc(m.job_title || 'Membre AFFI')}</p>
+                    <p class="dir-modal-company">${esc(m.company || '')}</p>
+                </div>
+                <button class="auth-close" onclick="closeModal('member-detail-modal')" style="color:#fff">&times;</button>
+            </div>
+            <div style="padding:24px">
+                <div class="dir-modal-badges">
+                    ${m.is_board ? '<span class="dir-badge dir-badge-board">Bureau AFFI</span>' : ''}
+                    ${m.is_mentor ? '<span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}
+                    ${m.availability && availLabels[m.availability] ? `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${availColors[m.availability]||'var(--gray-400)'};color:#fff">${availLabels[m.availability]}</span>` : ''}
+                    ${m.membership_type ? `<span class="dir-tag">${esc(m.membership_type)}</span>` : ''}
+                </div>
+                ${m.bio ? `<div class="dir-modal-section"><h4>À propos</h4><p>${esc(m.bio)}</p></div>` : ''}
+                ${m.interests ? `<div class="dir-modal-section"><h4>Centres d'intérêt</h4><p>${esc(m.interests)}</p></div>` : ''}
+                <div class="dir-modal-grid">
+                    ${m.sector ? `<div><span class="dir-modal-label">Secteur</span><span>${esc(m.sector)}</span></div>` : ''}
+                    ${m.specialty ? `<div><span class="dir-modal-label">Spécialité</span><span>${esc(m.specialty)}</span></div>` : ''}
+                    ${m.region ? `<div><span class="dir-modal-label">Région</span><span>${esc(m.region)}</span></div>` : ''}
+                    ${m.phone && m.phone_visible ? `<div><span class="dir-modal-label">Téléphone</span><span>${esc(m.phone)}</span></div>` : ''}
+                    ${m.joined_at ? `<div><span class="dir-modal-label">Membre depuis</span><span>${formatDate(m.joined_at)}</span></div>` : ''}
+                </div>
+                ${m.linkedin_url ? `<div style="margin-top:16px"><a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" class="dir-card-btn" style="background:#0077b5;color:#fff;display:inline-flex;padding:10px 20px;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;gap:6px">in Voir le profil LinkedIn</a></div>` : ''}
             </div>
         </div>
-        <div class="dir-card-badges">
-            ${m.is_board ? '<span class="dir-badge dir-badge-board">Bureau AFFI</span>' : ''}
-            ${m.is_mentor ? '<span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}
-            ${m.availability ? `<span class="dir-tag" style="background:${{'en-poste':'var(--green)','ouvert':'#f59e0b','recherche':'var(--accent)','freelance':'var(--teal)'}[m.availability]||'var(--gray-400)'};color:#fff">${esc({'en-poste':'En poste','ouvert':'Ouvert aux opportunites','recherche':'En recherche active','freelance':'Freelance'}[m.availability]||m.availability)}</span>` : ''}
-            ${m.membership_type ? `<span class="dir-tag">${esc(m.membership_type)}</span>` : ''}
-            ${m.consent_annuaire ? '<span class="dir-tag" style="background:var(--green);color:#fff">Profil public</span>' : ''}
-        </div>
-        ${m.bio ? `<div class="dir-card-section"><h4>Bio</h4><p>${esc(m.bio)}</p></div>` : ''}
-        ${m.interests ? `<div class="dir-card-section"><h4>Centres d'intérêt</h4><p>${esc(m.interests)}</p></div>` : ''}
-        <div class="dir-card-details">
-            ${m.sector ? `<div><strong>Secteur</strong><span>${esc(m.sector)}</span></div>` : ''}
-            ${m.specialty ? `<div><strong>Spécialité</strong><span>${esc(m.specialty)}</span></div>` : ''}
-            ${m.region ? `<div><strong>Région</strong><span>${esc(m.region)}</span></div>` : ''}
-            ${m.phone && m.phone_visible ? `<div><strong>Téléphone</strong><span>${esc(m.phone)}</span></div>` : ''}
-            ${m.joined_at ? `<div><strong>Membre depuis</strong><span>${formatDate(m.joined_at)}</span></div>` : ''}
-        </div>
-        <div class="dir-card-actions">
-            ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" class="dir-card-btn" style="background:#0077b5;color:#fff">in LinkedIn</a>` : ''}
-        </div>
     </div>`;
+    openModal(html);
 }
 
 let _dirSearch;

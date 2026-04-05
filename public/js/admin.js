@@ -6,8 +6,7 @@ let adminData = {};
 
 async function loadAdmin() {
     if (!currentUser || !currentUser.is_admin) return;
-    switchAdminSection('adm-dashboard');
-    loadAdminDashboard();
+    switchAdminSection('adm-members');
 }
 
 function switchAdminSection(id) {
@@ -17,7 +16,6 @@ function switchAdminSection(id) {
     if (panel) panel.style.display = 'block';
     const btn = document.querySelector(`.adm-nav-btn[data-section="${id}"]`);
     if (btn) btn.classList.add('active');
-    if (id === 'adm-dashboard') loadAdminDashboard();
     if (id === 'adm-members') loadAdminMembers();
     if (id === 'adm-events') loadAdminEvents();
     if (id === 'adm-news') loadAdminNews();
@@ -43,45 +41,7 @@ async function adminPost(data) {
     return res.json();
 }
 
-// === DASHBOARD ===
-async function loadAdminDashboard() {
-    const s = await adminFetch('dashboard', {});
-    adminData.dashboard = s;
-    const el = document.getElementById('adm-dashboard-content');
-    if (!el) return;
-    el.innerHTML = `
-        <div class="kpi-row">
-            <div class="kpi-card" style="border-top-color:var(--primary)"><div class="kpi-val">${s.total_members||0}</div><div class="kpi-label">Membres total</div></div>
-            <div class="kpi-card" style="border-top-color:var(--green)"><div class="kpi-val">${s.active_members||0}</div><div class="kpi-label">Actifs</div></div>
-            <div class="kpi-card" style="border-top-color:var(--orange)"><div class="kpi-val">${s.pending_members||0}</div><div class="kpi-label">En attente</div></div>
-            <div class="kpi-card" style="border-top-color:var(--accent)"><div class="kpi-val">${s.unread_messages||0}</div><div class="kpi-label">Messages non lus</div></div>
-            <div class="kpi-card" style="border-top-color:var(--teal)"><div class="kpi-val">${s.mentors||0}</div><div class="kpi-label">Mentors</div></div>
-            <div class="kpi-card" style="border-top-color:var(--purple)"><div class="kpi-val">${s.consent_annuaire||0}</div><div class="kpi-label">Annuaire public</div></div>
-        </div>
-        ${s.incomplete_profiles > 0 ? `<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;font-size:14px;color:#92400e"><strong>Alerte :</strong> ${s.incomplete_profiles} profil(s) incomplet(s) (secteur, entreprise ou specialite manquant)</div>` : ''}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-            <div class="card"><div class="card-body">
-                <h3 style="color:var(--primary);margin-bottom:16px">Derniers inscrits</h3>
-                ${(s.recent_members||[]).map(m => `
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)">
-                        <div><strong>${esc(m.first_name)} ${esc(m.last_name)}</strong><br><span style="font-size:12px;color:var(--gray-500)">${esc(m.email)}</span></div>
-                        <span class="adm-badge adm-badge-${m.status}">${m.status}</span>
-                    </div>`).join('')}
-            </div></div>
-            <div class="card"><div class="card-body">
-                <h3 style="color:var(--primary);margin-bottom:16px">Par secteur</h3>
-                ${(s.by_sector||[]).map(x => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(x.sector||'Non renseigne')}</span><strong>${x.n}</strong></div>`).join('')}
-            </div></div>
-            <div class="card"><div class="card-body">
-                <h3 style="color:var(--primary);margin-bottom:16px">Par region</h3>
-                ${(s.by_region||[]).map(x => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(x.region||'Non renseignee')}</span><strong>${x.n}</strong></div>`).join('')}
-            </div></div>
-            <div class="card"><div class="card-body">
-                <h3 style="color:var(--primary);margin-bottom:16px">Par specialite</h3>
-                ${(s.by_specialty||[]).map(x => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100)"><span>${esc(x.specialty||'Non renseignee')}</span><strong>${x.n}</strong></div>`).join('')}
-            </div></div>
-        </div>`;
-}
+// === DASHBOARD (removed) ===
 
 // === MEMBERS MANAGEMENT (unified: members + adhesions + RGPD + connexions) ===
 async function loadAdminMembers(status, search) {

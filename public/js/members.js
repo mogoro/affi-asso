@@ -95,6 +95,7 @@ function switchTab(tab) {
     if (tab === 'directory') loadDirectory();
     if (tab === 'profile') loadProfile();
     if (tab === 'announcements') { loadAnnouncements(); if (typeof loadMyProposals === 'function') loadMyProposals(); }
+    if (tab === 'messages') loadConversations();
     if (tab === 'notifications') loadNotifications();
     if (tab === 'admin') { if (typeof loadAdmin === 'function') loadAdmin(); }
 }
@@ -184,7 +185,6 @@ function renderDirectory(members) {
     if (!el) return;
     if (!members.length) { el.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:40px">Aucun membre trouvé</p>'; return; }
 
-    // Group by first letter
     const grouped = {};
     members.forEach(m => {
         const letter = (m.last_name || '?')[0].toUpperCase();
@@ -192,49 +192,76 @@ function renderDirectory(members) {
         grouped[letter].push(m);
     });
 
-    let html = `<div class="dir-count">${members.length} membres</div>`;
+    // Store for detail view
+    window._dirMembers = {};
+    members.forEach(m => window._dirMembers[m.id] = m);
 
+    let listHtml = `<div class="dir-count">${members.length} membres</div>`;
     Object.keys(grouped).sort().forEach(letter => {
-        html += `<div class="dir-letter-group">
-            <div class="dir-letter">${letter}</div>
-            <div class="dir-list">
-                ${grouped[letter].map(m => {
-                    const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
-                    const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
-                    const tags = [m.sector, m.specialty].filter(Boolean);
-                    return `<div class="dir-row" onclick="toggleDirExpand(this)">
-                        <div class="dir-row-main">
-                            <div class="dir-avatar">${hasPhoto ? `<img src="${esc(m.photo_url)}" alt="">` : initials}</div>
-                            <div class="dir-info">
-                                <div class="dir-name">${esc(m.first_name)} <strong>${esc(m.last_name)}</strong>${m.is_board ? ' <span class="dir-badge dir-badge-board">Bureau</span>' : ''}${m.is_mentor ? ' <span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}</div>
-                                <div class="dir-meta">${esc(m.job_title || '')}${m.company ? ' · ' + esc(m.company) : ''}${m.region ? ' · ' + esc(m.region) : ''}</div>
-                            </div>
-                            ${tags.length ? `<div class="dir-tags">${tags.map(t => `<span class="dir-tag">${esc(t)}</span>`).join('')}</div>` : ''}
-                            <div class="dir-actions-mini">
-                                ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dir-action-btn" title="LinkedIn">in</a>` : ''}
-                            </div>
-                        </div>
-                        <div class="dir-expand">
-                            ${m.bio ? `<p class="dir-bio">${esc((m.bio||'').substring(0,300))}${(m.bio||'').length>300?'...':''}</p>` : ''}
-                            ${m.interests ? `<p class="dir-interests"><strong>Intérêts :</strong> ${esc(m.interests)}</p>` : ''}
-                            ${m.phone && m.phone_visible ? `<p class="dir-phone">Tél : ${esc(m.phone)}</p>` : ''}
-                            <div class="dir-expand-meta">
-                                ${m.joined_at ? `<span>Membre depuis ${formatDate(m.joined_at)}</span>` : ''}
-                                <span>${m.consent_annuaire ? 'Profil public' : 'Profil privé'}</span>
-                                ${m.membership_type ? `<span>${esc(m.membership_type)}</span>` : ''}
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('')}
-            </div>
-        </div>`;
+        listHtml += `<div class="dir-letter">${letter}</div>`;
+        grouped[letter].forEach(m => {
+            const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
+            listHtml += `<div class="dir-row" onclick="showMemberCard(${m.id})" data-mid="${m.id}">
+                <div class="dir-avatar">${m.photo_url && m.photo_url.startsWith('http') ? `<img src="${esc(m.photo_url)}" alt="">` : initials}</div>
+                <div class="dir-info">
+                    <div class="dir-name">${esc(m.first_name)} <strong>${esc(m.last_name)}</strong>${m.is_board ? ' <span class="dir-badge dir-badge-board">Bureau</span>' : ''}${m.is_mentor ? ' <span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}</div>
+                    <div class="dir-meta">${esc(m.company || '')}${m.sector ? ' · ' + esc(m.sector) : ''}</div>
+                </div>
+            </div>`;
+        });
     });
 
-    el.innerHTML = html;
+    el.innerHTML = `<div class="dir-layout">
+        <div class="dir-left">${listHtml}</div>
+        <div class="dir-right" id="dir-card-panel">
+            <div class="dir-card-empty">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <p>Cliquez sur un membre pour voir sa fiche</p>
+            </div>
+        </div>
+    </div>`;
 }
 
-function toggleDirExpand(row) {
-    row.classList.toggle('dir-row-open');
+function showMemberCard(id) {
+    const m = window._dirMembers?.[id];
+    if (!m) return;
+    // Highlight selected row
+    document.querySelectorAll('.dir-row').forEach(r => r.classList.remove('dir-row-active'));
+    document.querySelector(`.dir-row[data-mid="${id}"]`)?.classList.add('dir-row-active');
+
+    const panel = document.getElementById('dir-card-panel');
+    if (!panel) return;
+    const initials = ((m.first_name||'?')[0] + (m.last_name||'?')[0]).toUpperCase();
+    const hasPhoto = m.photo_url && m.photo_url.startsWith('http');
+
+    panel.innerHTML = `<div class="dir-card">
+        <div class="dir-card-header">
+            <div class="dir-card-avatar">${hasPhoto ? `<img src="${esc(m.photo_url)}" alt="">` : initials}</div>
+            <div>
+                <h3 class="dir-card-name">${esc(m.first_name)} ${esc(m.last_name)}</h3>
+                <p class="dir-card-job">${esc(m.job_title || 'Membre AFFI')}</p>
+                <p class="dir-card-company">${esc(m.company || '')}</p>
+            </div>
+        </div>
+        <div class="dir-card-badges">
+            ${m.is_board ? '<span class="dir-badge dir-badge-board">Bureau AFFI</span>' : ''}
+            ${m.is_mentor ? '<span class="dir-badge dir-badge-mentor">Mentor</span>' : ''}
+            ${m.membership_type ? `<span class="dir-tag">${esc(m.membership_type)}</span>` : ''}
+            ${m.consent_annuaire ? '<span class="dir-tag" style="background:var(--green);color:#fff">Profil public</span>' : ''}
+        </div>
+        ${m.bio ? `<div class="dir-card-section"><h4>Bio</h4><p>${esc(m.bio)}</p></div>` : ''}
+        ${m.interests ? `<div class="dir-card-section"><h4>Centres d'intérêt</h4><p>${esc(m.interests)}</p></div>` : ''}
+        <div class="dir-card-details">
+            ${m.sector ? `<div><strong>Secteur</strong><span>${esc(m.sector)}</span></div>` : ''}
+            ${m.specialty ? `<div><strong>Spécialité</strong><span>${esc(m.specialty)}</span></div>` : ''}
+            ${m.region ? `<div><strong>Région</strong><span>${esc(m.region)}</span></div>` : ''}
+            ${m.phone && m.phone_visible ? `<div><strong>Téléphone</strong><span>${esc(m.phone)}</span></div>` : ''}
+            ${m.joined_at ? `<div><strong>Membre depuis</strong><span>${formatDate(m.joined_at)}</span></div>` : ''}
+        </div>
+        <div class="dir-card-actions">
+            ${m.linkedin_url ? `<a href="${esc(m.linkedin_url)}" target="_blank" rel="noopener" class="dir-card-btn" style="background:#0077b5;color:#fff">in LinkedIn</a>` : ''}
+        </div>
+    </div>`;
 }
 
 let _dirSearch;

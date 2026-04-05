@@ -900,290 +900,65 @@ function switchBureauView(btn, view) {
 
 function loadBureauSpace() {
     if (_bureauView === 'actions') loadBureauActions();
-    else if (_bureauView === 'meetings') loadBureauMeetings();
-    else if (_bureauView === 'minutes') loadBureauMinutes();
-    else if (_bureauView === 'docs') loadBureauDocs();
+    else if (_bureauView === 'wiki') loadBureauWiki();
 }
 
+// =============================================
+// KANBAN ACTIONS (agile board)
+// =============================================
 async function loadBureauActions() {
     const el = document.getElementById('bureau-content');
     if (!el) return;
     try {
         const res = await fetch(`${API}/api/members?action=bureau_actions`, {headers:{'Authorization':'Bearer '+authToken}});
         const actions = await res.json();
-        if (actions.error) { el.innerHTML = '<p class="empty-msg">'+esc(actions.error)+'</p>'; return; }
+        if (!Array.isArray(actions)) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; return; }
 
         const open = actions.filter(a => a.status === 'open');
         const progress = actions.filter(a => a.status === 'in_progress');
-        const done = actions.filter(a => a.status === 'done');
+        const done = actions.filter(a => a.status === 'done').slice(0, 10);
 
         el.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="color:var(--primary);font-weight:800;margin:0">Actions du Bureau</h3>
+                <div>
+                    <h3 style="color:var(--primary);font-weight:800;margin:0">Suivi d'actions</h3>
+                    <p style="font-size:12px;color:var(--gray-500);margin:2px 0 0">${actions.length} action(s) · ${open.length} ouvertes · ${progress.length} en cours</p>
+                </div>
                 <button onclick="showNewActionForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle action</button>
             </div>
             <div class="bureau-kanban">
                 <div class="bureau-kanban-col">
-                    <div class="bureau-kanban-header" style="border-color:var(--accent)">A faire <span class="bureau-kanban-count">${open.length}</span></div>
-                    ${open.map(a => renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px">Aucune</p>'}
+                    <div class="bureau-kanban-header" style="border-color:var(--accent)">À faire <span class="bureau-kanban-count">${open.length}</span></div>
+                    ${open.map(a => _renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px;font-size:12px">Aucune action à faire</p>'}
                 </div>
                 <div class="bureau-kanban-col">
                     <div class="bureau-kanban-header" style="border-color:var(--orange)">En cours <span class="bureau-kanban-count">${progress.length}</span></div>
-                    ${progress.map(a => renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px">Aucune</p>'}
+                    ${progress.map(a => _renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px;font-size:12px">—</p>'}
                 </div>
                 <div class="bureau-kanban-col">
-                    <div class="bureau-kanban-header" style="border-color:var(--green)">Terminees <span class="bureau-kanban-count">${done.length}</span></div>
-                    ${done.map(a => renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px">Aucune</p>'}
+                    <div class="bureau-kanban-header" style="border-color:var(--green)">Terminées <span class="bureau-kanban-count">${done.length}</span></div>
+                    ${done.map(a => _renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px;font-size:12px">—</p>'}
                 </div>
-            </div>
-        `;
-    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; }
+            </div>`;
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur : ' + e.message + '</p>'; }
 }
 
-function renderActionCard(a) {
+function _renderActionCard(a) {
     const overdue = a.due_date && new Date(a.due_date) < new Date() && a.status !== 'done';
-    const assignee = a.first_name ? `${a.first_name} ${(a.last_name||'')[0]}.` : 'Non assigne';
+    const assignee = a.first_name ? a.first_name + ' ' + (a.last_name||'')[0] + '.' : '';
     return `<div class="bureau-action-card ${overdue ? 'bureau-action-overdue' : ''}">
         <div class="bureau-action-title">${esc(a.title)}</div>
-        ${a.description ? `<div class="bureau-action-desc">${esc(a.description.substring(0,80))}${a.description.length>80?'...':''}</div>` : ''}
+        ${a.description ? `<div class="bureau-action-desc">${esc(a.description.substring(0,100))}</div>` : ''}
         <div class="bureau-action-footer">
-            <span class="bureau-action-assignee">${esc(assignee)}</span>
-            ${a.due_date ? `<span class="bureau-action-due ${overdue?'bureau-overdue':''}">${formatDate(a.due_date)}</span>` : ''}
+            ${assignee ? `<span class="bureau-action-assignee">${esc(assignee)}</span>` : '<span style="color:var(--gray-300)">Non assigné</span>'}
+            ${a.due_date ? `<span class="${overdue?'bureau-overdue':''}">${formatDate(a.due_date)}</span>` : ''}
         </div>
         <div class="bureau-action-btns">
-            ${a.status==='open'?`<button onclick="updateBureauAction(${a.id},'in_progress')" class="bureau-sm-btn" title="Demarrer">&#9654;</button>`:''}
-            ${a.status==='in_progress'?`<button onclick="updateBureauAction(${a.id},'done')" class="bureau-sm-btn bureau-sm-ok" title="Terminer">&#10003;</button>`:''}
-            ${a.status==='done'?`<button onclick="updateBureauAction(${a.id},'open')" class="bureau-sm-btn" title="Rouvrir">&#8634;</button>`:''}
+            ${a.status==='open' ? `<button onclick="updateBureauAction(${a.id},'in_progress')" class="bureau-sm-btn" title="Démarrer">&#9654;</button>` : ''}
+            ${a.status==='in_progress' ? `<button onclick="updateBureauAction(${a.id},'done')" class="bureau-sm-btn bureau-sm-ok" title="Terminer">&#10003;</button>` : ''}
+            ${a.status==='done' ? `<button onclick="updateBureauAction(${a.id},'open')" class="bureau-sm-btn" title="Rouvrir">&#8634;</button>` : ''}
         </div>
     </div>`;
-}
-
-async function loadBureauMeetings() {
-    const el = document.getElementById('bureau-content');
-    if (!el) return;
-    try {
-        const res = await fetch(`${API}/api/members?action=bureau_meetings`, {headers:{'Authorization':'Bearer '+authToken}});
-        const meetings = await res.json();
-        if (meetings.error) { el.innerHTML = '<p class="empty-msg">'+esc(meetings.error)+'</p>'; return; }
-        const now = new Date();
-        const upcoming = meetings.filter(m => new Date(m.meeting_date) >= now);
-        const past = meetings.filter(m => new Date(m.meeting_date) < now);
-
-        el.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="color:var(--primary);font-weight:800;margin:0">Reunions du Bureau</h3>
-                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Planifier</button>
-            </div>
-            ${upcoming.length ? `<h4 style="font-size:13px;color:var(--green);margin-bottom:8px;font-weight:700">&#9679; A venir</h4>` : ''}
-            ${upcoming.map(m => renderMeetingCard(m, false)).join('')}
-            ${past.length ? `<h4 style="font-size:13px;color:var(--gray-400);margin:16px 0 8px;font-weight:700">Passees</h4>` : ''}
-            ${past.slice(0,10).map(m => renderMeetingCard(m, true)).join('')}
-            ${!meetings.length ? '<p class="empty-msg">Aucune reunion</p>' : ''}
-        `;
-    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; }
-}
-
-function renderMeetingCard(m, isPast) {
-    const d = new Date(m.meeting_date);
-    const months = ['jan','fev','mar','avr','mai','jun','jul','aou','sep','oct','nov','dec'];
-    return `<div class="bureau-meeting-card ${isPast?'bureau-meeting-past':''}">
-        <div class="bureau-meeting-date">
-            <div class="bureau-meeting-day">${d.getDate()}</div>
-            <div class="bureau-meeting-month">${months[d.getMonth()]}</div>
-        </div>
-        <div class="bureau-meeting-info">
-            <div class="bureau-meeting-title">${esc(m.title)}</div>
-            <div class="bureau-meeting-meta">${d.getHours()}h${String(d.getMinutes()).padStart(2,'0')}${m.location ? ' · ' + esc(m.location) : ''}</div>
-            ${m.agenda ? `<div class="bureau-meeting-agenda">${esc(m.agenda.substring(0,120))}${m.agenda.length>120?'...':''}</div>` : ''}
-        </div>
-        <div class="bureau-meeting-actions">
-            ${!isPast ? `<span class="adm-badge adm-badge-active">A venir</span>` : ''}
-            ${isPast && m.minutes ? `<button onclick="viewDocument('','Compte-rendu')" class="bureau-sm-btn bureau-sm-ok" title="Voir le CR">&#128196;</button>` : ''}
-            ${isPast && !m.minutes ? `<button onclick="editMeetingMinutes(${m.id})" class="bureau-sm-btn" title="Rediger le CR">&#9998;</button>` : ''}
-        </div>
-    </div>`;
-}
-
-// === CR WIKI SYSTEM ===
-async function loadBureauMinutes() {
-    const el = document.getElementById('bureau-content');
-    try {
-        const res = await fetch(`${API}/api/members?action=bureau_meetings`, {headers:{'Authorization':'Bearer '+authToken}});
-        const meetings = await res.json();
-        // Only meetings with minutes or past meetings
-        const withMinutes = meetings.filter(m => m.minutes || new Date(m.meeting_date) < new Date());
-
-        if (!withMinutes.length) {
-            el.innerHTML = '<p class="empty-msg">Aucun compte-rendu disponible</p>';
-            return;
-        }
-
-        // Tabs for each meeting (most recent first)
-        const tabs = withMinutes.slice(0, 12).map((m, i) => {
-            const d = new Date(m.meeting_date);
-            const months = ['jan','fev','mar','avr','mai','jun','jul','aou','sep','oct','nov','dec'];
-            const label = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-            return { id: m.id, label, meeting: m, active: i === 0 };
-        });
-
-        el.innerHTML = `
-            <div class="cr-wiki">
-                <div class="cr-sidebar">
-                    <h4 class="cr-sidebar-title">Comptes-rendus</h4>
-                    ${tabs.map(t => `
-                        <button class="cr-tab ${t.active ? 'cr-tab-active' : ''}" onclick="showCRTab(${t.id})" data-crid="${t.id}">
-                            <span class="cr-tab-date">${t.label}</span>
-                            <span class="cr-tab-title">${esc(t.meeting.title)}</span>
-                            ${t.meeting.minutes ? '<span class="cr-tab-badge">CR</span>' : '<span class="cr-tab-badge cr-tab-badge-empty">&mdash;</span>'}
-                        </button>
-                    `).join('')}
-                </div>
-                <div class="cr-content" id="cr-content">
-                    ${renderCRContent(tabs[0]?.meeting)}
-                </div>
-            </div>
-        `;
-
-        // Store meetings for tab switching
-        window._crMeetings = {};
-        withMinutes.forEach(m => window._crMeetings[m.id] = m);
-    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; }
-}
-
-function showCRTab(id) {
-    // Update active tab
-    document.querySelectorAll('.cr-tab').forEach(t => t.classList.remove('cr-tab-active'));
-    document.querySelector(`.cr-tab[data-crid="${id}"]`)?.classList.add('cr-tab-active');
-    // Render content
-    const m = window._crMeetings?.[id];
-    const el = document.getElementById('cr-content');
-    if (el && m) el.innerHTML = renderCRContent(m);
-}
-
-function renderCRContent(meeting) {
-    if (!meeting) return '<p class="empty-msg">Selectionnez un compte-rendu</p>';
-    const d = new Date(meeting.meeting_date);
-    const hasMinutes = meeting.minutes && meeting.minutes.trim().length > 0;
-
-    return `
-        <div class="cr-header">
-            <div>
-                <h2 class="cr-title">${esc(meeting.title)}</h2>
-                <div class="cr-meta">${formatDate(meeting.meeting_date)}${meeting.location ? ' &middot; ' + esc(meeting.location) : ''}</div>
-            </div>
-            <div class="cr-header-actions">
-                <button onclick="editCR(${meeting.id})" class="btn btn-primary" style="font-size:12px;padding:6px 14px">${hasMinutes ? 'Modifier' : 'Rediger le CR'}</button>
-            </div>
-        </div>
-        ${meeting.agenda ? `<div class="cr-section">
-            <h3 class="cr-section-title">Ordre du jour</h3>
-            <div class="cr-section-body">${renderMarkdown(meeting.agenda)}</div>
-        </div>` : ''}
-        ${hasMinutes ? `<div class="cr-section">
-            <h3 class="cr-section-title">Compte-rendu</h3>
-            <div class="cr-section-body cr-minutes">${renderMarkdown(meeting.minutes)}</div>
-        </div>` : `<div class="cr-empty-minutes">
-            <div style="font-size:36px;margin-bottom:8px">&#128221;</div>
-            <p>Aucun compte-rendu redige pour cette reunion</p>
-            <button onclick="editCR(${meeting.id})" class="btn btn-accent" style="font-size:13px;padding:8px 20px;margin-top:8px">Rediger le compte-rendu</button>
-        </div>`}
-    `;
-}
-
-function editCR(meetingId) {
-    const m = window._crMeetings?.[meetingId];
-    if (!m) return;
-
-    const template = m.minutes || `# Compte-rendu \u2014 ${m.title}\n\n## Participants\n- \n\n## Ordre du jour\n${m.agenda || '1. '}\n\n## Decisions prises\n- [ ] \n\n## Actions a mener\n- [ ] Action 1 \u2014 **Responsable** \u2014 Echeance\n- [ ] Action 2 \u2014 **Responsable** \u2014 Echeance\n\n## Points divers\n- \n\n---\n*Redige le ${new Date().toLocaleDateString('fr-FR')}*`;
-
-    const html = `<div class="adm-modal-bg" id="cr-editor-modal">
-        <div class="adm-modal" style="max-width:900px;padding:0;height:90vh;display:flex;flex-direction:column">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--gray-200);flex-shrink:0">
-                <h3 style="color:var(--primary);margin:0;font-size:16px">${esc(m.title)} &mdash; Compte-rendu</h3>
-                <div style="display:flex;gap:8px">
-                    <button onclick="toggleCRPreview()" class="btn btn-primary" style="font-size:12px;padding:6px 14px;background:var(--teal)">Apercu</button>
-                    <button onclick="saveCR(${meetingId})" class="btn btn-accent" style="font-size:12px;padding:6px 14px">Enregistrer</button>
-                    <button class="auth-close" onclick="closeModal('cr-editor-modal')" style="position:static">&times;</button>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden" id="cr-editor-layout">
-                <div style="border-right:1px solid var(--gray-200);display:flex;flex-direction:column">
-                    <div style="padding:8px 12px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);font-weight:700">EDITEUR MARKDOWN</div>
-                    <textarea id="cr-editor-text" style="flex:1;width:100%;border:none;padding:16px;font-family:'Source Code Pro',monospace;font-size:14px;line-height:1.7;resize:none;outline:none;background:var(--white);color:var(--gray-800)">${esc(template)}</textarea>
-                </div>
-                <div style="overflow-y:auto;display:flex;flex-direction:column">
-                    <div style="padding:8px 12px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);font-weight:700">APERCU</div>
-                    <div id="cr-preview" style="flex:1;padding:16px;font-size:14px;line-height:1.7;overflow-y:auto"></div>
-                </div>
-            </div>
-            <div style="padding:8px 12px;background:var(--gray-50);border-top:1px solid var(--gray-200);font-size:11px;color:var(--gray-400);flex-shrink:0">
-                Syntaxe: # Titre &middot; ## Sous-titre &middot; **gras** &middot; *italique* &middot; - liste &middot; - [x] fait &middot; - [ ] a faire &middot; &gt; citation &middot; --- separateur &middot; \`code\`
-            </div>
-        </div>
-    </div>`;
-    openModal(html);
-
-    // Live preview
-    const textarea = document.getElementById('cr-editor-text');
-    const preview = document.getElementById('cr-preview');
-    function updatePreview() {
-        if (preview && textarea) preview.innerHTML = renderMarkdown(textarea.value);
-    }
-    updatePreview();
-    textarea?.addEventListener('input', updatePreview);
-}
-
-function toggleCRPreview() {
-    const layout = document.getElementById('cr-editor-layout');
-    if (!layout) return;
-    if (layout.style.gridTemplateColumns === '1fr') {
-        layout.style.gridTemplateColumns = '1fr 1fr';
-        layout.children[1].style.display = 'flex';
-    } else {
-        layout.style.gridTemplateColumns = '1fr';
-        layout.children[1].style.display = 'none';
-    }
-}
-
-async function saveCR(meetingId) {
-    const text = document.getElementById('cr-editor-text')?.value;
-    if (!text) return;
-    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-        body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: text, status: 'done'})});
-    closeModal('cr-editor-modal');
-    window._crMeetings[meetingId].minutes = text;
-    showCRTab(meetingId);
-    showToast('Compte-rendu enregistre', 'success');
-}
-
-async function loadBureauDocs() {
-    const el = document.getElementById('bureau-content');
-    if (!el) return;
-    try {
-        const res = await fetch(`${API}/api/members?action=bureau_docs`, {headers:{'Authorization':'Bearer '+authToken}});
-        const docs = await res.json();
-        if (docs.error) { el.innerHTML = '<p class="empty-msg">'+esc(docs.error)+'</p>'; return; }
-
-        el.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="color:var(--primary);font-weight:800;margin:0">Documents Bureau</h3>
-                <button onclick="uploadBureauDoc()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Ajouter</button>
-            </div>
-            ${docs.length ? docs.map(d => `<div class="bureau-doc-row">
-                <div class="bureau-doc-icon">${getFileIcon(d.file_type)}</div>
-                <div class="bureau-doc-info">
-                    <div class="bureau-doc-title">${esc(d.title)}</div>
-                    <div class="bureau-doc-meta">Par ${esc(d.first_name||'')} ${esc(d.last_name||'')} · ${formatDate(d.created_at)}</div>
-                </div>
-                <button onclick="viewDocument('${esc(d.file_url)}','${esc(d.title)}')" class="bureau-sm-btn" title="Consulter">&#128065;</button>
-            </div>`).join('') : '<p class="empty-msg">Aucun document</p>'}
-        `;
-    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; }
-}
-
-function getFileIcon(type) {
-    const icons = {pdf:'&#128196;',doc:'&#128196;',docx:'&#128196;',ppt:'&#128202;',pptx:'&#128202;',xls:'&#128200;',xlsx:'&#128200;',jpg:'&#128247;',png:'&#128247;'};
-    return icons[type] || '&#128196;';
 }
 
 function showNewActionForm() {
@@ -1192,27 +967,13 @@ function showNewActionForm() {
             <button class="auth-close" onclick="closeModal('action-modal')">&times;</button>
             <div style="padding:28px">
                 <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle action</h3>
-                <div class="form-group"><label>Titre *</label><input id="ba-title" required></div>
-                <div class="form-group"><label>Description</label><textarea id="ba-desc" style="min-height:60px"></textarea></div>
-                <div class="form-group"><label>Echeance</label><input type="date" id="ba-due"></div>
-                <button onclick="saveBureauAction()" class="btn btn-accent" style="width:100%">Creer l'action</button>
-            </div>
-        </div>
-    </div>`;
-    openModal(html);
-}
-
-function showNewMeetingForm() {
-    const html = `<div class="adm-modal-bg" id="meeting-modal">
-        <div class="adm-modal" style="max-width:480px">
-            <button class="auth-close" onclick="closeModal('meeting-modal')">&times;</button>
-            <div style="padding:28px">
-                <h3 style="color:var(--primary);margin-bottom:16px">Planifier une reunion</h3>
-                <div class="form-group"><label>Titre *</label><input id="bm-title" required placeholder="Reunion de Bureau"></div>
-                <div class="form-group"><label>Date *</label><input type="datetime-local" id="bm-date" required></div>
-                <div class="form-group"><label>Lieu</label><input id="bm-location" placeholder="Visio / Presentiel"></div>
-                <div class="form-group"><label>Ordre du jour</label><textarea id="bm-agenda" style="min-height:80px" placeholder="Points a aborder..."></textarea></div>
-                <button onclick="saveBureauMeeting()" class="btn btn-accent" style="width:100%">Planifier</button>
+                <div class="form-group"><label>Titre *</label><input id="ba-title" required placeholder="Ex: Envoyer les convocations AG"></div>
+                <div class="form-group"><label>Description</label><textarea id="ba-desc" style="min-height:60px" placeholder="Détails de l'action..."></textarea></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div class="form-group"><label>Échéance</label><input type="date" id="ba-due"></div>
+                    <div class="form-group"><label>Assigné à (ID membre)</label><input type="number" id="ba-assigned" placeholder="Optionnel"></div>
+                </div>
+                <button onclick="saveBureauAction()" class="btn btn-accent" style="width:100%">Créer l'action</button>
             </div>
         </div>
     </div>`;
@@ -1220,62 +981,208 @@ function showNewMeetingForm() {
 }
 
 async function saveBureauAction() {
-    const title = document.getElementById('ba-title').value;
-    if (!title) return;
+    const title = document.getElementById('ba-title')?.value;
+    if (!title) return alert('Titre requis');
     await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'bureau_create_action', title,
-            description: document.getElementById('ba-desc').value,
-            due_date: document.getElementById('ba-due').value || null
+            description: document.getElementById('ba-desc')?.value || '',
+            due_date: document.getElementById('ba-due')?.value || null,
+            assigned_to: document.getElementById('ba-assigned')?.value ? parseInt(document.getElementById('ba-assigned').value) : null
         })});
     closeModal('action-modal');
-    showToast('Action creee', 'success');
+    showToast('Action créée', 'success');
     loadBureauActions();
 }
 
 async function updateBureauAction(id, status) {
     await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'bureau_update_action', id, status})});
+    showToast(status === 'done' ? 'Action terminée' : status === 'in_progress' ? 'Action démarrée' : 'Action rouverte', 'success');
     loadBureauActions();
 }
 
-async function saveBureauMeeting() {
-    const title = document.getElementById('bm-title').value;
-    const date = document.getElementById('bm-date').value;
-    if (!title || !date) return;
-    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-        body: JSON.stringify({action:'bureau_create_meeting', title, meeting_date: date,
-            location: document.getElementById('bm-location').value,
-            agenda: document.getElementById('bm-agenda').value
-        })});
-    closeModal('meeting-modal');
-    showToast('Reunion planifiee', 'success');
-    loadBureauMeetings();
+// =============================================
+// WIKI CR (onglets par réunion)
+// =============================================
+async function loadBureauWiki() {
+    const el = document.getElementById('bureau-content');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API}/api/members?action=bureau_meetings`, {headers:{'Authorization':'Bearer '+authToken}});
+        const meetings = await res.json();
+        if (!Array.isArray(meetings) || !meetings.length) {
+            el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Wiki — Comptes-rendus</h3>
+                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle réunion</button>
+            </div><p class="empty-msg">Aucune réunion. Créez la première !</p>`;
+            return;
+        }
+
+        window._wikiMeetings = {};
+        meetings.forEach(m => window._wikiMeetings[m.id] = m);
+
+        const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+
+        el.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Wiki — Comptes-rendus</h3>
+                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle réunion</button>
+            </div>
+            <div class="cr-wiki">
+                <div class="cr-sidebar">
+                    ${meetings.map((m, i) => {
+                        const d = new Date(m.meeting_date);
+                        const label = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+                        const hasCR = m.minutes && m.minutes.trim().length > 0;
+                        return `<button class="cr-tab ${i===0?'cr-tab-active':''}" onclick="showWikiTab(${m.id})" data-crid="${m.id}">
+                            <span class="cr-tab-date">${label}</span>
+                            <span class="cr-tab-title">${esc(m.title)}</span>
+                            ${hasCR ? '<span class="cr-tab-badge">CR</span>' : '<span class="cr-tab-badge cr-tab-badge-empty">—</span>'}
+                        </button>`;
+                    }).join('')}
+                </div>
+                <div class="cr-content" id="wiki-cr-content">
+                    ${_renderWikiTab(meetings[0])}
+                </div>
+            </div>`;
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur : ' + e.message + '</p>'; }
 }
 
-function editMeetingMinutes(id) {
-    const html = `<div class="adm-modal-bg" id="minutes-modal">
-        <div class="adm-modal" style="max-width:600px">
-            <button class="auth-close" onclick="closeModal('minutes-modal')">&times;</button>
+function showWikiTab(id) {
+    document.querySelectorAll('.cr-tab').forEach(t => t.classList.remove('cr-tab-active'));
+    document.querySelector(`.cr-tab[data-crid="${id}"]`)?.classList.add('cr-tab-active');
+    const m = window._wikiMeetings?.[id];
+    const el = document.getElementById('wiki-cr-content');
+    if (el && m) el.innerHTML = _renderWikiTab(m);
+}
+
+function _renderWikiTab(m) {
+    if (!m) return '<p class="empty-msg">Sélectionnez une réunion</p>';
+    const hasCR = m.minutes && m.minutes.trim().length > 0;
+    const isPast = new Date(m.meeting_date) < new Date();
+
+    return `
+        <div class="cr-header">
+            <div>
+                <h2 class="cr-title">${esc(m.title)}</h2>
+                <div class="cr-meta">${formatDate(m.meeting_date)}${m.location ? ' · ' + esc(m.location) : ''}</div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button onclick="editWikiCR(${m.id})" class="btn btn-primary" style="font-size:12px;padding:6px 14px">${hasCR ? 'Modifier le CR' : 'Rédiger le CR'}</button>
+            </div>
+        </div>
+        ${m.agenda ? `<div class="cr-section"><h3 class="cr-section-title">Ordre du jour</h3><div class="cr-section-body">${typeof renderMarkdown === 'function' ? renderMarkdown(m.agenda) : esc(m.agenda)}</div></div>` : ''}
+        ${hasCR ? `<div class="cr-section"><h3 class="cr-section-title">Compte-rendu</h3><div class="cr-section-body cr-minutes">${typeof renderMarkdown === 'function' ? renderMarkdown(m.minutes) : esc(m.minutes)}</div></div>` :
+        `<div class="cr-empty-minutes">
+            <div style="font-size:32px;margin-bottom:8px">&#128221;</div>
+            <p>${isPast ? 'Aucun CR rédigé pour cette réunion' : 'Réunion à venir'}</p>
+            ${isPast ? `<button onclick="editWikiCR(${m.id})" class="btn btn-accent" style="font-size:13px;padding:8px 20px;margin-top:8px">Rédiger le CR</button>` : ''}
+        </div>`}
+    `;
+}
+
+function editWikiCR(meetingId) {
+    const m = window._wikiMeetings?.[meetingId];
+    if (!m) return;
+
+    const template = m.minutes || `# Compte-rendu — ${m.title}\n\n## Participants\n- \n\n## Décisions prises\n- [ ] \n\n## Actions à mener\n- [ ] Action — **Responsable** — Échéance\n\n## Points divers\n- \n\n---\n*Rédigé le ${new Date().toLocaleDateString('fr-FR')}*`;
+
+    const html = `<div class="adm-modal-bg" id="cr-editor-modal">
+        <div class="adm-modal" style="max-width:900px;padding:0;height:85vh;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--gray-200);flex-shrink:0">
+                <h3 style="color:var(--primary);margin:0;font-size:15px">${esc(m.title)}</h3>
+                <div style="display:flex;gap:8px">
+                    <button onclick="extractActionsFromCR(${meetingId})" class="btn btn-primary" style="font-size:11px;padding:5px 12px;background:var(--teal)">Extraire les actions</button>
+                    <button onclick="saveWikiCR(${meetingId})" class="btn btn-accent" style="font-size:11px;padding:5px 12px">Enregistrer</button>
+                    <button class="auth-close" onclick="closeModal('cr-editor-modal')" style="position:static">&times;</button>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden">
+                <div style="border-right:1px solid var(--gray-200);display:flex;flex-direction:column">
+                    <div style="padding:6px 12px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);font-weight:700">MARKDOWN</div>
+                    <textarea id="cr-editor-text" style="flex:1;width:100%;border:none;padding:16px;font-family:'Courier New',monospace;font-size:13px;line-height:1.7;resize:none;outline:none">${esc(template)}</textarea>
+                </div>
+                <div style="overflow-y:auto;display:flex;flex-direction:column">
+                    <div style="padding:6px 12px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);font-weight:700">APERÇU</div>
+                    <div id="cr-preview" style="flex:1;padding:16px;font-size:14px;line-height:1.7;overflow-y:auto"></div>
+                </div>
+            </div>
+            <div style="padding:6px 12px;background:var(--gray-50);border-top:1px solid var(--gray-200);font-size:10px;color:var(--gray-400);flex-shrink:0">
+                # Titre · ## Sous-titre · **gras** · *italique* · - liste · - [x] fait · - [ ] à faire · > citation · --- séparateur
+            </div>
+        </div>
+    </div>`;
+    openModal(html);
+
+    const textarea = document.getElementById('cr-editor-text');
+    const preview = document.getElementById('cr-preview');
+    function update() { if (preview && textarea && typeof renderMarkdown === 'function') preview.innerHTML = renderMarkdown(textarea.value); }
+    update();
+    textarea?.addEventListener('input', update);
+}
+
+async function saveWikiCR(meetingId) {
+    const text = document.getElementById('cr-editor-text')?.value;
+    if (!text) return;
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: text, status:'done'})});
+    closeModal('cr-editor-modal');
+    if (window._wikiMeetings) window._wikiMeetings[meetingId].minutes = text;
+    showWikiTab(meetingId);
+    showToast('CR enregistré', 'success');
+}
+
+async function extractActionsFromCR(meetingId) {
+    const text = document.getElementById('cr-editor-text')?.value;
+    if (!text) return;
+    // Parse lines like: - [ ] Action text — **Responsible** — Date
+    const actionLines = text.match(/^- \[ \] .+$/gm) || [];
+    if (!actionLines.length) { showToast('Aucune action trouvée (format: - [ ] Action)', 'info'); return; }
+
+    let created = 0;
+    for (const line of actionLines) {
+        const clean = line.replace(/^- \[ \] /, '').trim();
+        const parts = clean.split('—').map(s => s.trim());
+        const title = parts[0]?.replace(/\*\*/g, '') || clean;
+        await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+            body: JSON.stringify({action:'bureau_create_action', title, meeting_id: meetingId})});
+        created++;
+    }
+    showToast(created + ' action(s) extraite(s) vers le Kanban', 'success');
+}
+
+function showNewMeetingForm() {
+    const html = `<div class="adm-modal-bg" id="meeting-modal">
+        <div class="adm-modal" style="max-width:480px">
+            <button class="auth-close" onclick="closeModal('meeting-modal')">&times;</button>
             <div style="padding:28px">
-                <h3 style="color:var(--primary);margin-bottom:16px">Rediger le compte-rendu</h3>
-                <textarea id="bm-minutes" style="width:100%;min-height:200px;padding:12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px" placeholder="Participants, decisions, actions..."></textarea>
-                <button onclick="saveMeetingMinutes(${id})" class="btn btn-accent" style="width:100%;margin-top:12px">Enregistrer le CR</button>
+                <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle réunion</h3>
+                <div class="form-group"><label>Titre *</label><input id="bm-title" required value="Réunion de Bureau"></div>
+                <div class="form-group"><label>Date et heure *</label><input type="datetime-local" id="bm-date" required></div>
+                <div class="form-group"><label>Lieu</label><input id="bm-location" placeholder="Visio / Présentiel"></div>
+                <div class="form-group"><label>Ordre du jour</label><textarea id="bm-agenda" style="min-height:80px" placeholder="## Points à aborder\n- Point 1\n- Point 2"></textarea></div>
+                <button onclick="saveBureauMeeting()" class="btn btn-accent" style="width:100%">Planifier la réunion</button>
             </div>
         </div>
     </div>`;
     openModal(html);
 }
 
-async function saveMeetingMinutes(id) {
-    const minutes = document.getElementById('bm-minutes').value;
+async function saveBureauMeeting() {
+    const title = document.getElementById('bm-title')?.value;
+    const date = document.getElementById('bm-date')?.value;
+    if (!title || !date) return alert('Titre et date requis');
     await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-        body: JSON.stringify({action:'bureau_update_meeting', id, minutes, status:'done'})});
-    closeModal('minutes-modal');
-    showToast('Compte-rendu enregistre', 'success');
-    loadBureauMeetings();
+        body: JSON.stringify({action:'bureau_create_meeting', title, meeting_date: date,
+            location: document.getElementById('bm-location')?.value || '',
+            agenda: document.getElementById('bm-agenda')?.value || ''
+        })});
+    closeModal('meeting-modal');
+    showToast('Réunion planifiée', 'success');
+    loadBureauWiki();
 }
 
-async function uploadBureauDoc() {
+function uploadBureauDoc() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.png';
@@ -1283,46 +1190,21 @@ async function uploadBureauDoc() {
         if (!this.files[0]) return;
         const file = this.files[0];
         if (file.size > 10*1024*1024) { alert('Max 10 Mo'); return; }
-        const title = prompt('Titre du document :', file.name.replace(/\.[^.]+$/,''));
+        const title = prompt('Titre :', file.name.replace(/\.[^.]+$/,''));
         if (!title) return;
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', 'ml_default');
-        formData.append('folder', 'affi/bureau');
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('upload_preset', 'ml_default');
+        fd.append('folder', 'affi/bureau');
         try {
-            showToast('Upload en cours...', 'info');
-            const res = await fetch('https://api.cloudinary.com/v1_1/dsheinfad/auto/upload', {method:'POST',body:formData});
-            const data = await res.json();
-            if (data.secure_url) {
+            const r = await fetch('https://api.cloudinary.com/v1_1/dsheinfad/auto/upload', {method:'POST',body:fd});
+            const d = await r.json();
+            if (d.secure_url) {
                 await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-                    body: JSON.stringify({action:'bureau_save_doc', title, file_url: data.secure_url, file_type: file.name.split('.').pop()})});
-                showToast('Document ajoute', 'success');
-                loadBureauDocs();
+                    body: JSON.stringify({action:'bureau_save_doc', title, file_url: d.secure_url, file_type: file.name.split('.').pop()})});
+                showToast('Document ajouté', 'success');
             }
-        } catch(e) { alert('Erreur upload'); }
+        } catch(e) { alert('Erreur'); }
     };
     input.click();
-}
-
-function viewDocument(url, title) {
-    const ext = url.split('.').pop().toLowerCase();
-    let viewerHtml = '';
-    if (['pdf','doc','docx','ppt','pptx','xls','xlsx'].includes(ext)) {
-        viewerHtml = `<iframe src="https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true" style="width:100%;height:80vh;border:none;border-radius:8px"></iframe>`;
-    } else if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
-        viewerHtml = `<img src="${url}" style="max-width:100%;max-height:80vh;border-radius:8px;display:block;margin:0 auto">`;
-    } else {
-        viewerHtml = `<p style="text-align:center;padding:40px;color:var(--gray-500)">Format non supporte pour la previsualisation. <a href="${url}" target="_blank">Ouvrir dans un nouvel onglet</a></p>`;
-    }
-
-    const html = `<div class="adm-modal-bg" id="doc-viewer-modal">
-        <div class="adm-modal" style="max-width:900px;padding:0;overflow:hidden">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--gray-200)">
-                <strong style="font-size:15px;color:var(--primary)">${esc(title)}</strong>
-                <button class="auth-close" onclick="closeModal('doc-viewer-modal')" style="position:static">&times;</button>
-            </div>
-            <div style="padding:0">${viewerHtml}</div>
-        </div>
-    </div>`;
-    openModal(html);
 }

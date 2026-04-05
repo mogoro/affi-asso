@@ -1013,11 +1013,13 @@ function openWikiMeeting(id) {
     document.querySelector(`.wiki-tab[data-wid="${id}"]`)?.classList.add('wiki-tab-active');
     const m = window._wikiMeetings?.[id];
     if (!m) return;
-    // Open fullscreen editor overlay
-    _openFullscreenEditor(m);
+    _openWikiPage(m, 'read');
 }
 
-function _openFullscreenEditor(m) {
+let _wikiMode = 'read'; // 'read' or 'edit'
+
+function _openWikiPage(m, mode) {
+    _wikiMode = mode || 'read';
     const content = m.minutes || '';
     _lastSavedContent = content;
     document.getElementById('wiki-fullscreen')?.remove();
@@ -1025,57 +1027,113 @@ function _openFullscreenEditor(m) {
     const overlay = document.createElement('div');
     overlay.id = 'wiki-fullscreen';
     overlay.className = 'wiki-fs';
-    overlay.innerHTML = `
-        <div class="wiki-fs-toolbar">
-            <div class="wiki-fs-toolbar-left">
-                <button onclick="closeWikiFullscreen()" class="wiki-fs-close" title="Fermer (Escape)">&#10005;</button>
-                <div>
-                    <div class="wiki-fs-title">${esc(m.title)}</div>
-                    <div class="wiki-fs-meta">${formatDate(m.meeting_date)}${m.location ? ' · ' + esc(m.location) : ''}</div>
+
+    if (_wikiMode === 'read') {
+        // MODE LECTURE (Wikipedia-style)
+        overlay.innerHTML = `
+            <div class="wiki-fs-toolbar">
+                <div class="wiki-fs-toolbar-left">
+                    <button onclick="closeWikiFullscreen()" class="wiki-fs-close" title="Fermer">&#10005;</button>
+                    <div>
+                        <div class="wiki-fs-title">${esc(m.title)}</div>
+                        <div class="wiki-fs-meta">${formatDate(m.meeting_date)}${m.location ? ' · ' + esc(m.location) : ''}</div>
+                    </div>
+                </div>
+                <div class="wiki-fs-toolbar-right">
+                    <button onclick="_openWikiPage(window._wikiMeetings[${m.id}],'edit')" class="wiki-fs-btn" style="background:rgba(255,255,255,.2);font-size:13px;padding:8px 20px">&#9998; Modifier</button>
                 </div>
             </div>
-            <div class="wiki-fs-toolbar-right">
-                <span id="wiki-save-status" class="wiki-save-status" style="color:#fff;opacity:.7">&#10003; Sauvegardé</span>
-                <button onclick="wikiCreateActionFromCR(${m.id})" class="wiki-fs-btn">+ Action</button>
-                <button onclick="wikiExtractAllActions(${m.id})" class="wiki-fs-btn wiki-fs-btn-accent">Extraire actions</button>
+            <div class="wiki-read-wrap">
+                <article class="wiki-article">
+                    ${content ? content : `<div class="wiki-empty-article">
+                        <p style="font-size:16px;color:var(--gray-400);margin-bottom:16px">Aucun compte-rendu rédigé pour cette réunion.</p>
+                        <button onclick="_openWikiPage(window._wikiMeetings[${m.id}],'edit')" class="btn btn-accent" style="font-size:14px;padding:10px 24px">Rédiger le compte-rendu</button>
+                    </div>`}
+                </article>
             </div>
-        </div>
-        <div class="on-format-bar">
-            <button onclick="onFmt('bold')" class="on-fmt-btn" title="Gras (Ctrl+B)"><strong>G</strong></button>
-            <button onclick="onFmt('italic')" class="on-fmt-btn" title="Italique (Ctrl+I)"><em>I</em></button>
-            <button onclick="onFmt('underline')" class="on-fmt-btn" title="Souligné (Ctrl+U)"><u>S</u></button>
-            <span class="on-fmt-sep"></span>
-            <button onclick="onFmtBlock('h2')" class="on-fmt-btn" title="Titre">T1</button>
-            <button onclick="onFmtBlock('h3')" class="on-fmt-btn" title="Sous-titre">T2</button>
-            <button onclick="onFmtBlock('h4')" class="on-fmt-btn" title="Petit titre">T3</button>
-            <span class="on-fmt-sep"></span>
-            <button onclick="onFmt('insertUnorderedList')" class="on-fmt-btn" title="Liste à puces">&#8226;</button>
-            <button onclick="onFmt('insertOrderedList')" class="on-fmt-btn" title="Liste numérotée">1.</button>
-            <button onclick="onInsertCheckbox()" class="on-fmt-btn" title="Case à cocher">&#9744;</button>
-            <span class="on-fmt-sep"></span>
-            <button onclick="onFmt('formatBlock','blockquote')" class="on-fmt-btn" title="Citation">&#10077;</button>
-            <button onclick="document.execCommand('insertHorizontalRule')" class="on-fmt-btn" title="Séparateur">―</button>
-            <span class="on-fmt-sep"></span>
-            <button onclick="onFmt('removeFormat')" class="on-fmt-btn" title="Retirer le formatage">&#10060;</button>
-        </div>
-        ${m.agenda ? `<div class="wiki-fs-agenda"><strong>OJ :</strong> ${esc(m.agenda)}</div>` : ''}
-        <div class="on-editor-wrap">
-            <div id="on-editor" class="on-editor" contenteditable="true" spellcheck="true">${content || _getDefaultTemplate(m)}</div>
-        </div>
-        <div class="wiki-fs-footer">Ctrl+B gras · Ctrl+I italique · Ctrl+U souligné · Auto-sauvegarde activée</div>
-    `;
+        `;
+    } else {
+        // MODE ÉDITION (OneNote-style)
+        overlay.innerHTML = `
+            <div class="wiki-fs-toolbar" style="background:var(--accent)">
+                <div class="wiki-fs-toolbar-left">
+                    <button onclick="wikiSaveAndRead(${m.id})" class="wiki-fs-close" title="Enregistrer et fermer">&#10005;</button>
+                    <div>
+                        <div class="wiki-fs-title">&#9998; ${esc(m.title)}</div>
+                        <div class="wiki-fs-meta">Mode édition</div>
+                    </div>
+                </div>
+                <div class="wiki-fs-toolbar-right">
+                    <span id="wiki-save-status" class="wiki-save-status" style="color:#fff;opacity:.8">&#10003; Sauvegardé</span>
+                    <button onclick="wikiCreateActionFromCR(${m.id})" class="wiki-fs-btn">+ Action</button>
+                    <button onclick="wikiExtractAllActions(${m.id})" class="wiki-fs-btn wiki-fs-btn-accent">Extraire actions</button>
+                    <button onclick="wikiSaveAndRead(${m.id})" class="wiki-fs-btn" style="background:#fff;color:var(--accent);font-size:13px;padding:8px 20px">&#10003; Enregistrer</button>
+                </div>
+            </div>
+            <div class="on-format-bar">
+                <button onclick="onFmt('bold')" class="on-fmt-btn" title="Gras"><strong>G</strong></button>
+                <button onclick="onFmt('italic')" class="on-fmt-btn" title="Italique"><em>I</em></button>
+                <button onclick="onFmt('underline')" class="on-fmt-btn" title="Souligné"><u>S</u></button>
+                <span class="on-fmt-sep"></span>
+                <button onclick="onFmtBlock('h2')" class="on-fmt-btn" title="Titre">T1</button>
+                <button onclick="onFmtBlock('h3')" class="on-fmt-btn" title="Sous-titre">T2</button>
+                <button onclick="onFmtBlock('h4')" class="on-fmt-btn" title="Petit titre">T3</button>
+                <span class="on-fmt-sep"></span>
+                <button onclick="onFmt('insertUnorderedList')" class="on-fmt-btn" title="Liste">&#8226;</button>
+                <button onclick="onFmt('insertOrderedList')" class="on-fmt-btn" title="Numérotée">1.</button>
+                <button onclick="onInsertCheckbox()" class="on-fmt-btn" title="Checkbox">&#9744;</button>
+                <span class="on-fmt-sep"></span>
+                <button onclick="onFmt('formatBlock','blockquote')" class="on-fmt-btn" title="Citation">&#10077;</button>
+                <button onclick="document.execCommand('insertHorizontalRule')" class="on-fmt-btn" title="Séparateur">―</button>
+            </div>
+            <div class="on-editor-wrap">
+                <div id="on-editor" class="on-editor" contenteditable="true" spellcheck="true">${content || _getDefaultTemplate(m)}</div>
+            </div>
+            <div class="wiki-fs-footer">Ctrl+B gras · Ctrl+I italique · Auto-sauvegarde activée</div>
+        `;
+    }
+
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
 
-    // Focus editor
-    setTimeout(() => document.getElementById('on-editor')?.focus(), 100);
-    _startAutoSaveWYSIWYG(m.id);
+    if (_wikiMode === 'edit') {
+        setTimeout(() => document.getElementById('on-editor')?.focus(), 100);
+        _startAutoSaveWYSIWYG(m.id);
+    }
 
-    // Close on Escape (but only if not in a text selection)
     overlay._escHandler = function(e) {
-        if (e.key === 'Escape' && !window.getSelection().toString()) closeWikiFullscreen();
+        if (e.key === 'Escape') {
+            if (_wikiMode === 'edit') wikiSaveAndRead(m.id);
+            else closeWikiFullscreen();
+        }
     };
     document.addEventListener('keydown', overlay._escHandler);
+}
+
+async function wikiSaveAndRead(meetingId) {
+    // Save current content
+    const ed = document.getElementById('on-editor');
+    if (ed) {
+        const content = ed.innerHTML;
+        try {
+            await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+                body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: content, status: content.trim() ? 'done' : 'planned'})});
+            if (window._wikiMeetings) window._wikiMeetings[meetingId].minutes = content;
+            _lastSavedContent = content;
+        } catch(e) {}
+    }
+    if (_autoSaveTimer) { clearInterval(_autoSaveTimer); _autoSaveTimer = null; }
+    // Switch to read mode
+    const m = window._wikiMeetings?.[meetingId];
+    if (m) {
+        document.getElementById('wiki-fullscreen')?.remove();
+        document.body.style.overflow = 'hidden';
+        _openWikiPage(m, 'read');
+    }
+    // Update tab
+    const tab = document.querySelector(`.wiki-tab[data-wid="${meetingId}"] .wiki-tab-status`);
+    if (tab) { tab.textContent = 'CR rédigé'; tab.className = 'wiki-tab-status wiki-tab-has-cr'; }
+    showToast('Compte-rendu enregistré', 'success');
 }
 
 function _getDefaultTemplate(m) {

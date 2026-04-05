@@ -5,6 +5,49 @@ const API = window.location.origin;
 const PAGES = ['accueil','identite','annuaire','agenda','evenements','publications','replays','quizz','ecoles','adhesion','contact','membres'];
 let _homeLoaded = false;
 
+// === I18N (Multi-langue) ===
+let _i18n = {};
+let _currentLang = localStorage.getItem('affi_lang') || 'fr';
+
+async function loadI18n() {
+    try {
+        const res = await fetch('/data/i18n.json');
+        _i18n = await res.json();
+    } catch(e) { console.warn('i18n:', e); }
+}
+
+function t(key) {
+    return (_i18n[_currentLang] && _i18n[_currentLang][key]) || (_i18n['fr'] && _i18n['fr'][key]) || key;
+}
+
+function setLanguage(lang) {
+    _currentLang = lang;
+    localStorage.setItem('affi_lang', lang);
+    applyTranslations();
+    // Update switcher
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+}
+
+function applyTranslations() {
+    // Translate all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        const translated = t(key);
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = translated;
+        } else {
+            el.innerHTML = translated;
+        }
+    });
+}
+
+// Load i18n on startup
+loadI18n().then(() => {
+    applyTranslations();
+    // Set active lang button
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === _currentLang));
+});
+
 // === READING PROGRESS BAR ===
 window.addEventListener('scroll', function() {
     const bar = document.getElementById('reading-progress');

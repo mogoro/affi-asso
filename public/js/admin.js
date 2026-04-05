@@ -256,6 +256,7 @@ async function loadAdminCotisations() {
             <div style="display:flex;align-items:center;gap:6px;font-size:13px"><span style="color:var(--accent);font-size:16px">&#9679;</span><strong>${noCotis}</strong> sans cotisation</div>
             <div style="margin-left:auto"><strong>${year}</strong></div>
         </div>
+        <div style="margin-bottom:12px"><button onclick="syncHelloAsso()" class="btn btn-primary" style="font-size:12px;padding:6px 14px;background:#49D2C0">&#127760; Synchroniser HelloAsso</button></div>
         <div id="adm-cotisations-table"></div>
     `;
 
@@ -277,6 +278,12 @@ async function loadAdminCotisations() {
         actions: (s) => s.status !== 'paid' ? `<button onclick="adminPost({action:'mark_subscription_paid',id:${s.id}}).then(()=>loadAdminCotisations())" class="adm-btn adm-btn-ok" title="Marquer payée">&#10003;</button>` : '',
         pageSize: 50,
     });
+}
+
+async function syncHelloAsso() {
+    const data = await adminFetch('helloasso_sync', {});
+    showToast(data.message, data.ok ? 'success' : 'info');
+    if (data.synced > 0) loadAdminCotisations();
 }
 
 async function saveMemberEdit(evt, id) {

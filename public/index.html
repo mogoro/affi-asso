@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775412914" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775412914">
+<link rel="preload" href="/css/styles.css?v=1775413762" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775413762">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -61,26 +61,32 @@
 
         <div class="nav-links" id="nav-links">
             <a class="nav-link active" data-page="accueil" onclick="navigate('accueil');document.getElementById('nav-links').classList.remove('open')">
-                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="nav-link-text">Accueil</span>
+                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="nav-link-text" data-i18n="nav.home">Accueil</span>
             </a>
             <a class="nav-link" data-page="identite" onclick="navigate('identite');document.getElementById('nav-links').classList.remove('open')">
-                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><span class="nav-link-text">L'AFFI</span>
+                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><span class="nav-link-text" data-i18n="nav.about">L'AFFI</span>
             </a>
             <a class="nav-link" data-page="annuaire" onclick="navigate('annuaire');document.getElementById('nav-links').classList.remove('open')">
-                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-link-text">Réseau</span>
+                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-link-text" data-i18n="nav.network">Réseau</span>
             </a>
             <a class="nav-link" data-page="agenda" onclick="navigate('agenda');document.getElementById('nav-links').classList.remove('open')">
-                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-link-text">Activités</span>
+                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-link-text" data-i18n="nav.activities">Activités</span>
             </a>
             <a class="nav-link" data-page="ecoles" onclick="navigate('ecoles');document.getElementById('nav-links').classList.remove('open')">
-                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 10 3 12 0v-5"/></svg></span><span class="nav-link-text">Étudiants</span>
+                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 10 3 12 0v-5"/></svg></span><span class="nav-link-text" data-i18n="nav.students">Étudiants</span>
             </a>
             <a class="nav-link" data-page="adhesion" id="nav-adhesion-link" onclick="navigate('adhesion');document.getElementById('nav-links').classList.remove('open')">
-                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span><span class="nav-link-text">Adhérer</span>
+                <span class="nav-link-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span><span class="nav-link-text" data-i18n="nav.join">Adhérer</span>
             </a>
         </div>
 
         <div class="nav-actions">
+            <div class="lang-switcher">
+                <button class="lang-btn active" data-lang="fr" onclick="setLanguage('fr')" title="Français">FR</button>
+                <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">EN</button>
+                <button class="lang-btn" data-lang="de" onclick="setLanguage('de')" title="Deutsch">DE</button>
+                <button class="lang-btn" data-lang="es" onclick="setLanguage('es')" title="Español">ES</button>
+            </div>
             <div id="nav-bell" class="nav-bell" style="display:none" onclick="toggleNotifPanel()">
                 <span class="nav-bell-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
                 <span id="nav-bell-count" class="nav-bell-count" style="display:none"></span>
@@ -93,7 +99,7 @@
                 <div id="notif-panel-list" class="notif-panel-list"></div>
             </div>
             <div class="nav-user" id="nav-user-area">
-                <a class="nav-member-btn" href="#" onclick="event.preventDefault();if(typeof showLoginPopup==='function')showLoginPopup();else navigate('membres')">Connexion</a>
+                <a class="nav-member-btn" href="#" onclick="event.preventDefault();if(typeof showLoginPopup==='function')showLoginPopup();else navigate('membres')" data-i18n="nav.login">Connexion</a>
             </div>
             <button class="nav-hamburger" aria-label="Menu de navigation" aria-expanded="false" onclick="this.setAttribute('aria-expanded',document.getElementById('nav-links').classList.toggle('open'))">&#9776;</button>
         </div>
@@ -153,17 +159,17 @@
         <div class="container">
             <div class="hw-layout">
                 <div class="hw-text">
-                    <span class="hw-badge">Depuis 1996</span>
-                    <h2 class="hw-title">L'association qui rassemble<br>le ferroviaire français</h2>
-                    <p class="hw-desc">L'AFFI réunit ingénieurs et cadres en activité ou retraités, représentant tous les métiers du rail : constructeurs, exploitants, bureaux d'études, mainteneurs et passionnés.</p>
+                    <span class="hw-badge" data-i18n="welcome.badge">Depuis 1996</span>
+                    <h2 class="hw-title" data-i18n="welcome.title">L'association qui rassemble<br>le ferroviaire français</h2>
+                    <p class="hw-desc" data-i18n="welcome.desc">L'AFFI réunit ingénieurs et cadres en activité ou retraités, représentant tous les métiers du rail : constructeurs, exploitants, bureaux d'études, mainteneurs et passionnés.</p>
                     <div class="hw-stats">
-                        <div class="hw-stat"><span class="hw-stat-val">300+</span><span class="hw-stat-label">Membres</span></div>
-                        <div class="hw-stat"><span class="hw-stat-val">30</span><span class="hw-stat-label">Ans d'histoire</span></div>
-                        <div class="hw-stat"><span class="hw-stat-val">12</span><span class="hw-stat-label">Partenaires</span></div>
+                        <div class="hw-stat"><span class="hw-stat-val">300+</span><span class="hw-stat-label" data-i18n="welcome.members">Membres</span></div>
+                        <div class="hw-stat"><span class="hw-stat-val">30</span><span class="hw-stat-label" data-i18n="welcome.years">Ans d'histoire</span></div>
+                        <div class="hw-stat"><span class="hw-stat-val">12</span><span class="hw-stat-label" data-i18n="welcome.partners">Partenaires</span></div>
                     </div>
                     <div class="hw-actions">
-                        <a class="btn btn-accent" href="#adhesion" onclick="navigate('adhesion')">Rejoindre l'AFFI</a>
-                        <a class="btn btn-primary" href="#identite" onclick="navigate('identite')" style="background:transparent;border:2px solid var(--primary);color:var(--primary)">En savoir plus</a>
+                        <a class="btn btn-accent" href="#adhesion" onclick="navigate('adhesion')" data-i18n="welcome.join">Rejoindre l'AFFI</a>
+                        <a class="btn btn-primary" href="#identite" onclick="navigate('identite')" style="background:transparent;border:2px solid var(--primary);color:var(--primary)" data-i18n="welcome.more">En savoir plus</a>
                     </div>
                 </div>
                 <div class="hw-visual">
@@ -193,8 +199,8 @@
         <div class="container">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">
                 <div>
-                    <h2 style="font-size:26px;font-weight:900;color:var(--primary);margin:0">Actualités</h2>
-                    <p style="color:var(--gray-500);font-size:14px;margin:4px 0 0">Les dernières nouvelles du ferroviaire</p>
+                    <h2 style="font-size:26px;font-weight:900;color:var(--primary);margin:0" data-i18n="news.title">Actualités</h2>
+                    <p style="color:var(--gray-500);font-size:14px;margin:4px 0 0" data-i18n="news.sub">Les dernières nouvelles du ferroviaire</p>
                 </div>
                 <div style="display:flex;gap:8px">
                     <button class="nc-arrow" onclick="slideNewsCarousel(-1)" style="position:static;transform:none">&#10094;</button>
@@ -214,7 +220,7 @@
     <!-- Partenaires — bandeau logos simple -->
     <section style="padding:40px 0;border-top:1px solid var(--gray-200)">
         <div class="container">
-            <p style="text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:var(--gray-400);margin-bottom:24px">Ils nous font confiance</p>
+            <p style="text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:var(--gray-400);margin-bottom:24px" data-i18n="partners.label">Ils nous font confiance</p>
             <div id="partenaires-unified"></div>
         </div>
     </section>
@@ -900,11 +906,11 @@
                 <h2 class="section-title section-title-center">Espace Membres</h2>
                 <p class="section-sub section-sub-center">Connectez-vous pour acceder a votre espace</p>
                 <div class="form-card">
-                    <h3 style="text-align:center;margin-bottom:28px;color:var(--primary);font-size:22px;font-weight:800">Connexion</h3>
+                    <h3 style="text-align:center;margin-bottom:28px;color:var(--primary);font-size:22px;font-weight:800" data-i18n="auth.login">Connexion</h3>
                     <form onsubmit="doLogin(event)">
-                        <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
-                        <div class="form-group"><label>Mot de passe</label><input type="password" name="password" required></div>
-                        <button type="submit" class="form-submit">Se connecter</button>
+                        <div class="form-group"><label data-i18n="auth.email">Email</label><input type="email" name="email" required></div>
+                        <div class="form-group"><label data-i18n="auth.password">Mot de passe</label><input type="password" name="password" required></div>
+                        <button type="submit" class="form-submit" data-i18n="auth.submit">Se connecter</button>
                         <div id="login-error" style="display:none;margin-top:12px;padding:10px;background:#fef2f2;color:#b91c1c;border-radius:6px;text-align:center;font-weight:600"></div>
                     </form>
                     <p class="text-center mt-24" style="font-size:14px;color:var(--gray-500)">
@@ -1362,7 +1368,7 @@
                 </ul>
             </div>
         </div>
-        <div class="footer-bar">&copy; 2026 AFFI — Tous droits reserves &middot; <a href="#contact" onclick="navigate('contact')" style="color:rgba(255,255,255,.4)">Mentions légales</a> &middot; <a href="#contact" onclick="navigate('contact')" style="color:rgba(255,255,255,.4)">Confidentialité</a></div>
+        <div class="footer-bar">&copy; 2026 AFFI — <span data-i18n="footer.rights">Tous droits reserves</span> &middot; <a href="#contact" onclick="navigate('contact')" style="color:rgba(255,255,255,.4)">Mentions légales</a> &middot; <a href="#contact" onclick="navigate('contact')" style="color:rgba(255,255,255,.4)">Confidentialité</a></div>
     </div>
 </footer>
 
@@ -1392,12 +1398,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/members.js?v=1775412914" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775412914" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775412914" defer></script>
+<script src="/js/members.js?v=1775413762" defer fetchpriority="high"></script>
+<script src="/js/app.js?v=1775413762" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775413762" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/social.js?v=1775412914','/js/datatable.js?v=1775412914','/js/admin.js?v=1775412914','/js/map.js?v=1775412914'];
+    var scripts = ['/js/social.js?v=1775413762','/js/datatable.js?v=1775413762','/js/admin.js?v=1775413762','/js/map.js?v=1775413762'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

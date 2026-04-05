@@ -106,6 +106,14 @@ class handler(BaseHTTPRequestHandler):
                 execute("UPDATE members SET password_hash = %s WHERE id = %s",
                         [hash_pw(password), member["id"]])
             token = create_session(member["id"])
+            # Log connection info
+            try:
+                ip = self.headers.get("X-Forwarded-For", self.headers.get("X-Real-IP", ""))
+                ua = self.headers.get("User-Agent", "")[:200]
+                execute("INSERT INTO logs (action, user_id, details, ip_address) VALUES (%s,%s,%s,%s)",
+                    ["login", member["id"], f"UA: {ua}", ip])
+            except Exception:
+                pass
             user = get_member_from_token(token)
             return self._json(200, {"ok": True, "token": token, "user": user})
 

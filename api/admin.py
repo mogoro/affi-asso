@@ -234,6 +234,16 @@ class handler(BaseHTTPRequestHandler):
                 ORDER BY b.level ASC, b.sort_order ASC, b.role ASC""")
             return self._json(200, rows)
 
+        elif action == "helloasso_sync":
+            # HelloAsso API integration (requires HELLOASSO_API_KEY env var)
+            import os
+            api_key = os.environ.get("HELLOASSO_API_KEY", "")
+            if not api_key:
+                return self._json(200, {"ok": False, "message": "Clé API HelloAsso non configurée. Ajoutez HELLOASSO_API_KEY dans les variables Vercel.", "synced": 0})
+            # TODO: When API key is configured, sync here
+            # https://api.helloasso.com/v5/organizations/{slug}/forms/Membership/{formSlug}/payments
+            return self._json(200, {"ok": True, "message": "Synchronisation HelloAsso à configurer", "synced": 0})
+
         return self._json(400, {"error": "Action inconnue"})
       except Exception as e:
         return self._json(500, {"error": "Erreur interne"})
@@ -569,9 +579,12 @@ class handler(BaseHTTPRequestHandler):
 
     def _log(self, user_id, action, details=""):
         try:
+            import re
+            # Mask email addresses in log details
+            masked = re.sub(r'[\w.+-]+@[\w-]+\.[\w.-]+', lambda m: m.group()[:3] + '***@' + m.group().split('@')[1], str(details))
             ip = self.headers.get("X-Forwarded-For", self.client_address[0] if self.client_address else "")
             execute("INSERT INTO logs (action, user_id, details, ip_address) VALUES (%s,%s,%s,%s)",
-                    [action, user_id, details, ip])
+                    [action, user_id, masked, ip])
         except Exception:
             pass
 

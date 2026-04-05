@@ -889,7 +889,9 @@ async function exportMyData() {
 }
 
 // === ESPACE BUREAU ===
-let _bureauView = 'actions';
+let _bureauView = 'wiki';
+let _autoSaveTimer = null;
+let _lastSavedContent = '';
 
 function switchBureauView(btn, view) {
     document.querySelectorAll('#mtab-bureau .course-filter').forEach(b => b.classList.remove('active'));
@@ -899,269 +901,248 @@ function switchBureauView(btn, view) {
 }
 
 function loadBureauSpace() {
-    if (_bureauView === 'actions') loadBureauActions();
-    else if (_bureauView === 'wiki') loadBureauWiki();
+    if (_bureauView === 'actions') loadBureauActionsBoard();
+    else if (_bureauView === 'wiki') loadBureauWikiFullscreen();
 }
 
 // =============================================
-// KANBAN ACTIONS (agile board)
+// ACTIONS BOARD (read-only display)
 // =============================================
-async function loadBureauActions() {
+async function loadBureauActionsBoard() {
     const el = document.getElementById('bureau-content');
     if (!el) return;
     try {
         const res = await fetch(`${API}/api/members?action=bureau_actions`, {headers:{'Authorization':'Bearer '+authToken}});
         const actions = await res.json();
-        if (!Array.isArray(actions)) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; return; }
+        if (!Array.isArray(actions)) { el.innerHTML = '<p class="empty-msg">Erreur</p>'; return; }
 
         const open = actions.filter(a => a.status === 'open');
         const progress = actions.filter(a => a.status === 'in_progress');
-        const done = actions.filter(a => a.status === 'done').slice(0, 10);
+        const done = actions.filter(a => a.status === 'done').slice(0, 15);
 
         el.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <div>
-                    <h3 style="color:var(--primary);font-weight:800;margin:0">Suivi d'actions</h3>
-                    <p style="font-size:12px;color:var(--gray-500);margin:2px 0 0">${actions.length} action(s) · ${open.length} ouvertes · ${progress.length} en cours</p>
-                </div>
-                <button onclick="showNewActionForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle action</button>
+            <div style="margin-bottom:12px">
+                <h3 style="color:var(--primary);font-weight:800;margin:0 0 4px">Tableau des actions</h3>
+                <p style="font-size:12px;color:var(--gray-500);margin:0">${open.length} a faire · ${progress.length} en cours · ${done.length} terminees</p>
             </div>
             <div class="bureau-kanban">
                 <div class="bureau-kanban-col">
-                    <div class="bureau-kanban-header" style="border-color:var(--accent)">À faire <span class="bureau-kanban-count">${open.length}</span></div>
-                    ${open.map(a => _renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px;font-size:12px">Aucune action à faire</p>'}
+                    <div class="bureau-kanban-header" style="border-color:var(--accent)">A faire <span class="bureau-kanban-count">${open.length}</span></div>
+                    ${open.map(a => _actionCard(a)).join('') || '<p class="empty-msg" style="padding:16px;font-size:12px">--</p>'}
                 </div>
                 <div class="bureau-kanban-col">
                     <div class="bureau-kanban-header" style="border-color:var(--orange)">En cours <span class="bureau-kanban-count">${progress.length}</span></div>
-                    ${progress.map(a => _renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px;font-size:12px">—</p>'}
+                    ${progress.map(a => _actionCard(a)).join('') || '<p class="empty-msg" style="padding:16px;font-size:12px">--</p>'}
                 </div>
                 <div class="bureau-kanban-col">
-                    <div class="bureau-kanban-header" style="border-color:var(--green)">Terminées <span class="bureau-kanban-count">${done.length}</span></div>
-                    ${done.map(a => _renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px;font-size:12px">—</p>'}
+                    <div class="bureau-kanban-header" style="border-color:var(--green)">Terminees <span class="bureau-kanban-count">${done.length}</span></div>
+                    ${done.map(a => _actionCard(a)).join('') || '<p class="empty-msg" style="padding:16px;font-size:12px">--</p>'}
                 </div>
             </div>`;
-    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur : ' + e.message + '</p>'; }
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur</p>'; }
 }
 
-function _renderActionCard(a) {
+function _actionCard(a) {
     const overdue = a.due_date && new Date(a.due_date) < new Date() && a.status !== 'done';
-    const assignee = a.first_name ? a.first_name + ' ' + (a.last_name||'')[0] + '.' : '';
-    return `<div class="bureau-action-card ${overdue ? 'bureau-action-overdue' : ''}">
+    const who = a.first_name ? a.first_name + ' ' + (a.last_name||'')[0] + '.' : 'Non assigne';
+    return `<div class="bureau-action-card ${overdue?'bureau-action-overdue':''}">
         <div class="bureau-action-title">${esc(a.title)}</div>
-        ${a.description ? `<div class="bureau-action-desc">${esc(a.description.substring(0,100))}</div>` : ''}
         <div class="bureau-action-footer">
-            ${assignee ? `<span class="bureau-action-assignee">${esc(assignee)}</span>` : '<span style="color:var(--gray-300)">Non assigné</span>'}
+            <span class="bureau-action-assignee">${esc(who)}</span>
             ${a.due_date ? `<span class="${overdue?'bureau-overdue':''}">${formatDate(a.due_date)}</span>` : ''}
         </div>
         <div class="bureau-action-btns">
-            ${a.status==='open' ? `<button onclick="updateBureauAction(${a.id},'in_progress')" class="bureau-sm-btn" title="Démarrer">&#9654;</button>` : ''}
-            ${a.status==='in_progress' ? `<button onclick="updateBureauAction(${a.id},'done')" class="bureau-sm-btn bureau-sm-ok" title="Terminer">&#10003;</button>` : ''}
-            ${a.status==='done' ? `<button onclick="updateBureauAction(${a.id},'open')" class="bureau-sm-btn" title="Rouvrir">&#8634;</button>` : ''}
+            ${a.status==='open'?`<button onclick="moveBureauAction(${a.id},'in_progress')" class="bureau-sm-btn" title="Demarrer">&#9654;</button>`:''}
+            ${a.status==='in_progress'?`<button onclick="moveBureauAction(${a.id},'done')" class="bureau-sm-btn bureau-sm-ok" title="Terminer">&#10003;</button>`:''}
+            ${a.status==='done'?`<button onclick="moveBureauAction(${a.id},'open')" class="bureau-sm-btn" title="Rouvrir">&#8634;</button>`:''}
         </div>
     </div>`;
 }
 
-function showNewActionForm() {
-    const html = `<div class="adm-modal-bg" id="action-modal">
-        <div class="adm-modal" style="max-width:480px">
-            <button class="auth-close" onclick="closeModal('action-modal')">&times;</button>
-            <div style="padding:28px">
-                <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle action</h3>
-                <div class="form-group"><label>Titre *</label><input id="ba-title" required placeholder="Ex: Envoyer les convocations AG"></div>
-                <div class="form-group"><label>Description</label><textarea id="ba-desc" style="min-height:60px" placeholder="Détails de l'action..."></textarea></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                    <div class="form-group"><label>Échéance</label><input type="date" id="ba-due"></div>
-                    <div class="form-group"><label>Assigné à (ID membre)</label><input type="number" id="ba-assigned" placeholder="Optionnel"></div>
-                </div>
-                <button onclick="saveBureauAction()" class="btn btn-accent" style="width:100%">Créer l'action</button>
-            </div>
-        </div>
-    </div>`;
-    openModal(html);
-}
-
-async function saveBureauAction() {
-    const title = document.getElementById('ba-title')?.value;
-    if (!title) return alert('Titre requis');
-    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-        body: JSON.stringify({action:'bureau_create_action', title,
-            description: document.getElementById('ba-desc')?.value || '',
-            due_date: document.getElementById('ba-due')?.value || null,
-            assigned_to: document.getElementById('ba-assigned')?.value ? parseInt(document.getElementById('ba-assigned').value) : null
-        })});
-    closeModal('action-modal');
-    showToast('Action créée', 'success');
-    loadBureauActions();
-}
-
-async function updateBureauAction(id, status) {
+async function moveBureauAction(id, status) {
     await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'bureau_update_action', id, status})});
-    showToast(status === 'done' ? 'Action terminée' : status === 'in_progress' ? 'Action démarrée' : 'Action rouverte', 'success');
-    loadBureauActions();
+    loadBureauActionsBoard();
 }
 
 // =============================================
-// WIKI CR (onglets par réunion)
+// WIKI CR — FULL SCREEN PERSISTENT EDITOR
 // =============================================
-async function loadBureauWiki() {
+async function loadBureauWikiFullscreen() {
     const el = document.getElementById('bureau-content');
     if (!el) return;
     try {
         const res = await fetch(`${API}/api/members?action=bureau_meetings`, {headers:{'Authorization':'Bearer '+authToken}});
         const meetings = await res.json();
-        if (!Array.isArray(meetings) || !meetings.length) {
-            el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="color:var(--primary);font-weight:800;margin:0">Wiki — Comptes-rendus</h3>
-                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle réunion</button>
-            </div><p class="empty-msg">Aucune réunion. Créez la première !</p>`;
-            return;
-        }
+        if (!Array.isArray(meetings)) { el.innerHTML = '<p class="empty-msg">Erreur</p>'; return; }
 
         window._wikiMeetings = {};
         meetings.forEach(m => window._wikiMeetings[m.id] = m);
 
-        const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+        const months = ['jan','fev','mar','avr','mai','jun','jul','aou','sep','oct','nov','dec'];
 
+        // Full-screen wiki layout
         el.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="color:var(--primary);font-weight:800;margin:0">Wiki — Comptes-rendus</h3>
-                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle réunion</button>
-            </div>
-            <div class="cr-wiki">
-                <div class="cr-sidebar">
-                    ${meetings.map((m, i) => {
+            <div class="wiki-full">
+                <div class="wiki-sidebar">
+                    <div class="wiki-sidebar-header">
+                        <strong>Reunions</strong>
+                        <button onclick="showNewMeetingForm()" class="bureau-sm-btn" title="Nouvelle reunion" style="font-size:16px">+</button>
+                    </div>
+                    ${meetings.length ? meetings.map((m, i) => {
                         const d = new Date(m.meeting_date);
-                        const label = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
                         const hasCR = m.minutes && m.minutes.trim().length > 0;
-                        return `<button class="cr-tab ${i===0?'cr-tab-active':''}" onclick="showWikiTab(${m.id})" data-crid="${m.id}">
-                            <span class="cr-tab-date">${label}</span>
-                            <span class="cr-tab-title">${esc(m.title)}</span>
-                            ${hasCR ? '<span class="cr-tab-badge">CR</span>' : '<span class="cr-tab-badge cr-tab-badge-empty">—</span>'}
+                        return `<button class="wiki-tab ${i===0?'wiki-tab-active':''}" onclick="openWikiMeeting(${m.id})" data-wid="${m.id}">
+                            <div class="wiki-tab-date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div>
+                            <div class="wiki-tab-title">${esc(m.title)}</div>
+                            ${hasCR ? '<div class="wiki-tab-status wiki-tab-has-cr">CR redige</div>' : '<div class="wiki-tab-status">Pas de CR</div>'}
                         </button>`;
-                    }).join('')}
+                    }).join('') : '<p style="padding:16px;font-size:12px;color:var(--gray-400)">Aucune reunion</p>'}
                 </div>
-                <div class="cr-content" id="wiki-cr-content">
-                    ${_renderWikiTab(meetings[0])}
+                <div class="wiki-editor-area" id="wiki-editor-area">
+                    ${meetings.length ? _buildWikiEditor(meetings[0]) : '<div class="wiki-empty"><p>Creez votre premiere reunion pour commencer</p><button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:14px;padding:10px 24px">+ Nouvelle reunion</button></div>'}
                 </div>
             </div>`;
+
+        if (meetings.length) _startAutoSave(meetings[0].id);
     } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur : ' + e.message + '</p>'; }
 }
 
-function showWikiTab(id) {
-    document.querySelectorAll('.cr-tab').forEach(t => t.classList.remove('cr-tab-active'));
-    document.querySelector(`.cr-tab[data-crid="${id}"]`)?.classList.add('cr-tab-active');
+function openWikiMeeting(id) {
+    document.querySelectorAll('.wiki-tab').forEach(t => t.classList.remove('wiki-tab-active'));
+    document.querySelector(`.wiki-tab[data-wid="${id}"]`)?.classList.add('wiki-tab-active');
     const m = window._wikiMeetings?.[id];
-    const el = document.getElementById('wiki-cr-content');
-    if (el && m) el.innerHTML = _renderWikiTab(m);
+    if (!m) return;
+    const area = document.getElementById('wiki-editor-area');
+    if (area) area.innerHTML = _buildWikiEditor(m);
+    _startAutoSave(id);
 }
 
-function _renderWikiTab(m) {
-    if (!m) return '<p class="empty-msg">Sélectionnez une réunion</p>';
-    const hasCR = m.minutes && m.minutes.trim().length > 0;
+function _buildWikiEditor(m) {
+    const content = m.minutes || '';
     const isPast = new Date(m.meeting_date) < new Date();
+    _lastSavedContent = content;
 
     return `
-        <div class="cr-header">
-            <div>
-                <h2 class="cr-title">${esc(m.title)}</h2>
-                <div class="cr-meta">${formatDate(m.meeting_date)}${m.location ? ' · ' + esc(m.location) : ''}</div>
+        <div class="wiki-toolbar">
+            <div class="wiki-toolbar-left">
+                <h3 class="wiki-title">${esc(m.title)}</h3>
+                <span class="wiki-date">${formatDate(m.meeting_date)}${m.location ? ' · ' + esc(m.location) : ''}</span>
             </div>
-            <div style="display:flex;gap:8px">
-                <button onclick="editWikiCR(${m.id})" class="btn btn-primary" style="font-size:12px;padding:6px 14px">${hasCR ? 'Modifier le CR' : 'Rédiger le CR'}</button>
-            </div>
-        </div>
-        ${m.agenda ? `<div class="cr-section"><h3 class="cr-section-title">Ordre du jour</h3><div class="cr-section-body">${typeof renderMarkdown === 'function' ? renderMarkdown(m.agenda) : esc(m.agenda)}</div></div>` : ''}
-        ${hasCR ? `<div class="cr-section"><h3 class="cr-section-title">Compte-rendu</h3><div class="cr-section-body cr-minutes">${typeof renderMarkdown === 'function' ? renderMarkdown(m.minutes) : esc(m.minutes)}</div></div>` :
-        `<div class="cr-empty-minutes">
-            <div style="font-size:32px;margin-bottom:8px">&#128221;</div>
-            <p>${isPast ? 'Aucun CR rédigé pour cette réunion' : 'Réunion à venir'}</p>
-            ${isPast ? `<button onclick="editWikiCR(${m.id})" class="btn btn-accent" style="font-size:13px;padding:8px 20px;margin-top:8px">Rédiger le CR</button>` : ''}
-        </div>`}
-    `;
-}
-
-function editWikiCR(meetingId) {
-    const m = window._wikiMeetings?.[meetingId];
-    if (!m) return;
-
-    const template = m.minutes || `# Compte-rendu — ${m.title}\n\n## Participants\n- \n\n## Décisions prises\n- [ ] \n\n## Actions à mener\n- [ ] Action — **Responsable** — Échéance\n\n## Points divers\n- \n\n---\n*Rédigé le ${new Date().toLocaleDateString('fr-FR')}*`;
-
-    const html = `<div class="adm-modal-bg" id="cr-editor-modal">
-        <div class="adm-modal" style="max-width:900px;padding:0;height:85vh;display:flex;flex-direction:column">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--gray-200);flex-shrink:0">
-                <h3 style="color:var(--primary);margin:0;font-size:15px">${esc(m.title)}</h3>
-                <div style="display:flex;gap:8px">
-                    <button onclick="extractActionsFromCR(${meetingId})" class="btn btn-primary" style="font-size:11px;padding:5px 12px;background:var(--teal)">Extraire les actions</button>
-                    <button onclick="saveWikiCR(${meetingId})" class="btn btn-accent" style="font-size:11px;padding:5px 12px">Enregistrer</button>
-                    <button class="auth-close" onclick="closeModal('cr-editor-modal')" style="position:static">&times;</button>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden">
-                <div style="border-right:1px solid var(--gray-200);display:flex;flex-direction:column">
-                    <div style="padding:6px 12px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);font-weight:700">MARKDOWN</div>
-                    <textarea id="cr-editor-text" style="flex:1;width:100%;border:none;padding:16px;font-family:'Courier New',monospace;font-size:13px;line-height:1.7;resize:none;outline:none">${esc(template)}</textarea>
-                </div>
-                <div style="overflow-y:auto;display:flex;flex-direction:column">
-                    <div style="padding:6px 12px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);font-weight:700">APERÇU</div>
-                    <div id="cr-preview" style="flex:1;padding:16px;font-size:14px;line-height:1.7;overflow-y:auto"></div>
-                </div>
-            </div>
-            <div style="padding:6px 12px;background:var(--gray-50);border-top:1px solid var(--gray-200);font-size:10px;color:var(--gray-400);flex-shrink:0">
-                # Titre · ## Sous-titre · **gras** · *italique* · - liste · - [x] fait · - [ ] à faire · > citation · --- séparateur
+            <div class="wiki-toolbar-right">
+                <span id="wiki-save-status" class="wiki-save-status">&#10003; Sauvegarde</span>
+                <button onclick="wikiCreateActionFromCR(${m.id})" class="wiki-toolbar-btn" title="Creer une action depuis le texte selectionne">+ Action</button>
+                <button onclick="wikiExtractAllActions(${m.id})" class="wiki-toolbar-btn" style="background:var(--teal);color:#fff" title="Extraire toutes les actions [ ]">Extraire actions</button>
             </div>
         </div>
-    </div>`;
-    openModal(html);
-
-    const textarea = document.getElementById('cr-editor-text');
-    const preview = document.getElementById('cr-preview');
-    function update() { if (preview && textarea && typeof renderMarkdown === 'function') preview.innerHTML = renderMarkdown(textarea.value); }
-    update();
-    textarea?.addEventListener('input', update);
+        ${m.agenda ? `<div class="wiki-agenda"><strong>Ordre du jour :</strong> ${esc(m.agenda.substring(0,200))}</div>` : ''}
+        <div class="wiki-split">
+            <div class="wiki-edit-pane">
+                <textarea id="wiki-textarea" class="wiki-textarea" placeholder="Redigez le compte-rendu ici...\n\n# Participants\n- \n\n## Decisions\n- [ ] \n\n## Actions\n- [ ] Action -- Responsable -- Echeance">${esc(content)}</textarea>
+            </div>
+            <div class="wiki-preview-pane" id="wiki-preview"></div>
+        </div>`;
 }
 
-async function saveWikiCR(meetingId) {
-    const text = document.getElementById('cr-editor-text')?.value;
-    if (!text) return;
-    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-        body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: text, status:'done'})});
-    closeModal('cr-editor-modal');
-    if (window._wikiMeetings) window._wikiMeetings[meetingId].minutes = text;
-    showWikiTab(meetingId);
-    showToast('CR enregistré', 'success');
+function _startAutoSave(meetingId) {
+    // Clear previous timer
+    if (_autoSaveTimer) clearInterval(_autoSaveTimer);
+
+    const textarea = document.getElementById('wiki-textarea');
+    const preview = document.getElementById('wiki-preview');
+    if (!textarea) return;
+
+    // Initial preview
+    if (preview && typeof renderMarkdown === 'function') {
+        preview.innerHTML = renderMarkdown(textarea.value) || '<p style="color:var(--gray-400);font-style:italic">L\'apercu apparaitra ici...</p>';
+    }
+
+    // Live preview on input
+    textarea.addEventListener('input', function() {
+        if (preview && typeof renderMarkdown === 'function') {
+            preview.innerHTML = renderMarkdown(this.value);
+        }
+        // Mark as modified
+        const status = document.getElementById('wiki-save-status');
+        if (status && this.value !== _lastSavedContent) {
+            status.innerHTML = '<span style="color:var(--orange)">&#9679; Modifie</span>';
+        }
+    });
+
+    // Auto-save every 5 seconds
+    _autoSaveTimer = setInterval(async () => {
+        const ta = document.getElementById('wiki-textarea');
+        if (!ta || ta.value === _lastSavedContent) return;
+
+        const content = ta.value;
+        try {
+            await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+                body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: content, status: content.trim() ? 'done' : 'planned'})});
+            _lastSavedContent = content;
+            if (window._wikiMeetings) window._wikiMeetings[meetingId].minutes = content;
+            const status = document.getElementById('wiki-save-status');
+            if (status) status.innerHTML = '&#10003; Sauvegarde';
+            // Update tab badge
+            const tab = document.querySelector(`.wiki-tab[data-wid="${meetingId}"] .wiki-tab-status`);
+            if (tab && content.trim()) { tab.textContent = 'CR redige'; tab.className = 'wiki-tab-status wiki-tab-has-cr'; }
+        } catch(e) {
+            const status = document.getElementById('wiki-save-status');
+            if (status) status.innerHTML = '<span style="color:var(--accent)">&#9888; Erreur sauvegarde</span>';
+        }
+    }, 5000);
 }
 
-async function extractActionsFromCR(meetingId) {
-    const text = document.getElementById('cr-editor-text')?.value;
-    if (!text) return;
-    // Parse lines like: - [ ] Action text — **Responsible** — Date
-    const actionLines = text.match(/^- \[ \] .+$/gm) || [];
-    if (!actionLines.length) { showToast('Aucune action trouvée (format: - [ ] Action)', 'info'); return; }
+function wikiCreateActionFromCR(meetingId) {
+    // Prompt for action details
+    const title = prompt('Titre de l\'action :');
+    if (!title) return;
+    const assignee = prompt('Assigner a (prenom ou laisser vide) :');
+
+    // Find member ID by first name if provided
+    let assignedTo = null;
+    // For now just create without assignment -- admin can assign later
+
+    fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_create_action', title, meeting_id: meetingId})
+    }).then(() => {
+        showToast('Action creee : ' + title, 'success');
+        // Add as checkbox in the CR
+        const ta = document.getElementById('wiki-textarea');
+        if (ta) {
+            ta.value += '\n- [ ] ' + title + (assignee ? ' -- **' + assignee + '**' : '');
+            ta.dispatchEvent(new Event('input'));
+        }
+    });
+}
+
+async function wikiExtractAllActions(meetingId) {
+    const ta = document.getElementById('wiki-textarea');
+    if (!ta) return;
+    const lines = ta.value.match(/^- \[ \] .+$/gm) || [];
+    if (!lines.length) { showToast('Aucune action trouvee (format : - [ ] Action)', 'info'); return; }
 
     let created = 0;
-    for (const line of actionLines) {
-        const clean = line.replace(/^- \[ \] /, '').trim();
-        const parts = clean.split('—').map(s => s.trim());
-        const title = parts[0]?.replace(/\*\*/g, '') || clean;
+    for (const line of lines) {
+        const clean = line.replace(/^- \[ \] /, '').replace(/\*\*/g, '').trim();
+        const parts = clean.split('--').map(s => s.trim());
         await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-            body: JSON.stringify({action:'bureau_create_action', title, meeting_id: meetingId})});
+            body: JSON.stringify({action:'bureau_create_action', title: parts[0], meeting_id: meetingId})});
         created++;
     }
-    showToast(created + ' action(s) extraite(s) vers le Kanban', 'success');
+    showToast(created + ' action(s) creee(s) dans le tableau', 'success');
 }
 
 function showNewMeetingForm() {
     const html = `<div class="adm-modal-bg" id="meeting-modal">
-        <div class="adm-modal" style="max-width:480px">
+        <div class="adm-modal" style="max-width:460px">
             <button class="auth-close" onclick="closeModal('meeting-modal')">&times;</button>
-            <div style="padding:28px">
-                <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle réunion</h3>
-                <div class="form-group"><label>Titre *</label><input id="bm-title" required value="Réunion de Bureau"></div>
-                <div class="form-group"><label>Date et heure *</label><input type="datetime-local" id="bm-date" required></div>
-                <div class="form-group"><label>Lieu</label><input id="bm-location" placeholder="Visio / Présentiel"></div>
-                <div class="form-group"><label>Ordre du jour</label><textarea id="bm-agenda" style="min-height:80px" placeholder="## Points à aborder\n- Point 1\n- Point 2"></textarea></div>
-                <button onclick="saveBureauMeeting()" class="btn btn-accent" style="width:100%">Planifier la réunion</button>
+            <div style="padding:24px">
+                <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle reunion</h3>
+                <div class="form-group"><label>Titre</label><input id="bm-title" required value="Reunion de Bureau"></div>
+                <div class="form-group"><label>Date et heure</label><input type="datetime-local" id="bm-date" required></div>
+                <div class="form-group"><label>Lieu</label><input id="bm-location" placeholder="Visio / Presentiel"></div>
+                <div class="form-group"><label>Ordre du jour</label><textarea id="bm-agenda" style="min-height:60px" placeholder="Points a aborder..."></textarea></div>
+                <button onclick="saveBureauMeeting()" class="btn btn-accent" style="width:100%">Creer</button>
             </div>
         </div>
     </div>`;
@@ -1171,40 +1152,12 @@ function showNewMeetingForm() {
 async function saveBureauMeeting() {
     const title = document.getElementById('bm-title')?.value;
     const date = document.getElementById('bm-date')?.value;
-    if (!title || !date) return alert('Titre et date requis');
+    if (!title || !date) return;
     await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'bureau_create_meeting', title, meeting_date: date,
             location: document.getElementById('bm-location')?.value || '',
-            agenda: document.getElementById('bm-agenda')?.value || ''
-        })});
+            agenda: document.getElementById('bm-agenda')?.value || ''})});
     closeModal('meeting-modal');
-    showToast('Réunion planifiée', 'success');
-    loadBureauWiki();
-}
-
-function uploadBureauDoc() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.png';
-    input.onchange = async function() {
-        if (!this.files[0]) return;
-        const file = this.files[0];
-        if (file.size > 10*1024*1024) { alert('Max 10 Mo'); return; }
-        const title = prompt('Titre :', file.name.replace(/\.[^.]+$/,''));
-        if (!title) return;
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('upload_preset', 'ml_default');
-        fd.append('folder', 'affi/bureau');
-        try {
-            const r = await fetch('https://api.cloudinary.com/v1_1/dsheinfad/auto/upload', {method:'POST',body:fd});
-            const d = await r.json();
-            if (d.secure_url) {
-                await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-                    body: JSON.stringify({action:'bureau_save_doc', title, file_url: d.secure_url, file_type: file.name.split('.').pop()})});
-                showToast('Document ajouté', 'success');
-            }
-        } catch(e) { alert('Erreur'); }
-    };
-    input.click();
+    showToast('Reunion creee', 'success');
+    loadBureauWikiFullscreen();
 }

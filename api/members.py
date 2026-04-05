@@ -151,6 +151,28 @@ class handler(BaseHTTPRequestHandler):
             stats["by_type"] = fetchall("SELECT membership_type, COUNT(*) as n FROM members WHERE status='active' GROUP BY membership_type ORDER BY n DESC")
             return self._json(200, stats)
 
+        elif action == "bureau_actions":
+            if not user or not user.get("is_board"):
+                return self._json(403, {"error": "Acces bureau requis"})
+            rows = fetchall("""SELECT a.*, m.first_name, m.last_name
+                FROM bureau_actions a LEFT JOIN members m ON a.assigned_to = m.id
+                ORDER BY CASE a.status WHEN 'open' THEN 1 WHEN 'in_progress' THEN 2 ELSE 3 END, a.due_date ASC NULLS LAST""")
+            return self._json(200, rows)
+
+        elif action == "bureau_meetings":
+            if not user or not user.get("is_board"):
+                return self._json(403, {"error": "Acces bureau requis"})
+            rows = fetchall("SELECT * FROM bureau_meetings ORDER BY meeting_date DESC LIMIT 30")
+            return self._json(200, rows)
+
+        elif action == "bureau_docs":
+            if not user or not user.get("is_board"):
+                return self._json(403, {"error": "Acces bureau requis"})
+            rows = fetchall("""SELECT d.*, m.first_name, m.last_name
+                FROM shared_documents d LEFT JOIN members m ON d.uploaded_by = m.id
+                WHERE d.is_bureau_only = TRUE ORDER BY d.created_at DESC""")
+            return self._json(200, rows)
+
         return self._json(400, {"error": "Action inconnue"})
 
     def do_POST(self):
@@ -281,6 +303,51 @@ class handler(BaseHTTPRequestHandler):
             announcements = fetchall("""SELECT id, title, category, is_active, created_at
                 FROM member_announcements WHERE author_id = %s ORDER BY created_at DESC LIMIT 20""", [user["id"]])
             return self._json(200, {"events": events, "news": news, "announcements": announcements})
+
+        elif action == "bureau_create_action":
+            if not user.get("is_board"):
+                return self._json(403, {"error": "Acces bureau requis"})
+            execute("""INSERT INTO bureau_actions (title, description, assigned_to, due_date, status)
+                VALUES (%s,%s,%s,%s,%s)""",
+                [body.get("title"), body.get("description"), body.get("assigned_to"),
+                 body.get("due_date"), body.get("status", "open")])
+            return self._json(200, {"ok": True})
+
+        elif action == "bureau_update_action":
+            if not user.get("is_board"):
+                return self._json(403, {"error": "Acces bureau requis"})
+            fields = {k: body[k] for k in ("title","description","assigned_to","due_date","status") if k in body}
+            if fields:
+                sets = ", ".join(f"{k}=%s" for k in fields)
+                execute(f"UPDATE bureau_actions SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
+            return self._json(200, {"ok": True})
+
+        elif action == "bureau_create_meeting":
+            if not user.get("is_board"):
+                return self._json(403, {"error": "Acces bureau requis"})
+            execute("""INSERT INTO bureau_meetings (title, meeting_date, location, agenda, status)
+                VALUES (%s,%s,%s,%s,%s)""",
+                [body.get("title"), body.get("meeting_date"), body.get("location"),
+                 body.get("agenda"), body.get("status", "planned")])
+            return self._json(200, {"ok": True})
+
+        elif action == "bureau_update_meeting":
+            if not user.get("is_board"):
+                return self._json(403, {"error": "Acces bureau requis"})
+            fields = {k: body[k] for k in ("title","meeting_date","location","agenda","minutes","status") if k in body}
+            if fields:
+                sets = ", ".join(f"{k}=%s" for k in fields)
+                execute(f"UPDATE bureau_meetings SET {sets} WHERE id=%s", list(fields.values()) + [body["id"]])
+            return self._json(200, {"ok": True})
+
+        elif action == "bureau_save_doc":
+            if not user.get("is_board"):
+                return self._json(403, {"error": "Acces bureau requis"})
+            execute("""INSERT INTO shared_documents (title, description, file_url, file_type, category, is_bureau_only, uploaded_by)
+                VALUES (%s,%s,%s,%s,%s,%s,%s)""",
+                [body.get("title"), body.get("description"), body.get("file_url"),
+                 body.get("file_type",""), body.get("category","bureau"), True, user["id"]])
+            return self._json(200, {"ok": True})
 
         return self._json(400, {"error": "Action inconnue"})
 

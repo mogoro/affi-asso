@@ -898,40 +898,140 @@ function switchBureauView(btn, view) {
     loadBureauSpace();
 }
 
-async function loadBureauSpace() {
+function loadBureauSpace() {
+    if (_bureauView === 'actions') loadBureauActions();
+    else if (_bureauView === 'meetings') loadBureauMeetings();
+    else if (_bureauView === 'minutes') loadBureauMeetings();
+    else if (_bureauView === 'docs') loadBureauDocs();
+}
+
+async function loadBureauActions() {
     const el = document.getElementById('bureau-content');
     if (!el) return;
+    try {
+        const res = await fetch(`${API}/api/members?action=bureau_actions`, {headers:{'Authorization':'Bearer '+authToken}});
+        const actions = await res.json();
+        if (actions.error) { el.innerHTML = '<p class="empty-msg">'+esc(actions.error)+'</p>'; return; }
 
-    if (_bureauView === 'actions') {
+        const open = actions.filter(a => a.status === 'open');
+        const progress = actions.filter(a => a.status === 'in_progress');
+        const done = actions.filter(a => a.status === 'done');
+
         el.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="color:var(--primary);font-weight:800;margin:0">Actions en cours</h3>
-                <button onclick="showNewActionForm()" class="btn btn-accent" style="font-size:12px;padding:6px 14px">+ Nouvelle action</button>
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Actions du Bureau</h3>
+                <button onclick="showNewActionForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Nouvelle action</button>
             </div>
-            <div id="bureau-actions-list"><p class="empty-msg">Aucune action en cours</p></div>
+            <div class="bureau-kanban">
+                <div class="bureau-kanban-col">
+                    <div class="bureau-kanban-header" style="border-color:var(--accent)">A faire <span class="bureau-kanban-count">${open.length}</span></div>
+                    ${open.map(a => renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px">Aucune</p>'}
+                </div>
+                <div class="bureau-kanban-col">
+                    <div class="bureau-kanban-header" style="border-color:var(--orange)">En cours <span class="bureau-kanban-count">${progress.length}</span></div>
+                    ${progress.map(a => renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px">Aucune</p>'}
+                </div>
+                <div class="bureau-kanban-col">
+                    <div class="bureau-kanban-header" style="border-color:var(--green)">Terminees <span class="bureau-kanban-count">${done.length}</span></div>
+                    ${done.map(a => renderActionCard(a)).join('') || '<p class="empty-msg" style="padding:20px">Aucune</p>'}
+                </div>
+            </div>
         `;
-    } else if (_bureauView === 'meetings') {
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; }
+}
+
+function renderActionCard(a) {
+    const overdue = a.due_date && new Date(a.due_date) < new Date() && a.status !== 'done';
+    const assignee = a.first_name ? `${a.first_name} ${(a.last_name||'')[0]}.` : 'Non assigne';
+    return `<div class="bureau-action-card ${overdue ? 'bureau-action-overdue' : ''}">
+        <div class="bureau-action-title">${esc(a.title)}</div>
+        ${a.description ? `<div class="bureau-action-desc">${esc(a.description.substring(0,80))}${a.description.length>80?'...':''}</div>` : ''}
+        <div class="bureau-action-footer">
+            <span class="bureau-action-assignee">${esc(assignee)}</span>
+            ${a.due_date ? `<span class="bureau-action-due ${overdue?'bureau-overdue':''}">${formatDate(a.due_date)}</span>` : ''}
+        </div>
+        <div class="bureau-action-btns">
+            ${a.status==='open'?`<button onclick="updateBureauAction(${a.id},'in_progress')" class="bureau-sm-btn" title="Demarrer">&#9654;</button>`:''}
+            ${a.status==='in_progress'?`<button onclick="updateBureauAction(${a.id},'done')" class="bureau-sm-btn bureau-sm-ok" title="Terminer">&#10003;</button>`:''}
+            ${a.status==='done'?`<button onclick="updateBureauAction(${a.id},'open')" class="bureau-sm-btn" title="Rouvrir">&#8634;</button>`:''}
+        </div>
+    </div>`;
+}
+
+async function loadBureauMeetings() {
+    const el = document.getElementById('bureau-content');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API}/api/members?action=bureau_meetings`, {headers:{'Authorization':'Bearer '+authToken}});
+        const meetings = await res.json();
+        if (meetings.error) { el.innerHTML = '<p class="empty-msg">'+esc(meetings.error)+'</p>'; return; }
+        const now = new Date();
+        const upcoming = meetings.filter(m => new Date(m.meeting_date) >= now);
+        const past = meetings.filter(m => new Date(m.meeting_date) < now);
+
         el.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="color:var(--primary);font-weight:800;margin:0">Prochaines reunions</h3>
-                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:6px 14px">+ Planifier</button>
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Reunions du Bureau</h3>
+                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Planifier</button>
             </div>
-            <div id="bureau-meetings-list"><p class="empty-msg">Aucune reunion planifiee</p></div>
+            ${upcoming.length ? `<h4 style="font-size:13px;color:var(--green);margin-bottom:8px;font-weight:700">&#9679; A venir</h4>` : ''}
+            ${upcoming.map(m => renderMeetingCard(m, false)).join('')}
+            ${past.length ? `<h4 style="font-size:13px;color:var(--gray-400);margin:16px 0 8px;font-weight:700">Passees</h4>` : ''}
+            ${past.slice(0,10).map(m => renderMeetingCard(m, true)).join('')}
+            ${!meetings.length ? '<p class="empty-msg">Aucune reunion</p>' : ''}
         `;
-    } else if (_bureauView === 'minutes') {
-        el.innerHTML = `
-            <h3 style="color:var(--primary);font-weight:800;margin-bottom:16px">Comptes-rendus</h3>
-            <div id="bureau-minutes-list"><p class="empty-msg">Aucun compte-rendu</p></div>
-        `;
-    } else if (_bureauView === 'docs') {
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; }
+}
+
+function renderMeetingCard(m, isPast) {
+    const d = new Date(m.meeting_date);
+    const months = ['jan','fev','mar','avr','mai','jun','jul','aou','sep','oct','nov','dec'];
+    return `<div class="bureau-meeting-card ${isPast?'bureau-meeting-past':''}">
+        <div class="bureau-meeting-date">
+            <div class="bureau-meeting-day">${d.getDate()}</div>
+            <div class="bureau-meeting-month">${months[d.getMonth()]}</div>
+        </div>
+        <div class="bureau-meeting-info">
+            <div class="bureau-meeting-title">${esc(m.title)}</div>
+            <div class="bureau-meeting-meta">${d.getHours()}h${String(d.getMinutes()).padStart(2,'0')}${m.location ? ' · ' + esc(m.location) : ''}</div>
+            ${m.agenda ? `<div class="bureau-meeting-agenda">${esc(m.agenda.substring(0,120))}${m.agenda.length>120?'...':''}</div>` : ''}
+        </div>
+        <div class="bureau-meeting-actions">
+            ${!isPast ? `<span class="adm-badge adm-badge-active">A venir</span>` : ''}
+            ${isPast && m.minutes ? `<button onclick="viewDocument('','Compte-rendu')" class="bureau-sm-btn bureau-sm-ok" title="Voir le CR">&#128196;</button>` : ''}
+            ${isPast && !m.minutes ? `<button onclick="editMeetingMinutes(${m.id})" class="bureau-sm-btn" title="Rediger le CR">&#9998;</button>` : ''}
+        </div>
+    </div>`;
+}
+
+async function loadBureauDocs() {
+    const el = document.getElementById('bureau-content');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API}/api/members?action=bureau_docs`, {headers:{'Authorization':'Bearer '+authToken}});
+        const docs = await res.json();
+        if (docs.error) { el.innerHTML = '<p class="empty-msg">'+esc(docs.error)+'</p>'; return; }
+
         el.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
                 <h3 style="color:var(--primary);font-weight:800;margin:0">Documents Bureau</h3>
-                <button onclick="uploadBureauDoc()" class="btn btn-accent" style="font-size:12px;padding:6px 14px">+ Ajouter un document</button>
+                <button onclick="uploadBureauDoc()" class="btn btn-accent" style="font-size:12px;padding:8px 16px">+ Ajouter</button>
             </div>
-            <div id="bureau-docs-list"><p class="empty-msg">Aucun document</p></div>
+            ${docs.length ? docs.map(d => `<div class="bureau-doc-row">
+                <div class="bureau-doc-icon">${getFileIcon(d.file_type)}</div>
+                <div class="bureau-doc-info">
+                    <div class="bureau-doc-title">${esc(d.title)}</div>
+                    <div class="bureau-doc-meta">Par ${esc(d.first_name||'')} ${esc(d.last_name||'')} · ${formatDate(d.created_at)}</div>
+                </div>
+                <button onclick="viewDocument('${esc(d.file_url)}','${esc(d.title)}')" class="bureau-sm-btn" title="Consulter">&#128065;</button>
+            </div>`).join('') : '<p class="empty-msg">Aucun document</p>'}
         `;
-    }
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; }
+}
+
+function getFileIcon(type) {
+    const icons = {pdf:'&#128196;',doc:'&#128196;',docx:'&#128196;',ppt:'&#128202;',pptx:'&#128202;',xls:'&#128200;',xlsx:'&#128200;',jpg:'&#128247;',png:'&#128247;'};
+    return icons[type] || '&#128196;';
 }
 
 function showNewActionForm() {
@@ -967,48 +1067,89 @@ function showNewMeetingForm() {
     openModal(html);
 }
 
-function uploadBureauDoc() {
+async function saveBureauAction() {
+    const title = document.getElementById('ba-title').value;
+    if (!title) return;
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_create_action', title,
+            description: document.getElementById('ba-desc').value,
+            due_date: document.getElementById('ba-due').value || null
+        })});
+    closeModal('action-modal');
+    showToast('Action creee', 'success');
+    loadBureauActions();
+}
+
+async function updateBureauAction(id, status) {
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_update_action', id, status})});
+    loadBureauActions();
+}
+
+async function saveBureauMeeting() {
+    const title = document.getElementById('bm-title').value;
+    const date = document.getElementById('bm-date').value;
+    if (!title || !date) return;
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_create_meeting', title, meeting_date: date,
+            location: document.getElementById('bm-location').value,
+            agenda: document.getElementById('bm-agenda').value
+        })});
+    closeModal('meeting-modal');
+    showToast('Reunion planifiee', 'success');
+    loadBureauMeetings();
+}
+
+function editMeetingMinutes(id) {
+    const html = `<div class="adm-modal-bg" id="minutes-modal">
+        <div class="adm-modal" style="max-width:600px">
+            <button class="auth-close" onclick="closeModal('minutes-modal')">&times;</button>
+            <div style="padding:28px">
+                <h3 style="color:var(--primary);margin-bottom:16px">Rediger le compte-rendu</h3>
+                <textarea id="bm-minutes" style="width:100%;min-height:200px;padding:12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:inherit;font-size:14px" placeholder="Participants, decisions, actions..."></textarea>
+                <button onclick="saveMeetingMinutes(${id})" class="btn btn-accent" style="width:100%;margin-top:12px">Enregistrer le CR</button>
+            </div>
+        </div>
+    </div>`;
+    openModal(html);
+}
+
+async function saveMeetingMinutes(id) {
+    const minutes = document.getElementById('bm-minutes').value;
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_update_meeting', id, minutes, status:'done'})});
+    closeModal('minutes-modal');
+    showToast('Compte-rendu enregistre', 'success');
+    loadBureauMeetings();
+}
+
+async function uploadBureauDoc() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.png';
     input.onchange = async function() {
         if (!this.files[0]) return;
         const file = this.files[0];
-        if (file.size > 10 * 1024 * 1024) { alert('Fichier trop volumineux (max 10 Mo)'); return; }
-        const title = prompt('Titre du document :', file.name);
+        if (file.size > 10*1024*1024) { alert('Max 10 Mo'); return; }
+        const title = prompt('Titre du document :', file.name.replace(/\.[^.]+$/,''));
         if (!title) return;
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', 'ml_default');
         formData.append('folder', 'affi/bureau');
         try {
-            const res = await fetch('https://api.cloudinary.com/v1_1/dsheinfad/auto/upload', {
-                method: 'POST', body: formData
-            });
+            showToast('Upload en cours...', 'info');
+            const res = await fetch('https://api.cloudinary.com/v1_1/dsheinfad/auto/upload', {method:'POST',body:formData});
             const data = await res.json();
             if (data.secure_url) {
-                showToast('Document televerse : ' + title, 'success');
-                // TODO: save to DB
-            } else {
-                alert('Erreur upload');
+                await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+                    body: JSON.stringify({action:'bureau_save_doc', title, file_url: data.secure_url, file_type: file.name.split('.').pop()})});
+                showToast('Document ajoute', 'success');
+                loadBureauDocs();
             }
-        } catch(e) { alert('Erreur : ' + e.message); }
+        } catch(e) { alert('Erreur upload'); }
     };
     input.click();
-}
-
-async function saveBureauAction() {
-    // TODO: save to API
-    closeModal('action-modal');
-    showToast('Action creee', 'success');
-    loadBureauSpace();
-}
-
-async function saveBureauMeeting() {
-    // TODO: save to API
-    closeModal('meeting-modal');
-    showToast('Reunion planifiee', 'success');
-    loadBureauSpace();
 }
 
 function viewDocument(url, title) {

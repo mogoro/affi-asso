@@ -1013,39 +1013,95 @@ function openWikiMeeting(id) {
     document.querySelector(`.wiki-tab[data-wid="${id}"]`)?.classList.add('wiki-tab-active');
     const m = window._wikiMeetings?.[id];
     if (!m) return;
-    const area = document.getElementById('wiki-editor-area');
-    if (area) area.innerHTML = _buildWikiEditor(m);
-    _startAutoSave(id);
+    // Open fullscreen editor overlay
+    _openFullscreenEditor(m);
 }
 
-function _buildWikiEditor(m) {
+function _openFullscreenEditor(m) {
     const content = m.minutes || '';
-    const isPast = new Date(m.meeting_date) < new Date();
     _lastSavedContent = content;
 
-    return `
-        <div class="wiki-toolbar">
-            <div class="wiki-toolbar-left">
-                <h3 class="wiki-title">${esc(m.title)}</h3>
-                <span class="wiki-date">${formatDate(m.meeting_date)}${m.location ? ' · ' + esc(m.location) : ''}</span>
+    // Remove existing overlay if any
+    document.getElementById('wiki-fullscreen')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'wiki-fullscreen';
+    overlay.className = 'wiki-fs';
+    overlay.innerHTML = `
+        <div class="wiki-fs-toolbar">
+            <div class="wiki-fs-toolbar-left">
+                <button onclick="closeWikiFullscreen()" class="wiki-fs-close" title="Fermer (Escape)">&#10005;</button>
+                <div>
+                    <div class="wiki-fs-title">${esc(m.title)}</div>
+                    <div class="wiki-fs-meta">${formatDate(m.meeting_date)}${m.location ? ' · ' + esc(m.location) : ''}</div>
+                </div>
             </div>
-            <div class="wiki-toolbar-right">
-                <span id="wiki-save-status" class="wiki-save-status">&#10003; Sauvegarde</span>
-                <button onclick="wikiCreateActionFromCR(${m.id})" class="wiki-toolbar-btn" title="Creer une action depuis le texte selectionne">+ Action</button>
-                <button onclick="wikiExtractAllActions(${m.id})" class="wiki-toolbar-btn" style="background:var(--teal);color:#fff" title="Extraire toutes les actions [ ]">Extraire actions</button>
+            <div class="wiki-fs-toolbar-right">
+                <span id="wiki-save-status" class="wiki-save-status" style="color:var(--green)">&#10003; Sauvegardé</span>
+                <button onclick="wikiCreateActionFromCR(${m.id})" class="wiki-fs-btn">+ Action</button>
+                <button onclick="wikiExtractAllActions(${m.id})" class="wiki-fs-btn wiki-fs-btn-accent">Extraire actions</button>
             </div>
         </div>
-        ${m.agenda ? `<div class="wiki-agenda"><strong>Ordre du jour :</strong> ${esc(m.agenda.substring(0,200))}</div>` : ''}
-        <div class="wiki-split">
-            <div class="wiki-edit-pane">
-                <textarea id="wiki-textarea" class="wiki-textarea" placeholder="Redigez le compte-rendu ici...\n\n# Participants\n- \n\n## Decisions\n- [ ] \n\n## Actions\n- [ ] Action -- Responsable -- Echeance">${esc(content)}</textarea>
+        ${m.agenda ? `<div class="wiki-fs-agenda"><strong>OJ :</strong> ${esc(m.agenda)}</div>` : ''}
+        <div class="wiki-fs-editor">
+            <div class="wiki-fs-edit-pane">
+                <div class="wiki-fs-pane-label">ÉDITEUR</div>
+                <textarea id="wiki-textarea" class="wiki-fs-textarea" spellcheck="true" placeholder="# Compte-rendu\n\n## Participants\n- \n\n## Décisions\n- [x] Décision validée\n- [ ] Point en suspens\n\n## Actions\n- [ ] Action — **Responsable** — Échéance">${esc(content)}</textarea>
             </div>
-            <div class="wiki-preview-pane" id="wiki-preview"></div>
-        </div>`;
+            <div class="wiki-fs-preview-pane">
+                <div class="wiki-fs-pane-label">APERÇU</div>
+                <div id="wiki-preview" class="wiki-fs-preview"></div>
+            </div>
+        </div>
+        <div class="wiki-fs-footer">
+            # Titre · ## Sous-titre · **gras** · *italique* · - liste · - [x] fait · - [ ] à faire · > citation · --- séparateur · \`code\`
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+
+    // Focus textarea
+    setTimeout(() => {
+        document.getElementById('wiki-textarea')?.focus();
+    }, 100);
+
+    _startAutoSave(m.id);
+
+    // Close on Escape
+    overlay._escHandler = function(e) {
+        if (e.key === 'Escape') closeWikiFullscreen();
+    };
+    document.addEventListener('keydown', overlay._escHandler);
 }
 
+function closeWikiFullscreen() {
+    // Force save before closing
+    const ta = document.getElementById('wiki-textarea');
+    if (ta && ta.value !== _lastSavedContent) {
+        // Trigger immediate save
+        const meetingId = _currentWikiMeetingId;
+        if (meetingId) {
+            fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+                body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: ta.value, status: ta.value.trim() ? 'done' : 'planned'})
+            });
+            if (window._wikiMeetings) window._wikiMeetings[meetingId].minutes = ta.value;
+        }
+    }
+    if (_autoSaveTimer) { clearInterval(_autoSaveTimer); _autoSaveTimer = null; }
+    const overlay = document.getElementById('wiki-fullscreen');
+    if (overlay) {
+        document.removeEventListener('keydown', overlay._escHandler);
+        overlay.remove();
+    }
+    document.body.style.overflow = '';
+    // Refresh wiki list
+    loadBureauWikiFullscreen();
+}
+
+let _currentWikiMeetingId = null;
+
 function _startAutoSave(meetingId) {
-    // Clear previous timer
+    _currentWikiMeetingId = meetingId;
     if (_autoSaveTimer) clearInterval(_autoSaveTimer);
 
     const textarea = document.getElementById('wiki-textarea');

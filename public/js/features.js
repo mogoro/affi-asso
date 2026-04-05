@@ -142,11 +142,11 @@ async function loadStatsDashboard() {
         el.innerHTML = `
             <div class="kpi-row" style="margin-bottom:32px">
                 <div class="kpi-card"><div class="kpi-val">${s.total}</div><div class="kpi-label">Membres actifs</div></div>
-                <div class="kpi-card"><div class="kpi-val">${s.verified}</div><div class="kpi-label">Verifies</div></div>
-                <div class="kpi-card"><div class="kpi-val">${s.board}</div><div class="kpi-label">Bureau</div></div>
-                <div class="kpi-card"><div class="kpi-val">${s.mentors}</div><div class="kpi-label">Mentors</div></div>
-                <div class="kpi-card"><div class="kpi-val">${s.events_total}</div><div class="kpi-label">Evenements</div></div>
-                <div class="kpi-card"><div class="kpi-val">${s.events_upcoming}</div><div class="kpi-label">A venir</div></div>
+                <div class="kpi-card"><div class="kpi-val">${s.new_this_year || 0}</div><div class="kpi-label">Nouveaux cette annee</div></div>
+                <div class="kpi-card"><div class="kpi-val">${s.verified}</div><div class="kpi-label">Verifies (annuaire)</div></div>
+                <div class="kpi-card"><div class="kpi-val">${s.events_upcoming}</div><div class="kpi-label">Evenements a venir</div></div>
+                <div class="kpi-card"><div class="kpi-val">${s.event_registrations || 0}</div><div class="kpi-label">Inscriptions evenements</div></div>
+                <div class="kpi-card"><div class="kpi-val">${s.partners_active || 0}</div><div class="kpi-label">Partenaires actifs</div></div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
                 <div class="card" style="padding:20px">
@@ -171,12 +171,6 @@ async function loadStatsDashboard() {
                         </div>`;
                     }).join('')}
                 </div>
-            </div>
-            <div class="card" style="padding:20px;margin-top:24px">
-                <h4 style="margin-bottom:12px;color:var(--primary)">Adhesions par mois</h4>
-                <div class="chart-months">${(s.by_month||[]).reverse().map(x =>
-                    `<div class="chart-col"><div class="chart-bar" style="height:${Math.max(8, x.n * 20)}px"></div><span class="chart-label">${x.month.slice(5)}</span><span class="chart-val">${x.n}</span></div>`
-                ).join('')}</div>
             </div>`;
     } catch(e) { console.warn('Stats:', e); }
 }
@@ -212,6 +206,37 @@ async function markAttended(regId) {
     await fetch(`${API}/api/admin`, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body: JSON.stringify({action:'event_attend', registration_id: regId})});
     if (typeof showToast === 'function') showToast('Presence enregistree', 'success');
+}
+
+// === ADMIN POLLS LIST ===
+async function loadAdminPolls() {
+    try {
+        const res = await fetch(`${API}/api/social?action=polls`, {headers:{'Authorization':'Bearer '+(typeof authToken!=='undefined'?authToken:'')}});
+        const polls = await res.json();
+        const el = document.getElementById('adm-polls-content');
+        if (!el) return;
+        if (!polls.length) { el.innerHTML = '<p class="empty-msg">Aucun sondage en cours</p>'; return; }
+        el.innerHTML = polls.map(p => {
+            const totalVotes = p.total_votes || 0;
+            return `<div class="poll-card" style="margin-bottom:16px">
+                <div class="poll-header">
+                    <h4 class="poll-title">${esc(p.title)}</h4>
+                    ${p.description ? `<p class="poll-desc">${esc(p.description)}</p>` : ''}
+                    <span class="poll-meta">${totalVotes} vote(s) · Par ${esc(p.first_name||'')} ${esc(p.last_name||'')}</span>
+                </div>
+                <div class="poll-options">
+                    ${(p.options||[]).map(o => {
+                        const pct = totalVotes > 0 ? Math.round(o.votes / totalVotes * 100) : 0;
+                        return `<div class="poll-option">
+                            <div class="poll-bar" style="width:${pct}%"></div>
+                            <span class="poll-opt-label">${esc(o.label)}</span>
+                            <span class="poll-opt-pct">${pct}% (${o.votes})</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) { console.warn('Admin Polls:', e); }
 }
 
 // === CREATE POLL (admin) ===

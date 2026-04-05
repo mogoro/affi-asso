@@ -6,7 +6,7 @@ let adminData = {};
 
 async function loadAdmin() {
     if (!currentUser || !currentUser.is_admin) return;
-    switchAdminSection('adm-members');
+    switchAdminSection('adm-stats');
 }
 
 function switchAdminSection(id) {
@@ -21,7 +21,7 @@ function switchAdminSection(id) {
     if (id === 'adm-news') loadAdminNews();
     if (id === 'adm-moderation') loadAdminModeration();
     if (id === 'adm-stats') { if (typeof loadStatsDashboard === 'function') loadStatsDashboard(); }
-    if (id === 'adm-polls') { if (typeof loadPolls === 'function') loadPolls(); }
+    if (id === 'adm-polls') { if (typeof loadAdminPolls === 'function') loadAdminPolls(); else if (typeof loadPolls === 'function') loadPolls(); }
     if (id === 'adm-pubs') loadAdminPubs();
     if (id === 'adm-partners') loadAdminPartners();
     if (id === 'adm-board') loadAdminBoard();

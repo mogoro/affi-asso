@@ -413,37 +413,26 @@ async function saveCv(evt) {
 }
 
 // === FORMATIONS TRACKING (#37) ===
-function addFormation() {
-    const title = prompt('Titre de la formation :');
-    if (!title) return;
-    const date = prompt('Date (ex: Mars 2026) :');
-    const org = prompt('Organisme :');
-    const cvEl = document.getElementById('prof-cv');
-    if (cvEl) {
-        const existing = cvEl.value;
-        cvEl.value = (existing ? existing + '\n\n' : '') + `FORMATION: ${title}\nDate: ${date || 'Non precisee'}\nOrganisme: ${org || 'Non precise'}`;
-    }
-    refreshFormationsList();
-    if (typeof showToast === 'function') showToast('Formation ajoutee au CV', 'success');
+let _formationCount = 0;
+function addFormationField() {
+    _formationCount++;
+    const container = document.getElementById('prof-formations-container');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:8px;align-items:end';
+    div.innerHTML = `
+        <div class="form-group" style="margin:0"><label style="font-size:12px">Formation / Diplome</label><input class="prof-formation-title" placeholder="Ex: Ingenieur ENPC"></div>
+        <div class="form-group" style="margin:0"><label style="font-size:12px">Etablissement</label><input class="prof-formation-school" placeholder="Ex: Ecole des Ponts"></div>
+        <div class="form-group" style="margin:0"><label style="font-size:12px">Annee</label><input class="prof-formation-year" placeholder="2015" maxlength="4"></div>
+    `;
+    container.appendChild(div);
 }
 
+// Legacy compat
+function addFormation() { addFormationField(); }
+
 function refreshFormationsList() {
-    const el = document.getElementById('prof-formations-list');
-    if (!el) return;
-    const cvEl = document.getElementById('prof-cv');
-    if (!cvEl || !cvEl.value) { el.innerHTML = '<em>Aucune formation enregistree</em>'; return; }
-    const lines = cvEl.value.split('\n');
-    const formations = [];
-    for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith('FORMATION:')) {
-            const title = lines[i].replace('FORMATION:', '').trim();
-            const date = (lines[i+1] && lines[i+1].startsWith('Date:')) ? lines[i+1].replace('Date:', '').trim() : '';
-            const org = (lines[i+2] && lines[i+2].startsWith('Organisme:')) ? lines[i+2].replace('Organisme:', '').trim() : '';
-            formations.push({title, date, org});
-        }
-    }
-    if (!formations.length) { el.innerHTML = '<em>Aucune formation enregistree</em>'; return; }
-    el.innerHTML = formations.map(f => `<div style="padding:6px 0;border-bottom:1px solid var(--gray-100)"><strong>${esc(f.title)}</strong>${f.date ? ' — ' + esc(f.date) : ''}${f.org ? ' <span style="color:var(--gray-400)">(' + esc(f.org) + ')</span>' : ''}</div>`).join('');
+    // No-op: formations are now inline fields in the CV form
 }
 
 // === QR CARTE DE VISITE (#35) ===

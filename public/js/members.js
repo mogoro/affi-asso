@@ -600,7 +600,7 @@ async function loadMyProposals() {
         const el = document.getElementById('my-proposals');
         if (!el) return;
         const all = [
-            ...(data.events||[]).map(e => ({...e, type: 'Evenement', published: e.is_published})),
+            ...(data.events||[]).map(e => ({...e, type: 'Événement', published: e.is_published})),
             ...(data.news||[]).map(n => ({...n, type: 'Actualite', published: n.is_published})),
             ...(data.announcements||[]).map(a => ({...a, type: 'Annonce', published: a.is_active})),
         ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
@@ -986,8 +986,8 @@ async function loadBureauWikiFullscreen() {
             <div class="wiki-full">
                 <div class="wiki-sidebar">
                     <div class="wiki-sidebar-header">
-                        <strong>Reunions</strong>
-                        <button onclick="showNewMeetingForm()" class="bureau-sm-btn" title="Nouvelle reunion" style="font-size:16px">+</button>
+                        <strong>Réunions</strong>
+                        <button onclick="showNewMeetingForm()" class="bureau-sm-btn" title="Nouvelle réunion" style="font-size:16px">+</button>
                     </div>
                     ${meetings.length ? meetings.map((m, i) => {
                         const d = new Date(m.meeting_date);
@@ -995,16 +995,14 @@ async function loadBureauWikiFullscreen() {
                         return `<button class="wiki-tab ${i===0?'wiki-tab-active':''}" onclick="openWikiMeeting(${m.id})" data-wid="${m.id}">
                             <div class="wiki-tab-date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div>
                             <div class="wiki-tab-title">${esc(m.title)}</div>
-                            ${hasCR ? '<div class="wiki-tab-status wiki-tab-has-cr">CR redige</div>' : '<div class="wiki-tab-status">Pas de CR</div>'}
+                            ${hasCR ? '<div class="wiki-tab-status wiki-tab-has-cr">CR rédigé</div>' : '<div class="wiki-tab-status">Pas de CR</div>'}
                         </button>`;
                     }).join('') : '<p style="padding:16px;font-size:12px;color:var(--gray-400)">Aucune reunion</p>'}
                 </div>
                 <div class="wiki-editor-area" id="wiki-editor-area">
-                    ${meetings.length ? _buildWikiEditor(meetings[0]) : '<div class="wiki-empty"><p>Creez votre premiere reunion pour commencer</p><button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:14px;padding:10px 24px">+ Nouvelle reunion</button></div>'}
+                    <div class="wiki-empty"><p style="font-size:14px;color:var(--gray-500)">Cliquez sur une réunion pour consulter le compte-rendu</p></div>
                 </div>
             </div>`;
-
-        if (meetings.length) _startAutoSave(meetings[0].id);
     } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur : ' + e.message + '</p>'; }
 }
 
@@ -1278,12 +1276,12 @@ function showNewMeetingForm() {
         <div class="adm-modal" style="max-width:460px">
             <button class="auth-close" onclick="closeModal('meeting-modal')">&times;</button>
             <div style="padding:24px">
-                <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle reunion</h3>
-                <div class="form-group"><label>Titre</label><input id="bm-title" required value="Reunion de Bureau"></div>
+                <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle réunion</h3>
+                <div class="form-group"><label>Titre</label><input id="bm-title" required value="Réunion de Bureau"></div>
                 <div class="form-group"><label>Date et heure</label><input type="datetime-local" id="bm-date" required></div>
-                <div class="form-group"><label>Lieu</label><input id="bm-location" placeholder="Visio / Presentiel"></div>
+                <div class="form-group"><label>Lieu</label><input id="bm-location" placeholder="Visio / Présentiel"></div>
                 <div class="form-group"><label>Ordre du jour</label><textarea id="bm-agenda" style="min-height:60px" placeholder="Points a aborder..."></textarea></div>
-                <button onclick="saveBureauMeeting()" class="btn btn-accent" style="width:100%">Creer</button>
+                <button onclick="saveBureauMeeting()" class="btn btn-accent" style="width:100%">Créer</button>
             </div>
         </div>
     </div>`;
@@ -1299,6 +1297,6 @@ async function saveBureauMeeting() {
             location: document.getElementById('bm-location')?.value || '',
             agenda: document.getElementById('bm-agenda')?.value || ''})});
     closeModal('meeting-modal');
-    showToast('Reunion creee', 'success');
+    showToast('Réunion créée', 'success');
     loadBureauWikiFullscreen();
 }

@@ -646,3 +646,49 @@ CREATE INDEX IF NOT EXISTS idx_challenge_teams_subject ON challenge_teams(subjec
 CREATE INDEX IF NOT EXISTS idx_challenge_teams_year ON challenge_teams(year);
 CREATE INDEX IF NOT EXISTS idx_challenge_evaluations_team ON challenge_evaluations(team_id);
 CREATE INDEX IF NOT EXISTS idx_challenge_results_year ON challenge_results(year);
+
+-- ============================================================
+-- Espace Bureau
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS bureau_meetings (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(300) NOT NULL,
+    meeting_date TIMESTAMP NOT NULL,
+    location VARCHAR(300),
+    agenda TEXT,
+    minutes TEXT,
+    status VARCHAR(20) DEFAULT 'planned',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS bureau_actions (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(300) NOT NULL,
+    description TEXT,
+    assigned_to INT REFERENCES members(id),
+    meeting_id INT REFERENCES bureau_meetings(id),
+    due_date DATE,
+    status VARCHAR(20) DEFAULT 'open',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS shared_documents (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(300) NOT NULL,
+    description TEXT,
+    file_url TEXT NOT NULL,
+    file_type VARCHAR(20),
+    category VARCHAR(50) DEFAULT 'general',
+    is_bureau_only BOOLEAN DEFAULT FALSE,
+    uploaded_by INT REFERENCES members(id),
+    event_id INT REFERENCES events(id),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Index Espace Bureau
+CREATE INDEX IF NOT EXISTS idx_bureau_meetings_date ON bureau_meetings(meeting_date DESC);
+CREATE INDEX IF NOT EXISTS idx_bureau_actions_status ON bureau_actions(status);
+CREATE INDEX IF NOT EXISTS idx_bureau_actions_assigned ON bureau_actions(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_shared_documents_category ON shared_documents(category);
+CREATE INDEX IF NOT EXISTS idx_shared_documents_bureau ON shared_documents(is_bureau_only);

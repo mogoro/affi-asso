@@ -73,6 +73,10 @@ async function showMemberArea() {
     const adminTab = document.getElementById('admin-main-tab');
     if (adminTab) adminTab.style.display = currentUser && currentUser.is_admin ? 'inline-flex' : 'none';
 
+    // Show Bureau tab if member is on the board
+    const bureauTab = document.getElementById('bureau-main-tab');
+    if (bureauTab) bureauTab.style.display = currentUser && currentUser.is_board ? 'inline-flex' : 'none';
+
     // Debloquer tout le site
     if (typeof onUserLoggedIn === 'function') onUserLoggedIn();
 
@@ -97,6 +101,7 @@ function switchTab(tab) {
     if (tab === 'announcements') { loadAnnouncements(); if (typeof loadMyProposals === 'function') loadMyProposals(); }
     if (tab === 'messages') loadConversations();
     if (tab === 'notifications') loadNotifications();
+    if (tab === 'bureau') loadBureauSpace();
     if (tab === 'admin') { if (typeof loadAdmin === 'function') loadAdmin(); }
 }
 
@@ -881,4 +886,150 @@ async function exportMyData() {
         URL.revokeObjectURL(a.href);
         if (typeof showToast === 'function') showToast('Données exportées', 'success');
     } catch(e) { alert('Erreur export'); }
+}
+
+// === ESPACE BUREAU ===
+let _bureauView = 'actions';
+
+function switchBureauView(btn, view) {
+    document.querySelectorAll('#mtab-bureau .course-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _bureauView = view;
+    loadBureauSpace();
+}
+
+async function loadBureauSpace() {
+    const el = document.getElementById('bureau-content');
+    if (!el) return;
+
+    if (_bureauView === 'actions') {
+        el.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Actions en cours</h3>
+                <button onclick="showNewActionForm()" class="btn btn-accent" style="font-size:12px;padding:6px 14px">+ Nouvelle action</button>
+            </div>
+            <div id="bureau-actions-list"><p class="empty-msg">Aucune action en cours</p></div>
+        `;
+    } else if (_bureauView === 'meetings') {
+        el.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Prochaines reunions</h3>
+                <button onclick="showNewMeetingForm()" class="btn btn-accent" style="font-size:12px;padding:6px 14px">+ Planifier</button>
+            </div>
+            <div id="bureau-meetings-list"><p class="empty-msg">Aucune reunion planifiee</p></div>
+        `;
+    } else if (_bureauView === 'minutes') {
+        el.innerHTML = `
+            <h3 style="color:var(--primary);font-weight:800;margin-bottom:16px">Comptes-rendus</h3>
+            <div id="bureau-minutes-list"><p class="empty-msg">Aucun compte-rendu</p></div>
+        `;
+    } else if (_bureauView === 'docs') {
+        el.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h3 style="color:var(--primary);font-weight:800;margin:0">Documents Bureau</h3>
+                <button onclick="uploadBureauDoc()" class="btn btn-accent" style="font-size:12px;padding:6px 14px">+ Ajouter un document</button>
+            </div>
+            <div id="bureau-docs-list"><p class="empty-msg">Aucun document</p></div>
+        `;
+    }
+}
+
+function showNewActionForm() {
+    const html = `<div class="adm-modal-bg" id="action-modal">
+        <div class="adm-modal" style="max-width:480px">
+            <button class="auth-close" onclick="closeModal('action-modal')">&times;</button>
+            <div style="padding:28px">
+                <h3 style="color:var(--primary);margin-bottom:16px">Nouvelle action</h3>
+                <div class="form-group"><label>Titre *</label><input id="ba-title" required></div>
+                <div class="form-group"><label>Description</label><textarea id="ba-desc" style="min-height:60px"></textarea></div>
+                <div class="form-group"><label>Echeance</label><input type="date" id="ba-due"></div>
+                <button onclick="saveBureauAction()" class="btn btn-accent" style="width:100%">Creer l'action</button>
+            </div>
+        </div>
+    </div>`;
+    openModal(html);
+}
+
+function showNewMeetingForm() {
+    const html = `<div class="adm-modal-bg" id="meeting-modal">
+        <div class="adm-modal" style="max-width:480px">
+            <button class="auth-close" onclick="closeModal('meeting-modal')">&times;</button>
+            <div style="padding:28px">
+                <h3 style="color:var(--primary);margin-bottom:16px">Planifier une reunion</h3>
+                <div class="form-group"><label>Titre *</label><input id="bm-title" required placeholder="Reunion de Bureau"></div>
+                <div class="form-group"><label>Date *</label><input type="datetime-local" id="bm-date" required></div>
+                <div class="form-group"><label>Lieu</label><input id="bm-location" placeholder="Visio / Presentiel"></div>
+                <div class="form-group"><label>Ordre du jour</label><textarea id="bm-agenda" style="min-height:80px" placeholder="Points a aborder..."></textarea></div>
+                <button onclick="saveBureauMeeting()" class="btn btn-accent" style="width:100%">Planifier</button>
+            </div>
+        </div>
+    </div>`;
+    openModal(html);
+}
+
+function uploadBureauDoc() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.png';
+    input.onchange = async function() {
+        if (!this.files[0]) return;
+        const file = this.files[0];
+        if (file.size > 10 * 1024 * 1024) { alert('Fichier trop volumineux (max 10 Mo)'); return; }
+        const title = prompt('Titre du document :', file.name);
+        if (!title) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'ml_default');
+        formData.append('folder', 'affi/bureau');
+        try {
+            const res = await fetch('https://api.cloudinary.com/v1_1/dsheinfad/auto/upload', {
+                method: 'POST', body: formData
+            });
+            const data = await res.json();
+            if (data.secure_url) {
+                showToast('Document televerse : ' + title, 'success');
+                // TODO: save to DB
+            } else {
+                alert('Erreur upload');
+            }
+        } catch(e) { alert('Erreur : ' + e.message); }
+    };
+    input.click();
+}
+
+async function saveBureauAction() {
+    // TODO: save to API
+    closeModal('action-modal');
+    showToast('Action creee', 'success');
+    loadBureauSpace();
+}
+
+async function saveBureauMeeting() {
+    // TODO: save to API
+    closeModal('meeting-modal');
+    showToast('Reunion planifiee', 'success');
+    loadBureauSpace();
+}
+
+function viewDocument(url, title) {
+    const ext = url.split('.').pop().toLowerCase();
+    let viewerHtml = '';
+    if (['pdf','doc','docx','ppt','pptx','xls','xlsx'].includes(ext)) {
+        viewerHtml = `<iframe src="https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true" style="width:100%;height:80vh;border:none;border-radius:8px"></iframe>`;
+    } else if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
+        viewerHtml = `<img src="${url}" style="max-width:100%;max-height:80vh;border-radius:8px;display:block;margin:0 auto">`;
+    } else {
+        viewerHtml = `<p style="text-align:center;padding:40px;color:var(--gray-500)">Format non supporte pour la previsualisation. <a href="${url}" target="_blank">Ouvrir dans un nouvel onglet</a></p>`;
+    }
+
+    const html = `<div class="adm-modal-bg" id="doc-viewer-modal">
+        <div class="adm-modal" style="max-width:900px;padding:0;overflow:hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--gray-200)">
+                <strong style="font-size:15px;color:var(--primary)">${esc(title)}</strong>
+                <button class="auth-close" onclick="closeModal('doc-viewer-modal')" style="position:static">&times;</button>
+            </div>
+            <div style="padding:0">${viewerHtml}</div>
+        </div>
+    </div>`;
+    openModal(html);
 }

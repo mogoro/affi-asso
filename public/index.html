@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775415936" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775415936">
+<link rel="preload" href="/css/styles.css?v=1775417497" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775417497">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -87,6 +87,10 @@
                 <button class="lang-btn" data-lang="de" onclick="setLanguage('de')" title="Deutsch">DE</button>
                 <button class="lang-btn" data-lang="es" onclick="setLanguage('es')" title="Español">ES</button>
             </div>
+            <button id="dark-mode-toggle" class="dark-mode-btn" onclick="toggleDarkMode()" title="Mode sombre">
+                <svg id="dark-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg id="dark-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
             <div id="nav-bell" class="nav-bell" style="display:none" onclick="toggleNotifPanel()">
                 <span class="nav-bell-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
                 <span id="nav-bell-count" class="nav-bell-count" style="display:none"></span>
@@ -956,6 +960,7 @@
                     <button class="mtab-u" data-tab="announcements" onclick="switchTab('announcements')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg> Annonces</button>
                     <button class="mtab-u" data-tab="messages" onclick="switchTab('messages')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Messages</button>
                     <button class="mtab-u" data-tab="notifications" onclick="switchTab('notifications')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg> Notifications</button>
+                    <button class="mtab-u" data-tab="bureau" onclick="switchTab('bureau')" id="bureau-main-tab" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Bureau</button>
                     <button class="mtab-u" data-tab="admin" onclick="switchTab('admin')" id="admin-main-tab" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Administration</button>
                 </div>
 
@@ -1210,6 +1215,17 @@
                     <div id="notif-list"><p class="empty-msg">Chargement...</p></div>
                 </div>
 
+                <!-- BUREAU -->
+                <div id="mtab-bureau" class="mtab-content" style="display:none">
+                    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+                        <button class="course-filter active" onclick="switchBureauView(this,'actions')">Actions en cours</button>
+                        <button class="course-filter" onclick="switchBureauView(this,'meetings')">Reunions</button>
+                        <button class="course-filter" onclick="switchBureauView(this,'minutes')">Comptes-rendus</button>
+                        <button class="course-filter" onclick="switchBureauView(this,'docs')">Documents</button>
+                    </div>
+                    <div id="bureau-content"><p class="empty-msg">Chargement...</p></div>
+                </div>
+
                 <!-- ADMIN -->
                 <div id="mtab-admin" class="mtab-content" style="display:none">
                     <div class="adm-nav">
@@ -1389,12 +1405,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/members.js?v=1775415936" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775415936" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775415936" defer></script>
+<script src="/js/members.js?v=1775417497" defer fetchpriority="high"></script>
+<script src="/js/app.js?v=1775417497" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775417497" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/social.js?v=1775415936','/js/datatable.js?v=1775415936','/js/admin.js?v=1775415936','/js/map.js?v=1775415936'];
+    var scripts = ['/js/social.js?v=1775417497','/js/datatable.js?v=1775417497','/js/admin.js?v=1775417497','/js/map.js?v=1775417497'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

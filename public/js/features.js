@@ -49,12 +49,35 @@ function renderShareButtons(title, eventId) {
     </div>`;
 }
 
-// === DARK MODE (desactive — garder le CSS pour usage futur) ===
+// === DARK MODE ===
 function initDarkMode() {
     const saved = localStorage.getItem('affi_dark_mode');
-    if (saved === 'true') document.body.classList.add('dark-mode');
+    if (saved === 'true' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-mode');
+    }
+    updateDarkModeIcon();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (localStorage.getItem('affi_dark_mode') === null) {
+            document.body.classList.toggle('dark-mode', e.matches);
+            updateDarkModeIcon();
+        }
+    });
 }
-function toggleDarkMode() {}
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('affi_dark_mode', isDark);
+    updateDarkModeIcon();
+}
+
+function updateDarkModeIcon() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const sun = document.getElementById('dark-icon-sun');
+    const moon = document.getElementById('dark-icon-moon');
+    if (sun) sun.style.display = isDark ? 'block' : 'none';
+    if (moon) moon.style.display = isDark ? 'none' : 'block';
+}
 
 // === ENDORSEMENTS ===
 function renderEndorseButton(memberId, memberName) {

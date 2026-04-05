@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-<link rel="preload" href="/css/styles.css?v=1775411807" as="style">
-<link rel="stylesheet" href="/css/styles.css?v=1775411807">
+<link rel="preload" href="/css/styles.css?v=1775411997" as="style">
+<link rel="stylesheet" href="/css/styles.css?v=1775411997">
 <link rel="preload" href="https://res.cloudinary.com/dsheinfad/image/upload/q_auto,f_auto/affi/slideshow/logo-slideshow" as="image">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a2d4d">
@@ -420,7 +420,7 @@
                     <option value="rencontre">Rencontre</option>
                     <option value="challenge">Challenge</option>
                 </select>
-                <a href="/api/calendar" class="btn btn-primary" style="font-size:12px;padding:6px 14px" title="S'abonner dans Outlook/Google Calendar">📅 S'abonner au calendrier</a>
+                <a href="/api/events?action=calendar" class="btn btn-primary" style="font-size:12px;padding:6px 14px" title="S'abonner dans Outlook/Google Calendar">📅 S'abonner au calendrier</a>
             </div>
             <div class="agenda-layout">
                 <div class="agenda-calendar" id="agenda-calendar"></div>
@@ -1326,12 +1326,12 @@
 <!-- TOAST NOTIFICATIONS -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="/js/members.js?v=1775411807" defer fetchpriority="high"></script>
-<script src="/js/app.js?v=1775411807" defer fetchpriority="high"></script>
-<script src="/js/features.js?v=1775411807" defer></script>
+<script src="/js/members.js?v=1775411997" defer fetchpriority="high"></script>
+<script src="/js/app.js?v=1775411997" defer fetchpriority="high"></script>
+<script src="/js/features.js?v=1775411997" defer></script>
 <script>
 window.addEventListener('load', function() {
-    var scripts = ['/js/social.js?v=1775411807','/js/datatable.js?v=1775411807','/js/admin.js?v=1775411807','/js/map.js?v=1775411807'];
+    var scripts = ['/js/social.js?v=1775411997','/js/datatable.js?v=1775411997','/js/admin.js?v=1775411997','/js/map.js?v=1775411997'];
     function loadNext() {
         if (!scripts.length) return;
         var s = document.createElement('script');

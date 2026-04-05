@@ -9,8 +9,27 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         qs = parse_qs(urlparse(self.path).query)
 
-        # My registrations
         action = qs.get("action", [""])[0]
+
+        # ICS calendar feed
+        if action == "calendar":
+            events = fetchall("SELECT * FROM events WHERE is_published=TRUE ORDER BY start_date DESC LIMIT 100")
+            lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//AFFI//Agenda//FR','X-WR-CALNAME:Agenda AFFI']
+            for e in events:
+                start = (e.get('start_date') or '').replace('-','').replace(':','').replace(' ','T')[:15]
+                if not start: continue
+                if 'T' not in start: start += 'T000000'
+                lines.extend(['BEGIN:VEVENT',f'DTSTART:{start}Z',f'SUMMARY:{e.get("title","")}',
+                    f'LOCATION:{e.get("location","")}',f'URL:https://affi-asso.vercel.app/#agenda','END:VEVENT'])
+            lines.append('END:VCALENDAR')
+            self.send_response(200)
+            self.send_header("Content-Type", "text/calendar; charset=utf-8")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write('\r\n'.join(lines).encode('utf-8'))
+            return
+
+        # My registrations
         if action == "my_registrations":
             token = (self.headers.get("Authorization") or "").replace("Bearer ", "")
             user = get_member_from_token(token)

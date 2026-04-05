@@ -1069,20 +1069,45 @@ function _openWikiPage(m, mode) {
                 </div>
             </div>
             <div class="on-format-bar">
-                <button onclick="onFmt('bold')" class="on-fmt-btn" title="Gras"><strong>G</strong></button>
-                <button onclick="onFmt('italic')" class="on-fmt-btn" title="Italique"><em>I</em></button>
-                <button onclick="onFmt('underline')" class="on-fmt-btn" title="Souligné"><u>S</u></button>
-                <span class="on-fmt-sep"></span>
-                <button onclick="onFmtBlock('h2')" class="on-fmt-btn" title="Titre">T1</button>
-                <button onclick="onFmtBlock('h3')" class="on-fmt-btn" title="Sous-titre">T2</button>
-                <button onclick="onFmtBlock('h4')" class="on-fmt-btn" title="Petit titre">T3</button>
-                <span class="on-fmt-sep"></span>
-                <button onclick="onFmt('insertUnorderedList')" class="on-fmt-btn" title="Liste">&#8226;</button>
-                <button onclick="onFmt('insertOrderedList')" class="on-fmt-btn" title="Numérotée">1.</button>
-                <button onclick="onInsertCheckbox()" class="on-fmt-btn" title="Checkbox">&#9744;</button>
-                <span class="on-fmt-sep"></span>
-                <button onclick="onFmt('formatBlock','blockquote')" class="on-fmt-btn" title="Citation">&#10077;</button>
-                <button onclick="document.execCommand('insertHorizontalRule')" class="on-fmt-btn" title="Séparateur">―</button>
+                <div class="on-fmt-row">
+                    <button onclick="onFmt('bold')" class="on-fmt-btn" title="Gras (Ctrl+B)"><strong>G</strong></button>
+                    <button onclick="onFmt('italic')" class="on-fmt-btn" title="Italique (Ctrl+I)"><em>I</em></button>
+                    <button onclick="onFmt('underline')" class="on-fmt-btn" title="Souligné"><u>S</u></button>
+                    <button onclick="onFmt('strikeThrough')" class="on-fmt-btn" title="Barré"><s>B</s></button>
+                    <span class="on-fmt-sep"></span>
+                    <button onclick="onFmtBlock('h2')" class="on-fmt-btn" title="Titre 1">T1</button>
+                    <button onclick="onFmtBlock('h3')" class="on-fmt-btn" title="Titre 2">T2</button>
+                    <button onclick="onFmtBlock('h4')" class="on-fmt-btn" title="Titre 3">T3</button>
+                    <span class="on-fmt-sep"></span>
+                    <button onclick="onFmt('insertUnorderedList')" class="on-fmt-btn" title="Liste">&#8226;</button>
+                    <button onclick="onFmt('insertOrderedList')" class="on-fmt-btn" title="Numérotée">1.</button>
+                    <button onclick="onInsertCheckbox()" class="on-fmt-btn" title="Case à cocher">&#9744;</button>
+                    <span class="on-fmt-sep"></span>
+                    <button onclick="onHighlight('yellow')" class="on-fmt-btn" title="Surligner jaune" style="background:#fef3cd">A</button>
+                    <button onclick="onHighlight('#d4edda')" class="on-fmt-btn" title="Surligner vert" style="background:#d4edda">A</button>
+                    <button onclick="onHighlight('#f8d7da')" class="on-fmt-btn" title="Surligner rouge" style="background:#f8d7da">A</button>
+                    <span class="on-fmt-sep"></span>
+                    <button onclick="onFmtColor('var(--accent)')" class="on-fmt-btn" title="Texte rouge" style="color:var(--accent)">A</button>
+                    <button onclick="onFmtColor('var(--green)')" class="on-fmt-btn" title="Texte vert" style="color:var(--green)">A</button>
+                    <button onclick="onFmtColor('var(--primary)')" class="on-fmt-btn" title="Texte bleu" style="color:var(--primary)">A</button>
+                </div>
+                <div class="on-fmt-row">
+                    <button onclick="onInsertCallout('decision')" class="on-fmt-btn on-fmt-btn-wide" title="Encadré Décision" style="color:var(--green)">&#10003; Décision</button>
+                    <button onclick="onInsertCallout('action')" class="on-fmt-btn on-fmt-btn-wide" title="Encadré Action" style="color:var(--accent)">&#9654; Action</button>
+                    <button onclick="onInsertCallout('info')" class="on-fmt-btn on-fmt-btn-wide" title="Encadré Info" style="color:var(--primary)">&#9432; Info</button>
+                    <button onclick="onInsertCallout('warning')" class="on-fmt-btn on-fmt-btn-wide" title="Encadré Attention" style="color:var(--orange)">&#9888; Alerte</button>
+                    <button onclick="onInsertVote()" class="on-fmt-btn on-fmt-btn-wide" title="Résultat de vote">&#9745; Vote</button>
+                    <span class="on-fmt-sep"></span>
+                    <button onclick="onInsertTable()" class="on-fmt-btn on-fmt-btn-wide" title="Tableau">&#9638; Tableau</button>
+                    <button onclick="onInsertTimestamp()" class="on-fmt-btn on-fmt-btn-wide" title="Horodatage">&#128339; Heure</button>
+                    <button onclick="onInsertSeparator()" class="on-fmt-btn on-fmt-btn-wide" title="Séparateur OJ">── Point ──</button>
+                    <span class="on-fmt-sep"></span>
+                    <button onclick="onInsertTemplate('cr')" class="on-fmt-btn on-fmt-btn-wide" title="Template CR">&#128196; CR</button>
+                    <button onclick="onInsertTemplate('ag')" class="on-fmt-btn on-fmt-btn-wide" title="Template AG">&#128196; AG</button>
+                    <button onclick="onInsertTemplate('bilan')" class="on-fmt-btn on-fmt-btn-wide" title="Template Bilan">&#128196; Bilan</button>
+                    <span class="on-fmt-sep"></span>
+                    <span id="wiki-word-count" class="on-word-count">0 mots</span>
+                </div>
             </div>
             <div class="on-editor-wrap">
                 <div id="on-editor" class="on-editor" contenteditable="true" spellcheck="true">${content || _getDefaultTemplate(m)}</div>
@@ -1170,6 +1195,141 @@ function onInsertCheckbox() {
     document.getElementById('on-editor')?.focus();
 }
 
+function onHighlight(color) {
+    document.execCommand('hiliteColor', false, color);
+    document.getElementById('on-editor')?.focus();
+}
+
+function onFmtColor(color) {
+    document.execCommand('foreColor', false, color);
+    document.getElementById('on-editor')?.focus();
+}
+
+function onInsertCallout(type) {
+    const configs = {
+        decision: { icon: '\u2705', label: 'D\u00c9CISION', bg: '#d4edda', border: '#28a745', color: '#155724' },
+        action: { icon: '\ud83d\udd34', label: 'ACTION', bg: '#f8d7da', border: '#dc3545', color: '#721c24' },
+        info: { icon: '\u2139\ufe0f', label: 'INFORMATION', bg: '#cce5ff', border: '#004085', color: '#004085' },
+        warning: { icon: '\u26a0\ufe0f', label: 'ATTENTION', bg: '#fff3cd', border: '#856404', color: '#856404' }
+    };
+    const c = configs[type] || configs.info;
+    const html = `<div class="wiki-callout" style="background:${c.bg};border-left:4px solid ${c.border};border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0">
+        <div style="font-weight:800;color:${c.color};font-size:13px;margin-bottom:4px">${c.icon} ${c.label}</div>
+        <div style="color:${c.color}">Saisissez le contenu ici...</div>
+    </div><p></p>`;
+    document.execCommand('insertHTML', false, html);
+    document.getElementById('on-editor')?.focus();
+}
+
+function onInsertVote() {
+    const html = `<div class="wiki-callout" style="background:#e8eaf6;border-left:4px solid #3f51b5;border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0">
+        <div style="font-weight:800;color:#283593;font-size:13px;margin-bottom:8px">\ud83d\uddf3\ufe0f VOTE</div>
+        <div style="color:#283593"><strong>Sujet :</strong> ...<br>
+        <strong>Pour :</strong> <br>
+        <strong>Contre :</strong> <br>
+        <strong>Abstention :</strong> <br>
+        <strong>R\u00e9sultat :</strong> <em>Adopt\u00e9 / Rejet\u00e9</em></div>
+    </div><p></p>`;
+    document.execCommand('insertHTML', false, html);
+    document.getElementById('on-editor')?.focus();
+}
+
+function onInsertTable() {
+    const html = `<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
+        <tr style="background:var(--gray-100)"><th style="border:1px solid var(--gray-300);padding:8px;text-align:left">Colonne 1</th><th style="border:1px solid var(--gray-300);padding:8px;text-align:left">Colonne 2</th><th style="border:1px solid var(--gray-300);padding:8px;text-align:left">Colonne 3</th></tr>
+        <tr><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td></tr>
+        <tr><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td></tr>
+    </table><p></p>`;
+    document.execCommand('insertHTML', false, html);
+    document.getElementById('on-editor')?.focus();
+}
+
+function onInsertTimestamp() {
+    const now = new Date();
+    const ts = `${now.getHours()}h${String(now.getMinutes()).padStart(2,'0')}`;
+    const html = `<span style="background:var(--gray-100);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;color:var(--gray-500)">\ud83d\udd50 ${ts}</span> `;
+    document.execCommand('insertHTML', false, html);
+    document.getElementById('on-editor')?.focus();
+}
+
+function onInsertSeparator() {
+    const html = `<div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--gray-400)"><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"><span style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:2px;white-space:nowrap">Point suivant</span><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"></div>`;
+    document.execCommand('insertHTML', false, html);
+    document.getElementById('on-editor')?.focus();
+}
+
+function onInsertTemplate(type) {
+    const ed = document.getElementById('on-editor');
+    if (!ed) return;
+    if (ed.innerHTML.trim().length > 50 && !confirm('Le contenu existant sera remplac\u00e9. Continuer ?')) return;
+
+    const templates = {
+        cr: `<h2 style="color:var(--primary)">Compte-rendu de r\u00e9union</h2>
+<h3>\ud83d\udccb Pr\u00e9sents</h3>
+<ul><li>&nbsp;</li></ul>
+<h3>\ud83d\udccb Excus\u00e9s</h3>
+<ul><li>&nbsp;</li></ul>
+<div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--gray-400)"><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"><span style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:2px">Ordre du jour</span><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"></div>
+<h3>1. Premier point</h3>
+<p>&nbsp;</p>
+<h3>2. Deuxi\u00e8me point</h3>
+<p>&nbsp;</p>
+<div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--gray-400)"><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"><span style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:2px">D\u00e9cisions</span><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"></div>
+<div class="wiki-callout" style="background:#d4edda;border-left:4px solid #28a745;border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0"><div style="font-weight:800;color:#155724;font-size:13px;margin-bottom:4px">\u2705 D\u00c9CISION</div><div style="color:#155724">...</div></div>
+<div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--gray-400)"><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"><span style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:2px">Actions</span><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"></div>
+<div class="wiki-callout" style="background:#f8d7da;border-left:4px solid #dc3545;border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0"><div style="font-weight:800;color:#721c24;font-size:13px;margin-bottom:4px">\ud83d\udd34 ACTION</div><div style="color:#721c24"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" style="width:18px;height:18px"> Action \u2014 <strong>Responsable</strong> \u2014 \u00c9ch\u00e9ance</label></div></div>
+<h3>Points divers</h3>
+<p>&nbsp;</p>
+<hr>
+<p style="font-size:12px;color:gray"><em>R\u00e9dig\u00e9 le ${new Date().toLocaleDateString('fr-FR')}</em></p>`,
+
+        ag: `<h2 style="color:var(--primary)">Assembl\u00e9e G\u00e9n\u00e9rale ${new Date().getFullYear()}</h2>
+<p><strong>Date :</strong> &nbsp; | <strong>Lieu :</strong> &nbsp; | <strong>Heure :</strong> &nbsp;</p>
+<h3>\ud83d\udccb V\u00e9rification du quorum</h3>
+<p>Membres pr\u00e9sents : &nbsp; | Pouvoirs : &nbsp; | Total : &nbsp; / &nbsp; requis</p>
+<div class="wiki-callout" style="background:#e8eaf6;border-left:4px solid #3f51b5;border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0"><div style="font-weight:800;color:#283593;font-size:13px">Quorum : <em>Atteint / Non atteint</em></div></div>
+<div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--gray-400)"><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"><span style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:2px">Rapport moral</span><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"></div>
+<p>&nbsp;</p>
+<div class="wiki-callout" style="background:#e8eaf6;border-left:4px solid #3f51b5;border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0"><div style="font-weight:800;color:#283593;font-size:13px">\ud83d\uddf3\ufe0f VOTE \u2014 Rapport moral</div><div style="color:#283593"><strong>Pour :</strong> &nbsp; | <strong>Contre :</strong> &nbsp; | <strong>Abstention :</strong> &nbsp;</div></div>
+<div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--gray-400)"><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"><span style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:2px">Rapport financier</span><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"></div>
+<p>&nbsp;</p>
+<div class="wiki-callout" style="background:#e8eaf6;border-left:4px solid #3f51b5;border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0"><div style="font-weight:800;color:#283593;font-size:13px">\ud83d\uddf3\ufe0f VOTE \u2014 Rapport financier</div><div style="color:#283593"><strong>Pour :</strong> &nbsp; | <strong>Contre :</strong> &nbsp; | <strong>Abstention :</strong> &nbsp;</div></div>
+<div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--gray-400)"><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"><span style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:2px">\u00c9lections</span><hr style="flex:1;border:none;border-top:2px solid var(--gray-200)"></div>
+<p>&nbsp;</p>
+<hr>
+<p style="font-size:12px;color:gray"><em>PV r\u00e9dig\u00e9 le ${new Date().toLocaleDateString('fr-FR')}</em></p>`,
+
+        bilan: `<h2 style="color:var(--primary)">Bilan annuel ${new Date().getFullYear()}</h2>
+<h3>\ud83d\udcca Chiffres cl\u00e9s</h3>
+<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
+<tr style="background:var(--gray-100)"><th style="border:1px solid var(--gray-300);padding:8px">Indicateur</th><th style="border:1px solid var(--gray-300);padding:8px">${new Date().getFullYear()-1}</th><th style="border:1px solid var(--gray-300);padding:8px">${new Date().getFullYear()}</th><th style="border:1px solid var(--gray-300);padding:8px">\u00c9volution</th></tr>
+<tr><td style="border:1px solid var(--gray-300);padding:8px">Membres actifs</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td></tr>
+<tr><td style="border:1px solid var(--gray-300);padding:8px">\u00c9v\u00e9nements organis\u00e9s</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td></tr>
+<tr><td style="border:1px solid var(--gray-300);padding:8px">Cotisations per\u00e7ues</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td><td style="border:1px solid var(--gray-300);padding:8px">&nbsp;</td></tr>
+</table>
+<h3>\ud83c\udfaf Objectifs atteints</h3>
+<ul><li>&nbsp;</li></ul>
+<h3>\ud83d\ude80 Objectifs ${new Date().getFullYear()+1}</h3>
+<ul><li>&nbsp;</li></ul>
+<h3>\ud83d\udca1 Points d'am\u00e9lioration</h3>
+<ul><li>&nbsp;</li></ul>
+<hr>
+<p style="font-size:12px;color:gray"><em>Bilan r\u00e9dig\u00e9 le ${new Date().toLocaleDateString('fr-FR')}</em></p>`
+    };
+
+    ed.innerHTML = templates[type] || templates.cr;
+    document.getElementById('on-editor')?.focus();
+}
+
+function updateWordCount() {
+    const ed = document.getElementById('on-editor');
+    const el = document.getElementById('wiki-word-count');
+    if (!ed || !el) return;
+    const text = ed.innerText || '';
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+    el.textContent = words + ' mots';
+}
+
 function closeWikiFullscreen() {
     // Force save before closing
     const ta = document.getElementById('on-editor');
@@ -1209,7 +1369,11 @@ function _startAutoSaveWYSIWYG(meetingId) {
         if (status && this.innerHTML !== _lastSavedContent) {
             status.innerHTML = '<span style="color:var(--orange)">&#9679; Modifié</span>';
         }
+        updateWordCount();
     });
+
+    // Initial word count
+    setTimeout(updateWordCount, 200);
 
     // Auto-save every 5 seconds
     _autoSaveTimer = setInterval(async () => {

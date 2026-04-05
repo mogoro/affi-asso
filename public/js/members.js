@@ -901,7 +901,7 @@ function switchBureauView(btn, view) {
 function loadBureauSpace() {
     if (_bureauView === 'actions') loadBureauActions();
     else if (_bureauView === 'meetings') loadBureauMeetings();
-    else if (_bureauView === 'minutes') loadBureauMeetings();
+    else if (_bureauView === 'minutes') loadBureauMinutes();
     else if (_bureauView === 'docs') loadBureauDocs();
 }
 
@@ -1002,6 +1002,158 @@ function renderMeetingCard(m, isPast) {
             ${isPast && !m.minutes ? `<button onclick="editMeetingMinutes(${m.id})" class="bureau-sm-btn" title="Rediger le CR">&#9998;</button>` : ''}
         </div>
     </div>`;
+}
+
+// === CR WIKI SYSTEM ===
+async function loadBureauMinutes() {
+    const el = document.getElementById('bureau-content');
+    try {
+        const res = await fetch(`${API}/api/members?action=bureau_meetings`, {headers:{'Authorization':'Bearer '+authToken}});
+        const meetings = await res.json();
+        // Only meetings with minutes or past meetings
+        const withMinutes = meetings.filter(m => m.minutes || new Date(m.meeting_date) < new Date());
+
+        if (!withMinutes.length) {
+            el.innerHTML = '<p class="empty-msg">Aucun compte-rendu disponible</p>';
+            return;
+        }
+
+        // Tabs for each meeting (most recent first)
+        const tabs = withMinutes.slice(0, 12).map((m, i) => {
+            const d = new Date(m.meeting_date);
+            const months = ['jan','fev','mar','avr','mai','jun','jul','aou','sep','oct','nov','dec'];
+            const label = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+            return { id: m.id, label, meeting: m, active: i === 0 };
+        });
+
+        el.innerHTML = `
+            <div class="cr-wiki">
+                <div class="cr-sidebar">
+                    <h4 class="cr-sidebar-title">Comptes-rendus</h4>
+                    ${tabs.map(t => `
+                        <button class="cr-tab ${t.active ? 'cr-tab-active' : ''}" onclick="showCRTab(${t.id})" data-crid="${t.id}">
+                            <span class="cr-tab-date">${t.label}</span>
+                            <span class="cr-tab-title">${esc(t.meeting.title)}</span>
+                            ${t.meeting.minutes ? '<span class="cr-tab-badge">CR</span>' : '<span class="cr-tab-badge cr-tab-badge-empty">&mdash;</span>'}
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="cr-content" id="cr-content">
+                    ${renderCRContent(tabs[0]?.meeting)}
+                </div>
+            </div>
+        `;
+
+        // Store meetings for tab switching
+        window._crMeetings = {};
+        withMinutes.forEach(m => window._crMeetings[m.id] = m);
+    } catch(e) { el.innerHTML = '<p class="empty-msg">Erreur chargement</p>'; }
+}
+
+function showCRTab(id) {
+    // Update active tab
+    document.querySelectorAll('.cr-tab').forEach(t => t.classList.remove('cr-tab-active'));
+    document.querySelector(`.cr-tab[data-crid="${id}"]`)?.classList.add('cr-tab-active');
+    // Render content
+    const m = window._crMeetings?.[id];
+    const el = document.getElementById('cr-content');
+    if (el && m) el.innerHTML = renderCRContent(m);
+}
+
+function renderCRContent(meeting) {
+    if (!meeting) return '<p class="empty-msg">Selectionnez un compte-rendu</p>';
+    const d = new Date(meeting.meeting_date);
+    const hasMinutes = meeting.minutes && meeting.minutes.trim().length > 0;
+
+    return `
+        <div class="cr-header">
+            <div>
+                <h2 class="cr-title">${esc(meeting.title)}</h2>
+                <div class="cr-meta">${formatDate(meeting.meeting_date)}${meeting.location ? ' &middot; ' + esc(meeting.location) : ''}</div>
+            </div>
+            <div class="cr-header-actions">
+                <button onclick="editCR(${meeting.id})" class="btn btn-primary" style="font-size:12px;padding:6px 14px">${hasMinutes ? 'Modifier' : 'Rediger le CR'}</button>
+            </div>
+        </div>
+        ${meeting.agenda ? `<div class="cr-section">
+            <h3 class="cr-section-title">Ordre du jour</h3>
+            <div class="cr-section-body">${renderMarkdown(meeting.agenda)}</div>
+        </div>` : ''}
+        ${hasMinutes ? `<div class="cr-section">
+            <h3 class="cr-section-title">Compte-rendu</h3>
+            <div class="cr-section-body cr-minutes">${renderMarkdown(meeting.minutes)}</div>
+        </div>` : `<div class="cr-empty-minutes">
+            <div style="font-size:36px;margin-bottom:8px">&#128221;</div>
+            <p>Aucun compte-rendu redige pour cette reunion</p>
+            <button onclick="editCR(${meeting.id})" class="btn btn-accent" style="font-size:13px;padding:8px 20px;margin-top:8px">Rediger le compte-rendu</button>
+        </div>`}
+    `;
+}
+
+function editCR(meetingId) {
+    const m = window._crMeetings?.[meetingId];
+    if (!m) return;
+
+    const template = m.minutes || `# Compte-rendu \u2014 ${m.title}\n\n## Participants\n- \n\n## Ordre du jour\n${m.agenda || '1. '}\n\n## Decisions prises\n- [ ] \n\n## Actions a mener\n- [ ] Action 1 \u2014 **Responsable** \u2014 Echeance\n- [ ] Action 2 \u2014 **Responsable** \u2014 Echeance\n\n## Points divers\n- \n\n---\n*Redige le ${new Date().toLocaleDateString('fr-FR')}*`;
+
+    const html = `<div class="adm-modal-bg" id="cr-editor-modal">
+        <div class="adm-modal" style="max-width:900px;padding:0;height:90vh;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--gray-200);flex-shrink:0">
+                <h3 style="color:var(--primary);margin:0;font-size:16px">${esc(m.title)} &mdash; Compte-rendu</h3>
+                <div style="display:flex;gap:8px">
+                    <button onclick="toggleCRPreview()" class="btn btn-primary" style="font-size:12px;padding:6px 14px;background:var(--teal)">Apercu</button>
+                    <button onclick="saveCR(${meetingId})" class="btn btn-accent" style="font-size:12px;padding:6px 14px">Enregistrer</button>
+                    <button class="auth-close" onclick="closeModal('cr-editor-modal')" style="position:static">&times;</button>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden" id="cr-editor-layout">
+                <div style="border-right:1px solid var(--gray-200);display:flex;flex-direction:column">
+                    <div style="padding:8px 12px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);font-weight:700">EDITEUR MARKDOWN</div>
+                    <textarea id="cr-editor-text" style="flex:1;width:100%;border:none;padding:16px;font-family:'Source Code Pro',monospace;font-size:14px;line-height:1.7;resize:none;outline:none;background:var(--white);color:var(--gray-800)">${esc(template)}</textarea>
+                </div>
+                <div style="overflow-y:auto;display:flex;flex-direction:column">
+                    <div style="padding:8px 12px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);font-weight:700">APERCU</div>
+                    <div id="cr-preview" style="flex:1;padding:16px;font-size:14px;line-height:1.7;overflow-y:auto"></div>
+                </div>
+            </div>
+            <div style="padding:8px 12px;background:var(--gray-50);border-top:1px solid var(--gray-200);font-size:11px;color:var(--gray-400);flex-shrink:0">
+                Syntaxe: # Titre &middot; ## Sous-titre &middot; **gras** &middot; *italique* &middot; - liste &middot; - [x] fait &middot; - [ ] a faire &middot; &gt; citation &middot; --- separateur &middot; \`code\`
+            </div>
+        </div>
+    </div>`;
+    openModal(html);
+
+    // Live preview
+    const textarea = document.getElementById('cr-editor-text');
+    const preview = document.getElementById('cr-preview');
+    function updatePreview() {
+        if (preview && textarea) preview.innerHTML = renderMarkdown(textarea.value);
+    }
+    updatePreview();
+    textarea?.addEventListener('input', updatePreview);
+}
+
+function toggleCRPreview() {
+    const layout = document.getElementById('cr-editor-layout');
+    if (!layout) return;
+    if (layout.style.gridTemplateColumns === '1fr') {
+        layout.style.gridTemplateColumns = '1fr 1fr';
+        layout.children[1].style.display = 'flex';
+    } else {
+        layout.style.gridTemplateColumns = '1fr';
+        layout.children[1].style.display = 'none';
+    }
+}
+
+async function saveCR(meetingId) {
+    const text = document.getElementById('cr-editor-text')?.value;
+    if (!text) return;
+    await fetch(`${API}/api/members`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body: JSON.stringify({action:'bureau_update_meeting', id: meetingId, minutes: text, status: 'done'})});
+    closeModal('cr-editor-modal');
+    window._crMeetings[meetingId].minutes = text;
+    showCRTab(meetingId);
+    showToast('Compte-rendu enregistre', 'success');
 }
 
 async function loadBureauDocs() {

@@ -2536,6 +2536,39 @@ async function submitChallengeTeam(evt) {
     } catch(e) { alert('Erreur'); }
 }
 
+// === SIMPLE MARKDOWN RENDERER ===
+function renderMarkdown(md) {
+    if (!md) return '';
+    return md
+        // Headers
+        .replace(/^### (.+)$/gm, '<h4 style="color:var(--primary);margin:16px 0 8px;font-size:15px;font-weight:800">$1</h4>')
+        .replace(/^## (.+)$/gm, '<h3 style="color:var(--primary);margin:20px 0 10px;font-size:17px;font-weight:800;border-bottom:1px solid var(--gray-200);padding-bottom:6px">$1</h3>')
+        .replace(/^# (.+)$/gm, '<h2 style="color:var(--primary);margin:24px 0 12px;font-size:20px;font-weight:900">$1</h2>')
+        // Bold & italic
+        .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        // Checkboxes
+        .replace(/^- \[x\] (.+)$/gm, '<div class="md-check md-checked"><span class="md-check-box">&#10003;</span> $1</div>')
+        .replace(/^- \[ \] (.+)$/gm, '<div class="md-check"><span class="md-check-box">&#9744;</span> $1</div>')
+        // Lists
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/s, '<ul style="margin:8px 0;padding-left:20px">$1</ul>')
+        // Numbered lists
+        .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+        // Blockquotes
+        .replace(/^> (.+)$/gm, '<blockquote style="border-left:3px solid var(--primary);padding:8px 16px;margin:8px 0;color:var(--gray-600);background:var(--gray-50);border-radius:0 6px 6px 0">$1</blockquote>')
+        // Horizontal rule
+        .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--gray-200);margin:16px 0">')
+        // Code
+        .replace(/`([^`]+)`/g, '<code style="background:var(--gray-100);padding:2px 6px;border-radius:3px;font-size:13px;font-family:monospace">$1</code>')
+        // Links
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--primary);font-weight:600">$1</a>')
+        // Paragraphs
+        .replace(/\n\n/g, '</p><p style="margin:8px 0;line-height:1.7">')
+        .replace(/\n/g, '<br>');
+}
+
 // === HELPERS ===
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function formatDate(d) {
